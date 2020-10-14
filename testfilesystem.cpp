@@ -29,11 +29,11 @@ using namespace std;
 int main() {
 	FileManager* fm = new FileManager();
 	BufPageManager* bpm = new BufPageManager(fm);
-	fm->createFile("testfile.txt"); //新建文件
-	fm->createFile("testfile2.txt");
+	fm->createFile("testfile1.dat"); //新建文件
+	fm->createFile("testfile2.dat");
 	int fileID, f2;
-	fm->openFile("testfile.txt", fileID); //打开文件，fileID是返回的文件id
-	fm->openFile("testfile2.txt", f2);
+	fm->openFile("testfile1.dat", fileID); //打开文件，fileID是返回的文件id
+	fm->openFile("testfile2.dat", f2);
 	for (int pageID = 0; pageID < 1000; ++ pageID) {
 		int index;
 		//为pageID获取一个缓存页
@@ -64,5 +64,8 @@ int main() {
 	}
 	//程序结束前可以调用BufPageManager的某个函数将缓存中的内容写回
 	//具体的函数大家可以看看ppt或者程序的注释
+	bpm->close();
+	delete bpm;
+	delete fm;
 	return 0;
 }

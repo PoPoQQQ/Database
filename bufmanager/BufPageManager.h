@@ -1,16 +1,18 @@
 #ifndef BUF_PAGE_MANAGER
 #define BUF_PAGE_MANAGER
+#include <cstring>
 #include "../utils/MyHashMap.h"
 #include "../utils/MyBitMap.h"
 #include "FindReplace.h"
 #include "../utils/pagedef.h"
 #include "../fileio/FileManager.h"
 #include "../utils/MyLinkList.h"
+using namespace std;
 /*
  * BufPageManager
  * 实现了一个缓存的管理器
  */
-struct BufPageManager {
+class BufPageManager {
 public:
 	int last;
 	FileManager* fileManager;
@@ -23,7 +25,9 @@ public:
 	 */
 	BufType* addr;
 	BufType allocMem() {
-		return new unsigned int[(PAGE_SIZE >> 2)];
+		BufType b = new unsigned int[PAGE_SIZE >> 2];
+		memset(b, 0, PAGE_SIZE);
+		return b;
 	}
 	BufType fetchPage(int typeID, int pageID, int& index) {
 		BufType b;
