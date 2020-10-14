@@ -32,6 +32,17 @@ private:
 		fd[fileID] = f;
 		return 0;
 	}
+	/**
+	 * 删除一个文件
+	*/
+	int _removeFile(const char* filename) {
+		int f = remove(filename);
+		if(remove(filename) == 0){
+			return 0;
+		} else {
+			return -1;
+		}
+	}
 public:
 	/*
 	 * FilManager构造函数
@@ -102,8 +113,7 @@ public:
 	 * 返回:操作成功，返回true
 	 */
 	bool createFile(const char* name) {
-		_createFile(name);
-		return true;
+		return _createFile(name) == 0;
 	}
 	/*
 	 * @函数名openFile
@@ -114,9 +124,15 @@ public:
 	 */
 	bool openFile(const char* name, int& fileID) {
 		fileID = fm->findLeftOne();
-		fm->setBit(fileID, 0);
-		_openFile(name, fileID);
-		return true;
+		if(_openFile(name, fileID) == 0) {
+			fm->setBit(fileID, 0);
+			return true;
+		}
+		else 
+			return false;
+	}
+	bool removeFile(const char* name) {
+		return _removeFile(name) == 0; 
 	}
 	int newType() {
 		int t = tm->findLeftOne();
