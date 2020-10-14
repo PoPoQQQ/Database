@@ -187,6 +187,10 @@ public:
 		pos = (index >> BIAS);
 		bit = index - (pos << BIAS);
 	}
+	static int getSize(int cap) {
+		uint mask = (1 << BIAS) - 1;
+		return (cap >> BIAS) + (cap & mask ? 1 : 0);
+	}
 	uint data0(){
 		return data[0];
 	}
@@ -218,8 +222,8 @@ public:
 		int index = h[_hash(lb)];
 		return (i << BIAS) + index;
 	}
-	MyBitMap(int cap, uint k) {
-		size = (cap >> BIAS);
+	MyBitMap(int cap, uint k = 0) {
+		size = getSize(cap);
 		data = new uint[size];
 		uint fill = 0;
 		if (k == 1) {
@@ -232,7 +236,7 @@ public:
 	}
 	MyBitMap(int cap, uint* da) {
 		data = da;
-		size = (cap >> BIAS);
+		size = getSize(cap);
 		init();
 	}
 	void reLoad(uint* da) {
