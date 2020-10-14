@@ -48,6 +48,13 @@ protected:
 	void setLeafData(int index, uint v) {
 		data[index] = v;
 	}
+	int getLeafBit(int index) {
+		int pos, bit;
+		getPos(index, pos, bit);
+		uint umask = (1 << bit);
+		uint w = getLeafData(pos) & umask;
+		return w ? 1 : 0;
+	}
 	int setLeafBit(int index, uint k) {
 		int pos, bit;
 		getPos(index, pos, bit);
@@ -71,6 +78,7 @@ protected:
 		}
 	}
 	void init() {
+		MyBitMap::initConst();   //新加的初始化
 		rootLevel = 0;
 		int s = size;
 		rootIndex = 0;
@@ -181,6 +189,9 @@ public:
 	}
 	uint data0(){
 		return data[0];
+	}
+	int getBit(int index) {
+		return getLeafBit(index);
 	}
 	void setBit(int index, uint k) {
 		//cout << data[0]<<endl;
