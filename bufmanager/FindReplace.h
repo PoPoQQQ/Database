@@ -1,8 +1,7 @@
-#ifndef BUF_SEARCH
-#define BUF_SEARCH
-#include "../utils/MyLinkList.h"
-#include "../utils/MyHashMap.h"
-#include "../utils/pagedef.h"
+#pragma once
+#include "../Utils/PageDef.h"
+#include "../Utils/MyHashMap.h"
+#include "../Utils/MyLinkList.h"
 //template <int CAP_>
 /*
  * FindReplace
@@ -52,4 +51,3 @@ public:
 		}
 	}
 };
-#endif

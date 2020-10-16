@@ -1,11 +1,10 @@
-#ifndef FILE_TABLE
-#define FILE_TABLE
-#include <string>
-#include "../utils/MyBitMap.h"
+#pragma once
 #include <map>
-#include <vector>
 #include <set>
+#include <string>
+#include <vector>
 #include <fstream>
+#include "../Utils/MyBitMap.h"
 using namespace std;
 class FileTable {
 private:
@@ -94,4 +93,3 @@ public:
 		save();
 	}
 };
-#endif

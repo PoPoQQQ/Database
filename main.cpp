@@ -19,14 +19,16 @@
  * 不要自行进行类似的delete[] b操作，内存的申请和释放都在BufPageManager中做好
  * 如果自行进行类似free(b)或者delete[] b的操作，可能会导致严重错误
  */
-#include "bufmanager/BufPageManager.h"
-#include "fileio/FileManager.h"
-#include "utils/pagedef.h"
 #include <iostream>
-
+#include "Utils/PageDef.h"
+#include "Record/Database.h"
+#include "Fileio/FileManager.h"
+#include "BufManager/BufPageManager.h"
 using namespace std;
 
 int main() {
+
+#ifdef MACRO_NON_DEFINED
 	FileManager* fm = new FileManager();
 	BufPageManager* bpm = new BufPageManager(fm);
 	fm->createFile("testfile.txt"); //新建文件
@@ -71,5 +73,22 @@ int main() {
 	}
 	//程序结束前可以调用BufPageManager的某个函数将缓存中的内容写回
 	//具体的函数大家可以看看ppt或者程序的注释
+#endif
+
+	Global::fm = new FileManager();
+	Global::bpm = new BufPageManager(Global::fm);
+/*
+	
+	Table *t = new Table(th);
+	delete t;
+*/
+	Database *database = new Database("TestDatabase");
+	
+
+	TableHeader *tableHeader = new TableHeader();
+	tableHeader->addField(Field("field1", 0, 4));
+	tableHeader->addField(Field("field2", 0, 4));
+	database->CreateTable("TestTable", tableHeader);
+
 	return 0;
 }

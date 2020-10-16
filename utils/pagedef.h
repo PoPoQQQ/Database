@@ -1,11 +1,11 @@
-#ifndef PAGE_DEF
-#define PAGE_DEF
-#include <unistd.h>
+#pragma once
 #include <errno.h>
 #include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <dirent.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+
 /*
  * 一个页面中的字节数
  */
@@ -54,4 +54,3 @@ typedef int INT;
 typedef int(cf)(uchar*, uchar*);
 int current = 0;
 int tt = 0;
-#endif

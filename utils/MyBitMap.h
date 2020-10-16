@@ -1,5 +1,4 @@
-#ifndef MY_BIT_MAP
-#define MY_BIT_MAP
+#pragma once
 typedef unsigned int uint;
 /*
 #define LEAF_BIT 32
@@ -243,4 +242,3 @@ public:
 		data = da;
 	}
 };
-#endif

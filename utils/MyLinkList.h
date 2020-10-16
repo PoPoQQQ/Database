@@ -1,5 +1,4 @@
-#ifndef MY_LINK_LIST
-#define MY_LINK_LIST
+#pragma once
 //template <int LIST_NUM, int cap>
 class MyLinkList {
 private:
@@ -63,4 +62,3 @@ public:
 		}
 	}
 };
-#endif

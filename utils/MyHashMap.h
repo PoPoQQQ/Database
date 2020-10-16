@@ -1,6 +1,5 @@
-#ifndef MY_HASH_MAP
-#define MY_HASH_MAP
-#include "pagedef.h"
+#pragma once
+#include "PageDef.h"
 #include "MyLinkList.h"
 /*
  * hash表的键
@@ -105,4 +104,3 @@ public:
 		list = new MyLinkList(CAP_, MOD_);
 	}
 };
-#endif

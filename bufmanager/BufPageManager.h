@@ -1,12 +1,11 @@
-#ifndef BUF_PAGE_MANAGER
-#define BUF_PAGE_MANAGER
+#pragma once
 #include <cstring>
-#include "../utils/MyHashMap.h"
-#include "../utils/MyBitMap.h"
 #include "FindReplace.h"
-#include "../utils/pagedef.h"
-#include "../fileio/FileManager.h"
-#include "../utils/MyLinkList.h"
+#include "../Utils/PageDef.h"
+#include "../Utils/MyBitMap.h"
+#include "../Utils/MyHashMap.h"
+#include "../Utils/MyLinkList.h"
+#include "../FileIO/FileManager.h"
 using namespace std;
 /*
  * BufPageManager
@@ -177,4 +176,3 @@ public:
 		}
 	}
 };
-#endif

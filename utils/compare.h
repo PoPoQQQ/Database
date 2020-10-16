@@ -5,12 +5,11 @@
  *      Author: lql
  */
 
-#ifndef PARSER_H_
-#define PARSER_H_
+#pragma once
 
-#include "../bplustree/BPlusTree.h"
-#include "pagedef.h"
 #include <cstring>
+#include "PageDef.h"
+#include "../BPlusTree/BPlusTree.h"
 using namespace std;
 #define LL_TYPE 0
 #define DB_TYPE 1
@@ -56,4 +55,3 @@ cf* kcmp[3][2] = {
 	{&keyu<db>, &keyn<db>},
 	{&su, &sn}
 };
-#endif /* PARSER_H_ */

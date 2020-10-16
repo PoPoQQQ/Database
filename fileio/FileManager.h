@@ -1,12 +1,12 @@
-#ifndef FILE_MANAGER
-#define FILE_MANAGER
+#pragma once
 #include <string>
+#include <fcntl.h>
 #include <stdio.h>
 #include <iostream>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <unistd.h>
-#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include "../Utils/MyBitMap.h"
 //#include "../MyLinkList.h"
 using namespace std;
 class FileManager {
@@ -150,4 +150,3 @@ public:
 		this->shutdown();
 	}
 };
-#endif
