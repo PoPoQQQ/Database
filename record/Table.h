@@ -14,9 +14,23 @@ class Table {
 public:
 	int fileID;
 	TableHeader *tableHeader;
+
+	Table(const char *databaseName, const char *tableName) {
+		//cout << dir << endl;
+		tableHeader = new TableHeader;
+
+		static char dir[1000];
+		sprintf(dir, "Database/%s/%s", databaseName, tableName);
+		Global::fm->openFile(dir, fileID);
+
+		int index;
+		BufType b = Global::bpm->allocPage(fileID, 0, index, true);
+		tableHeader->Load(b);
+	}
+
 	Table(TableHeader *tableHeader): tableHeader(tableHeader) {
 		static char dir[1000];
-		sprintf(dir, "Database/%s/%s.dat", tableHeader->databaseName, tableHeader->tableName);
+		sprintf(dir, "Database/%s/%s", tableHeader->databaseName, tableHeader->tableName);
 		Global::fm->createFile(dir);
 		Global::fm->openFile(dir, fileID);
 
@@ -26,6 +40,7 @@ public:
 		Global::bpm->markDirty(index);
 		Global::bpm->writeBack(index);
 	}
+
 	~Table() {
 		Global::fm->closeFile(fileID);
 		delete tableHeader;

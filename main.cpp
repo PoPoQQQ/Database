@@ -77,18 +77,21 @@ int main() {
 
 	Global::fm = new FileManager();
 	Global::bpm = new BufPageManager(Global::fm);
-/*
-	
-	Table *t = new Table(th);
-	delete t;
-*/
-	Database *database = new Database("TestDatabase");
-	
+	Database::LoadDatabases();
+
+	Database::CreateDatabase("TestDatabase");
+	Database::CreateDatabase("TestDatabase2");
+	Database::OpenDatabase("TestDatabase");
+	Database::OpenDatabase("TestDatabase2");
 
 	TableHeader *tableHeader = new TableHeader();
 	tableHeader->addField(Field("field1", 0, 4));
 	tableHeader->addField(Field("field2", 0, 4));
-	database->CreateTable("TestTable", tableHeader);
+	Database::CreateTable("TestTable", tableHeader);
 
+	TableHeader *tableHeader2 = new TableHeader(*tableHeader);
+	tableHeader2->addField(Field("field3", 0, 4));
+	Database::OpenDatabase("TestDatabase");
+	Database::CreateTable("TestTable2", tableHeader2);
 	return 0;
 }

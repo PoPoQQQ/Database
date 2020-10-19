@@ -1,5 +1,6 @@
 #pragma once
-#include <map>
+#include <set>
+#include <io.h>
 #include <string>
 #include <cstring>
 #include <direct.h>
@@ -9,21 +10,50 @@ using namespace std;
 
 class Database {
 public:
-	static map<string, Database*> databases;
+	static set<string> databases;
+	static Database *currentDatabase;
 	char databaseName[MAX_STRING_LEN + 1];
 	map<string, Table*> tables;
 
-	Database(const char *databaseName) {
+	static void ShowDatabases() {
+		for(set<string>::iterator it = databases.begin(); it != databases.end(); it++)
+			cout << *it << endl;
+	}
+
+	static void LoadDatabases() {
+		if (_access("Database", 0) == -1)
+	        _mkdir("Database");
+	
+	    databases.clear();
+
+		_finddata_t fileinfo;
+		int hFile = _findfirst("Database/*", &fileinfo);
+		if(hFile != -1)
+		{
+			do {
+				if(fileinfo.attrib & _A_SUBDIR)  
+				{  
+				    if(strcmp(fileinfo.name, ".") != 0 && strcmp(fileinfo.name, "..") != 0)  
+				    {
+				    	StringValidator::Check(fileinfo.name);
+				    	databases.insert(fileinfo.name);
+				    }    
+				}
+			} while(_findnext(hFile, &fileinfo) == 0);  
+			_findclose(hFile);
+		}
+
+		//ShowDatabases();
+	}
+
+	static void CreateDatabase(const char *databaseName) {
 		StringValidator::Check(databaseName);
-		memset(this->databaseName, 0, sizeof this->databaseName);
-		strcpy(this->databaseName, databaseName);
-		string s(databaseName);
-		if(databases.find(s) != databases.end())
+		if(databases.find(databaseName) != databases.end())
 		{
 			cerr << "Database is already exist!" << endl;
 			exit(-1);
 		}
-		databases[s] = this;
+		databases.insert(databaseName);
 		if (_access("Database", 0) == -1)
 	        _mkdir("Database");
 	    char dir[1000];
@@ -32,12 +62,60 @@ public:
 	        _mkdir(dir);
 	}
 
-	Table* CreateTable(const char *tableName, TableHeader *tableHeader) {
+	static void OpenDatabase(const char *databaseName) {
+		StringValidator::Check(databaseName);
+		if(databases.find(databaseName) == databases.end())
+		{
+			cerr << "Database is not found!" << endl;
+			exit(-1);
+		}
+		if(currentDatabase != NULL)
+			CloseDatabase();
+		currentDatabase = new Database;
+		memset(currentDatabase->databaseName, 0, sizeof currentDatabase->databaseName);
+		strcpy(currentDatabase->databaseName, databaseName);
+
+		_finddata_t fileinfo;
+		static char dir[1000];
+		sprintf(dir, "Database/%s/*", databaseName);
+		int hFile = _findfirst(dir, &fileinfo);
+		if(hFile != -1)
+		{
+			do {
+				if((fileinfo.attrib & _A_SUBDIR) == 0)  
+				{
+					StringValidator::Check(fileinfo.name);
+					currentDatabase->tables[fileinfo.name] = new Table(currentDatabase->databaseName, fileinfo.name);
+				}
+			} while(_findnext(hFile, &fileinfo) == 0);  
+			_findclose(hFile);
+		}
+	}
+
+	static void CloseDatabase() {
+		if(currentDatabase == NULL)
+		{
+			cerr << "Current database does not exist!" << endl;
+			exit(-1);
+		}
+		for(map<string, Table*>::iterator it = currentDatabase->tables.begin(); it != currentDatabase->tables.end(); it++)
+			delete it->second;
+		delete currentDatabase;
+		currentDatabase = NULL;
+	}
+
+	static void CreateTable(const char *tableName, TableHeader *tableHeader) {
+		if(currentDatabase == NULL)
+		{
+			cerr << "Current database does not exist!" << endl;
+			exit(-1);
+		}
 		StringValidator::Check(tableName);
-		tableHeader->setDatabaseName(databaseName);
+		tableHeader->setDatabaseName(currentDatabase->databaseName);
 		tableHeader->setTableName(tableName);
-		Table *table = new Table(tableHeader);
+		currentDatabase->tables[tableName] = new Table(tableHeader);
 	}
 };
 
-map<string, Database*> Database::databases;
+set<string> Database::databases;
+Database* Database::currentDatabase = NULL;

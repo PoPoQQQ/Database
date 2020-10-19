@@ -15,7 +15,7 @@ public:
 		}
 		for(int i = 0; str[i]; i++)
 		{
-			if(str[i] >= '0' && str[i] <= '9')
+			if(i != 0 && str[i] >= '0' && str[i] <= '9')
 				continue;
 			if(str[i] >= 'a' && str[i] <= 'z')
 				continue;
@@ -23,7 +23,7 @@ public:
 				continue;
 			if(str[i] == '_')
 				continue;
-			cerr << "Invalid character detected!" << endl;
+			cerr << "Invalid name syntax!" << endl;
 			exit(-1);
 		}
 	}
