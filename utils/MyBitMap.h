@@ -144,6 +144,7 @@ protected:
 		updateInner(level + 1, offset + levelCap, pos, (levelCap >> BIAS), c);
 	}
 	int _findLeftOne(int level, int offset, int pos, int prevLevelCap) {
+		//cout << inner[offset + pos] << endl;
 		uint lb = lowbit(inner[offset + pos]);
 		int index = h[_hash(lb)];
 		/*if (level == 0) {
@@ -209,6 +210,8 @@ public:
 		updateInner(0, 0, p, (size >> BIAS), c);
 	}
 	int findLeftOne() {
+		if(inner[rootIndex] == 0)
+			return -1;
 		int i = _findLeftOne(rootLevel, rootIndex, 0, rootBit);
 		/*
 		for (i = 0; i < size;++i){
@@ -220,6 +223,9 @@ public:
 		uint lb = lowbit(getLeafData(i));
 		int index = h[_hash(lb)];
 		return (i << BIAS) + index;
+	}
+	void save(uint* da) {
+		memcpy(da, data, size * sizeof(uint));
 	}
 	MyBitMap(int cap, uint k = 0) {
 		size = getSize(cap);
@@ -233,12 +239,18 @@ public:
 		}
 		init();
 	}
-	MyBitMap(int cap, uint* da) {
-		data = da;
+	MyBitMap(int cap, const uint* da) {
 		size = getSize(cap);
+		data = new uint[size];
+		memcpy(data, da, size * sizeof(uint));
 		init();
 	}
+	~MyBitMap() {
+		delete[] data;
+	}
+	/*
 	void reLoad(uint* da) {
 		data = da;
 	}
+	*/
 };

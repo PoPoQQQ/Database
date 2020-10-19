@@ -70,7 +70,11 @@ public:
 			exit(-1);
 		}
 		if(currentDatabase != NULL)
+		{
+			if(!strcmp(databaseName, currentDatabase->databaseName))
+				return;
 			CloseDatabase();
+		}
 		currentDatabase = new Database;
 		memset(currentDatabase->databaseName, 0, sizeof currentDatabase->databaseName);
 		strcpy(currentDatabase->databaseName, databaseName);

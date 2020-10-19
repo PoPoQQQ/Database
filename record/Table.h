@@ -14,6 +14,7 @@ class Table {
 public:
 	int fileID;
 	TableHeader *tableHeader;
+	MyBitMap *bitMap;
 
 	Table(const char *databaseName, const char *tableName) {
 		//cout << dir << endl;
@@ -24,8 +25,10 @@ public:
 		Global::fm->openFile(dir, fileID);
 
 		int index;
-		BufType b = Global::bpm->allocPage(fileID, 0, index, true);
+		BufType b = Global::bpm->getPage(fileID, 0, index);
 		tableHeader->Load(b);
+
+		bitMap = new MyBitMap(PAGE_SIZE << 2, b + (PAGE_INT_NUM >> 1));
 	}
 
 	Table(TableHeader *tableHeader): tableHeader(tableHeader) {
@@ -37,12 +40,17 @@ public:
 		int index;
 		BufType b = Global::bpm->allocPage(fileID, 0, index, false);
 		tableHeader->Save(b);
+		
+		bitMap = new MyBitMap(PAGE_SIZE << 2, 1);
+		bitMap->setBit(0, 0);
+		bitMap->save(b + (PAGE_INT_NUM >> 1));
+
 		Global::bpm->markDirty(index);
-		Global::bpm->writeBack(index);
 	}
 
 	~Table() {
 		Global::fm->closeFile(fileID);
 		delete tableHeader;
+		delete bitMap;
 	}
 };

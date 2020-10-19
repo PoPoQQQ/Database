@@ -1,7 +1,7 @@
 #pragma once
-#include "../Utils/PageDef.h"
 #include "../Utils/MyHashMap.h"
 #include "../Utils/MyLinkList.h"
+#include "../Utils/Constraints.h"
 //template <int CAP_>
 /*
  * FindReplace

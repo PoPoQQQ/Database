@@ -20,8 +20,8 @@
  * 如果自行进行类似free(b)或者delete[] b的操作，可能会导致严重错误
  */
 #include <iostream>
-#include "Utils/PageDef.h"
 #include "Record/Database.h"
+#include "Utils/Constraints.h"
 #include "Fileio/FileManager.h"
 #include "BufManager/BufPageManager.h"
 using namespace std;
@@ -80,18 +80,13 @@ int main() {
 	Database::LoadDatabases();
 
 	Database::CreateDatabase("TestDatabase");
-	Database::CreateDatabase("TestDatabase2");
 	Database::OpenDatabase("TestDatabase");
-	Database::OpenDatabase("TestDatabase2");
 
 	TableHeader *tableHeader = new TableHeader();
-	tableHeader->addField(Field("field1", 0, 4));
-	tableHeader->addField(Field("field2", 0, 4));
+	for(int i = 0; i < 31; i++)
+		tableHeader->addField(Field("aField", 0, 4));
 	Database::CreateTable("TestTable", tableHeader);
-
-	TableHeader *tableHeader2 = new TableHeader(*tableHeader);
-	tableHeader2->addField(Field("field3", 0, 4));
-	Database::OpenDatabase("TestDatabase");
-	Database::CreateTable("TestTable2", tableHeader2);
+	
+	Global::bpm->close();
 	return 0;
 }

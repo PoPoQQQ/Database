@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include "Field.h"
+#include "../Utils/MyBitMap.h"
 #include "../Utils/Constraints.h"
 #include "../Utils/StringValidator.h"
 #include "../BufManager/BufPageManager.h"
@@ -14,12 +15,18 @@ class TableHeader {
 public:
 	char databaseName[MAX_STRING_LEN + 1];
 	char tableName[MAX_STRING_LEN + 1];
+	int numberOfPage;
 	unsigned long long ridTimestamp;
 	int recordCount;
 	//int fieldCount;
 	vector<Field> fields;
 	int recordSize;
-	TableHeader(): ridTimestamp(0), recordCount(0), recordSize(0) {}
+
+	TableHeader(): 
+		numberOfPage(1), 
+		ridTimestamp(0), 
+		recordCount(0), 
+		recordSize(0) {}
 
 	void setDatabaseName(const char *name) {
 		StringValidator::Check(name);
@@ -32,6 +39,11 @@ public:
 	}
 
 	void addField(Field field) {
+		if(fields.size() >= MAX_COL_NUM)
+		{
+			cerr << "Too many fields!" << endl;
+			exit(-1);
+		}
 		fields.push_back(field);
 		recordSize += field.fieldSize;
 	}
@@ -46,6 +58,9 @@ public:
 		memset(tableName, 0, sizeof databaseName);
 		memcpy(tableName, b + (offset >> 2), MAX_STRING_LEN);
 		offset += MAX_STRING_LEN;
+
+		numberOfPage = b[offset >> 2];
+		offset += 4;
 		
 		ridTimestamp = (long long)b[(offset >> 2) + 1] << 32ll | b[offset >> 2];
 		offset += 8;
@@ -74,6 +89,9 @@ public:
 		
 		memcpy(b + (offset >> 2), tableName, MAX_STRING_LEN);
 		offset += MAX_STRING_LEN;
+
+		b[offset >> 2] = numberOfPage;
+		offset += 4;
 		
 		b[offset >> 2] = ridTimestamp & 0xFFFFFFFFull;
 		b[(offset >> 2) + 1] = ridTimestamp >> 32ll;
@@ -90,5 +108,7 @@ public:
 			it->Save(b + (offset >> 2));
 			offset += FIELD_SIZE;
 		}
+
+		offset = PAGE_SIZE >> 1;
 	}
 };

@@ -36,7 +36,7 @@ private:
 	 * 删除一个文件
 	*/
 	int _removeFile(const char* filename) {
-		int f = remove(filename);
+		//int f = remove(filename);
 		if(remove(filename) == 0){
 			return 0;
 		} else {

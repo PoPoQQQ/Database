@@ -1,10 +1,10 @@
 #pragma once
 #include <cstring>
 #include "FindReplace.h"
-#include "../Utils/PageDef.h"
 #include "../Utils/MyBitMap.h"
 #include "../Utils/MyHashMap.h"
 #include "../Utils/MyLinkList.h"
+#include "../Utils/Constraints.h"
 #include "../FileIO/FileManager.h"
 using namespace std;
 /*
