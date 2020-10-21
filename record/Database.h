@@ -50,7 +50,7 @@ public:
 		StringValidator::Check(databaseName);
 		if(databases.find(databaseName) != databases.end())
 		{
-			cerr << "Database is already exist!" << endl;
+			cerr << "Database already exists!" << endl;
 			exit(-1);
 		}
 		databases.insert(databaseName);
@@ -66,7 +66,7 @@ public:
 		StringValidator::Check(databaseName);
 		if(databases.find(databaseName) == databases.end())
 		{
-			cerr << "Database is not found!" << endl;
+			cerr << "Database not found!" << endl;
 			exit(-1);
 		}
 		if(currentDatabase != NULL)
@@ -108,16 +108,33 @@ public:
 		currentDatabase = NULL;
 	}
 
-	static void CreateTable(const char *tableName, TableHeader *tableHeader) {
+	static Table *CreateTable(const char *tableName, TableHeader *tableHeader) {
+		if(currentDatabase == NULL) {
+			cerr << "Current database does not exist!" << endl;
+			exit(-1);
+		}
+		StringValidator::Check(tableName);
+		if(currentDatabase->tables.find(tableName) != currentDatabase->tables.end()) {
+			cerr << "Table already exsists!" << endl;
+			exit(-1);
+		}
+		tableHeader->SetDatabaseName(currentDatabase->databaseName);
+		tableHeader->SetTableName(tableName);
+		return currentDatabase->tables[tableName] = new Table(tableHeader);
+	}
+
+	static Table *GetTable(const char *tableName) {
 		if(currentDatabase == NULL)
 		{
 			cerr << "Current database does not exist!" << endl;
 			exit(-1);
 		}
 		StringValidator::Check(tableName);
-		tableHeader->setDatabaseName(currentDatabase->databaseName);
-		tableHeader->setTableName(tableName);
-		currentDatabase->tables[tableName] = new Table(tableHeader);
+		if(currentDatabase->tables.find(tableName) != currentDatabase->tables.end()) {
+			cerr << "Table not found!" << endl;
+			exit(-1);
+		}
+		return currentDatabase->tables[tableName];
 	}
 };
 

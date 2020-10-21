@@ -27,8 +27,7 @@ public:
 	}
 	void SetTypeAndSize(DataType fieldType, int para1 = 10, int para2 = 0) {
 		this->fieldType = fieldType;
-		switch(fieldType)
-		{
+		switch(fieldType) {
 			case TINYINT:
 				fieldSize = 1;
 				break;
@@ -57,7 +56,6 @@ public:
 				}
 				this->fieldType = fieldType | (para1 << 8) | (para2 << 16);
 				fieldSize = para1 + 2;
-				//cout << this->fieldType << endl;
 				break;
 			case DATE:
 				fieldSize = 3;
@@ -89,9 +87,11 @@ public:
 				}
 				this->fieldType = fieldType | (para1 << 8);
 				fieldSize = para1;
+				break;
 			default:
 				cerr << "Data type not supported!" << endl;
 				exit(-1);
+				break;
 		}
 	}
 	void Load(BufType b) {
@@ -101,7 +101,6 @@ public:
 		fieldSize = b[(MAX_STRING_LEN >> 2) + 1];
 	}
 	void Save(BufType b) {
-		cout << b << endl;
 		memcpy(b, fieldName, MAX_STRING_LEN);
 		b[MAX_STRING_LEN >> 2] = fieldType;
 		b[(MAX_STRING_LEN >> 2) + 1] = fieldSize;

@@ -7,12 +7,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include "../Utils/MyBitMap.h"
-//#include "../MyLinkList.h"
 using namespace std;
 class FileManager {
 private:
-	//FileTable* ftable;
-	int fd[MAX_FILE_NUM];
+	FILE* fd[MAX_FILE_NUM];
 	MyBitMap* fm;
 	MyBitMap* tm;
 	int _createFile(const char* name) {
@@ -25,8 +23,8 @@ private:
 		return 0;
 	}
 	int _openFile(const char* name, int fileID) {
-		int f = open(name, O_RDWR);
-		if (f == -1) {
+		FILE* f = fopen(name, "ab+");
+		if (f == NULL) {
 			return -1;
 		}
 		fd[fileID] = f;
@@ -61,15 +59,13 @@ public:
 	 * 返回:成功操作返回0
 	 */
 	int writePage(int fileID, int pageID, BufType buf, int off) {
-		int f = fd[fileID];
-		off_t offset = pageID;
-		offset = (offset << PAGE_SIZE_IDX);
-		off_t error = lseek(f, offset, SEEK_SET);
-		if (error != offset) {
+		FILE* f = fd[fileID];
+		long offset = pageID;
+		offset <<= PAGE_SIZE_IDX;
+		if (fseek(f, offset, SEEK_SET) != 0)
 			return -1;
-		}
 		BufType b = buf + off;
-		error = write(f, (void*) b, PAGE_SIZE);
+		fwrite((void*)b, 1, PAGE_SIZE, f);
 		return 0;
 	}
 	/*
@@ -82,16 +78,13 @@ public:
 	 * 返回:成功操作返回0
 	 */
 	int readPage(int fileID, int pageID, BufType buf, int off) {
-		//int f = fd[fID[type]];
-		int f = fd[fileID];
-		off_t offset = pageID;
-		offset = (offset << PAGE_SIZE_IDX);
-		off_t error = lseek(f, offset, SEEK_SET);
-		if (error != offset) {
+		FILE* f = fd[fileID];
+		long offset = pageID;
+		offset <<= PAGE_SIZE_IDX;
+		if (fseek(f, offset, SEEK_SET) != 0)
 			return -1;
-		}
 		BufType b = buf + off;
-		error = read(f, (void*) b, PAGE_SIZE);
+		fread((void*)b, 1, PAGE_SIZE, f);
 		return 0;
 	}
 	/*
@@ -102,8 +95,8 @@ public:
 	 */
 	int closeFile(int fileID) {
 		fm->setBit(fileID, 1);
-		int f = fd[fileID];
-		close(f);
+		FILE* f = fd[fileID];
+		fclose(f);
 		return 0;
 	}
 	/*

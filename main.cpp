@@ -83,10 +83,27 @@ int main() {
 	Database::OpenDatabase("TestDatabase");
 
 	TableHeader *tableHeader = new TableHeader();
-	for(int i = 0; i < 31; i++)
-		tableHeader->addField(Field("Z00000000011111111112222222222333333333344444444445555555555666666666677777777778888888888999999", DECIMAL));
-	Database::CreateTable("TestTable", tableHeader);
+	tableHeader->AddField(Field("a", INTEGER));
+	tableHeader->AddField(Field("b", INTEGER));
+	tableHeader->AddField(Field("c", CHAR, 40));
+	Table *table = Database::CreateTable("TestTable", tableHeader);
+	delete tableHeader;
+
+	Record *record = table->CreateEmptyRecord();
+	int a = 0x003e2590, b = 0x23333333;
+	char c[41] = "something is really happening I think.  ";
+	for(int i = 0; i < 128; i++) {
+		record->CleanData();
+		record->FillData(0, &a);
+		record->FillData(1, &b);
+		if(rand() & 1)
+			record->FillData(2, c);
+		table->AddRecord(record);
+	}
+	delete record;
 	
+	table->PrintTable();
+
 	Global::bpm->close();
 	return 0;
 }

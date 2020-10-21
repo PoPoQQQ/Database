@@ -21,32 +21,28 @@ public:
 	int recordCount;
 	//int fieldCount;
 	vector<Field> fields;
-	int recordSize;
 
 	TableHeader(): 
 		numberOfPage(1), 
 		ridTimestamp(0), 
-		recordCount(0), 
-		recordSize(0) {}
+		recordCount(0) {}
 
-	void setDatabaseName(const char *name) {
+	void SetDatabaseName(const char *name) {
 		StringValidator::Check(name);
 		strcpy(databaseName, name);
 	}
 
-	void setTableName(const char *name) {
+	void SetTableName(const char *name) {
 		StringValidator::Check(name);
 		strcpy(tableName, name);
 	}
 
-	void addField(Field field) {
-		if(fields.size() >= MAX_COL_NUM)
-		{
+	void AddField(Field field) {
+		if(fields.size() >= MAX_COL_NUM) {
 			cerr << "Too many fields!" << endl;
 			exit(-1);
 		}
 		fields.push_back(field);
-		recordSize += field.fieldSize;
 	}
 
 	void Load(BufType b) {
@@ -73,11 +69,8 @@ public:
 		offset += 4;
 
 		fields.resize(size);
-		recordSize = 0;
-		for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++)
-		{
+		for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++) {
 			it->Load(b + (offset >> 2));
-			recordSize += it->fieldSize;
 			offset += FIELD_SIZE;
 		}
 	}
@@ -104,8 +97,7 @@ public:
 		b[offset >> 2] = fields.size();
 		offset += 4;
 
-		for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++)
-		{
+		for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++) {
 			it->Save(b + (offset >> 2));
 			offset += FIELD_SIZE;
 		}

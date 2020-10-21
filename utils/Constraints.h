@@ -46,6 +46,10 @@
  * 数据库中字符串的长度上限
  */
 #define MAX_STRING_LEN 96
+/*
+ * 数据库中记录长度的下限
+ */
+#define MIN_RECORD_SIZE 64
 
 #define RELEASE 1
 typedef unsigned int* BufType;
