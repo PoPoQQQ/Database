@@ -3,6 +3,7 @@
 #include <cstdio>
 #include <cstring>
 #include "Field.h"
+#include "Record.h"
 #include "../Utils/MyBitMap.h"
 #include "../Utils/Constraints.h"
 #include "../Utils/StringValidator.h"
@@ -108,7 +109,5 @@ public:
 			it->Save(b + (offset >> 2));
 			offset += FIELD_SIZE;
 		}
-
-		offset = PAGE_SIZE >> 1;
 	}
 };

@@ -16,7 +16,7 @@ private:
 	MyBitMap* fm;
 	MyBitMap* tm;
 	int _createFile(const char* name) {
-		FILE* f = fopen(name, "a+");
+		FILE* f = fopen(name, "ab+");
 		if (f == NULL) {
 			cout << "fail" << endl;
 			return -1;

@@ -84,7 +84,7 @@ int main() {
 
 	TableHeader *tableHeader = new TableHeader();
 	for(int i = 0; i < 31; i++)
-		tableHeader->addField(Field("aField", 0, 4));
+		tableHeader->addField(Field("Z00000000011111111112222222222333333333344444444445555555555666666666677777777778888888888999999", DECIMAL));
 	Database::CreateTable("TestTable", tableHeader);
 	
 	Global::bpm->close();
