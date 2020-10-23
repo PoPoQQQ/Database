@@ -1,9 +1,14 @@
 #pragma once
 #include <set>
-#include <io.h>
 #include <string>
 #include <cstring>
+#ifdef __linux__
+#include <unistd.h>
+#include <fcntl.h>
+#else
+#include <io.h>
 #include <direct.h>
+#endif //__linux__
 #include "Table.h"
 #include "../Utils/StringValidator.h"
 using namespace std;

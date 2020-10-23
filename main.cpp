@@ -22,7 +22,7 @@
 #include <iostream>
 #include "Record/Database.h"
 #include "Utils/Constraints.h"
-#include "Fileio/FileManager.h"
+#include "FileIO/FileManager.h"
 #include "BufManager/BufPageManager.h"
 using namespace std;
 
