@@ -17,3 +17,12 @@ project (BDDB)
 add_executable(main main.cpp)
 
 # 链接
+
+# 自定义指令
+
+## 删除数据库
+
+add_custom_target(
+    clean_db
+    COMMAND ${CMAKE_COMMAND} -E remove_directory "${PROJECT_BINARY_DIR}/Database"
+)

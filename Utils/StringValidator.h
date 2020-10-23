@@ -6,6 +6,12 @@ using namespace std;
 
 class StringValidator {
 public:
+	/**
+	 * 检查一个字符串是否满足数据库的规定
+	 * 要求一个字符串只能是[0-9]|[a-z]|[A-Z]|_的组合
+	 * 如果不满足条件则直接报错退出
+	 * @param str const char * 
+	 * */
 	static void Check(const char *str) {
 		int len = strlen(str);
 		if(len <= 0 || len > MAX_STRING_LEN)
