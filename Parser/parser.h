@@ -1,6 +1,6 @@
 //lex.l和yacc.y共同使用的头文件
-#ifndef MAIN_HPP
-#define MAIN_HPP
+#ifndef __PARSER_H__
+#define __PARSER_H__
 
 #include <iostream>//使用C++库
 #include <string>
@@ -21,5 +21,46 @@ struct Type//通常这里面每个成员，每次只会使用其中一个，一�
 };
 
 #define YYSTYPE Type//把YYSTYPE(即yylval变量)重定义为struct Type类型，这样lex就能向yacc返回更多的数据了
+
+// enum Token {
+//     DATABASE = 1,
+//     DATABASES = 2,
+//     TABLE = 3,
+//     TABLES = 4,
+//     SHOW = 5,
+//     CREATE = 6,
+//     DROP = 7,
+//     USE	= 8,
+//     PRIMARY = 9,
+//     KEY = 10,
+//     NOT = 11,
+//     NULLTOKEN = 12,
+//     INSERT = 13,
+//     INTO = 14,
+//     VALUES = 15,
+//     DELETE = 16,
+//     FROM = 17,
+//     WHERE = 18,
+//     UPDATE = 19,
+//     SET = 20,
+//     SELECT = 21,
+//     IS = 22,
+//     INT = 23,
+//     VARCHAR = 24,
+//     DEFAULT = 25,
+//     CONSTRAINT = 26,
+//     CHANGE = 27,
+//     ALTER = 28,
+//     ADD = 29,
+//     RENAME = 30,
+//     DESC = 31,
+//     REFERENCES = 32,
+//     INDEX = 33,
+//     AND = 34,
+//     DATE = 35,  	
+//     FLOAT = 36,
+//     FOREIGN = 37,
+//     CHAR = 38
+// };
 
 #endif
