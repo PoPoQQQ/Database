@@ -82,12 +82,11 @@ int main() {
 	Database::CreateDatabase("TestDatabase");
 	Database::OpenDatabase("TestDatabase");
 
-	TableHeader *tableHeader = new TableHeader();
-	tableHeader->AddField(Field("a", Data(Data::INTEGER)));
-	tableHeader->AddField(Field("b", Data(Data::INTEGER)));
-	tableHeader->AddField(Field("c", Data(Data::CHAR, 40)));
-	Table *table = Database::CreateTable("TestTable", tableHeader);
-	delete tableHeader;
+	vector<Field> fields;
+	fields.push_back(Field("a", Data(Data::INTEGER)));
+	fields.push_back(Field("b", Data(Data::INTEGER)));
+	fields.push_back(Field("c", Data(Data::CHAR, 40)));
+	Table *table = Database::CreateTable("TestTable", fields);
 
 	Record *record = table->CreateEmptyRecord();
 	for(int i = 0; i < 128; i++) {
