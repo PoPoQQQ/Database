@@ -65,32 +65,4 @@ typedef int INT;
 typedef int(cf)(uchar*, uchar*);
 extern int current;
 extern int tt;
-
-enum DataType {
-	TINYINT = 1,
-	SMALLINT = 2,
-	MEDIUMINT = 3,
-	INTEGER = 4,
-	BIGINT = 5,
-	FLOAT = 6,
-	DOUBLE = 7,
-	DECIMAL = 8,
-	
-	DATE = 9,
-	TIME = 10,
-	YEAR = 11,
-	DATETIME = 12,
-	TIMESTAMP = 13,
-
-	CHAR = 14,
-	VARCHAR = 15,
-	TINYBLOB = 16,
-	TINYTEXT = 17,
-	BLOB = 18,
-	TEXT = 19,
-	MEDIUMBLOB = 20,
-	MEDIUMTEXT = 21,
-	LONGBLOB = 22,
-	LONGTEXT = 23
-};
 #endif // __CONSTRAINTS_H__

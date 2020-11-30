@@ -173,9 +173,9 @@ public:
 	 * 在当前打开的数据库中创建一个新的表
 	 * 如果当前没有打开数据库或是表已经存在则会报错退出
 	 * @param tableName 表名
-	 * @param tableHeader 用于描述表头的对象指针。创建新表的时候会拷贝获得一个全新的 tableHeader
+	 * @param fields 域列表
 	 * */
-	static Table *CreateTable(const char *tableName, TableHeader *tableHeader) {
+	static Table *CreateTable(const char *tableName, vector<Field> fields) {
 		if(currentDatabase == NULL) {
 			cerr << "Current database does not exist!" << endl;
 			exit(-1);
@@ -185,9 +185,7 @@ public:
 			cerr << "Table already exsists!" << endl;
 			exit(-1);
 		}
-		tableHeader->SetDatabaseName(currentDatabase->databaseName);
-		tableHeader->SetTableName(tableName);
-		return currentDatabase->tables[tableName] = new Table(tableHeader);
+		return currentDatabase->tables[tableName] = new Table(currentDatabase->databaseName, tableName, fields);
 	}
 	/**
 	 * 从当前打开的数据库中获得某个 table 对象指针

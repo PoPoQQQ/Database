@@ -1,11 +1,12 @@
 #pragma once
 #include "Record.h"
+#include "PageBase.h"
 #define PAGE_OFFSET 64
-class Page {
+class RecordPage: public PageBase {
 public:
-	int type;
 	unsigned int bitMaps[4];
-	Page(): type(1) {
+	RecordPage() {
+		type = RECORD_PAGE;
 		for(int i = 0; i < 4; i++)
 			bitMaps[i] = 0xffffffffu;
 	}
