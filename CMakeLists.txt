@@ -8,15 +8,25 @@ project (BDDB)
 
 # 添加子目录
 
-# add_subdirectory(bufmanager)
-# add_subdirectory(fileio)
-# add_subdirectory(utils)
+add_subdirectory(Parser)
+add_subdirectory(Record)
+add_subdirectory(Utils)
 
 # 指定生成目标
 
 add_executable(main main.cpp)
 
+# 编译器选项
+
+add_compile_options(-Wall -g)
+
 # 链接
+find_library(LEX_LIB l)
+target_link_libraries(main ${LEX_LIB})
+
+target_link_libraries(main myparser)
+target_link_libraries(main record)
+target_link_libraries(main utils)
 
 # 自定义指令
 

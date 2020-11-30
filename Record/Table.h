@@ -26,7 +26,7 @@ public:
 
 		static char dir[1000];
 		sprintf(dir, "Database/%s/%s", databaseName, tableName);
-		Global::fm->openFile(dir, fileID);
+		Global::getInstance()->getInstance()->fm->openFile(dir, fileID);
 
 		LoadHeader();
 	}
@@ -52,20 +52,20 @@ public:
 
 		static char dir[1000];
 		sprintf(dir, "Database/%s/%s", databaseName, tableName);
-		Global::fm->createFile(dir);
-		Global::fm->openFile(dir, fileID);
+		Global::getInstance()->fm->createFile(dir);
+		Global::getInstance()->fm->openFile(dir, fileID);
 
 		SaveHeader();
 	}
 
 	~Table() {
-		Global::fm->closeFile(fileID);
+		Global::getInstance()->fm->closeFile(fileID);
 		delete bitMap;
 	}
 
 	void LoadHeader() {
 		int index;
-		BufType b = Global::bpm->getPage(fileID, 0, index);
+		BufType b = Global::getInstance()->bpm->getPage(fileID, 0, index);
 
 		int offset = 0;
 		
@@ -102,7 +102,7 @@ public:
 
 	void SaveHeader() {
 		int index;
-		BufType b = Global::bpm->getPage(fileID, 0, index);
+		BufType b = Global::getInstance()->bpm->getPage(fileID, 0, index);
 		
 		int offset = 0;
 		
@@ -132,7 +132,7 @@ public:
 
 		bitMap->save(b + (PAGE_INT_NUM >> 1));
 
-		Global::bpm->markDirty(index);
+		Global::getInstance()->bpm->markDirty(index);
 	}
 
 	Record *CreateEmptyRecord() {
@@ -159,12 +159,12 @@ public:
 		PageBase *page;
 
 		if(pageNumber < numberOfPage) {
-			b = Global::bpm->getPage(fileID, pageNumber, index);
+			b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
 			page = PageFactory::LoadPageHeader(b);
 		}
 		else {
 			numberOfPage++;
-			b = Global::bpm->allocPage(fileID, pageNumber, index);
+			b = Global::getInstance()->bpm->allocPage(fileID, pageNumber, index);
 			page = new RecordPage;
 			page->SavePageHeader(b);
 		}
@@ -180,7 +180,7 @@ public:
 		++recordCount;
 
 		bool full = dynamic_cast<RecordPage*>(page)->AddRecord(b, record);
-		Global::bpm->markDirty(index);
+		Global::getInstance()->bpm->markDirty(index);
 
 		if(full)
 			bitMap->setBit(pageNumber, 0);
@@ -197,7 +197,7 @@ public:
 		Record *record = CreateEmptyRecord();
 		for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
 			int index;
-			BufType b = Global::bpm->getPage(fileID, pageNumber, index);
+			BufType b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
 			PageBase *page = PageFactory::LoadPageHeader(b);
 			if(page->type != PageBase::RECORD_PAGE)
 				continue;

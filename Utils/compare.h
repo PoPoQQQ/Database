@@ -9,7 +9,7 @@
 
 #include <cstring>
 #include "Constraints.h"
-#include "../BPlusTree/BPlusTree.h"
+#include "BplusTree.h"
 using namespace std;
 #define LL_TYPE 0
 #define DB_TYPE 1

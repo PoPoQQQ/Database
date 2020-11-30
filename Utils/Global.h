@@ -4,7 +4,16 @@
 */
 class FileManager;
 class BufPageManager;
-namespace Global {
-	FileManager* fm = NULL;
-	BufPageManager* bpm = NULL;
+class Global{
+public:
+	FileManager* fm;
+	BufPageManager* bpm;
+	static Global* getInstance();
+private:
+	Global();
+	Global(const Global&);
+	~Global();
+	Global& operator=(const Global&);
+
+	static Global *instance;
 };

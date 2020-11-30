@@ -208,5 +208,4 @@ public:
 	}
 };
 
-set<string> Database::databases;
-Database* Database::currentDatabase = NULL;
+

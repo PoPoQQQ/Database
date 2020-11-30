@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdio>
+#include <iostream>
 #include <cstring>
 #include "../Utils/Constraints.h"
 using namespace std;
