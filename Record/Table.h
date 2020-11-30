@@ -2,7 +2,7 @@
 #include <map>
 #include <string>
 #include <cstring>
-#include "Page.h"
+#include "PageFactory.h"
 #include "TableHeader.h"
 #include "../Utils/Global.h"
 #include "../FileIO/FileManager.h"
@@ -79,16 +79,23 @@ public:
 
 		int index;
 		BufType b;
-		Page page;
+		PageBase *page;
 
 		if(pageNumber < tableHeader->numberOfPage) {
 			b = Global::bpm->getPage(fileID, pageNumber, index);
-			page.LoadPageHeader(b);
+			page = PageFactory::LoadPageHeader(b);
 		}
 		else {
 			tableHeader->numberOfPage++;
 			b = Global::bpm->allocPage(fileID, pageNumber, index);
-			page.SavePageHeader(b);
+			page = new RecordPage;
+			page->SavePageHeader(b);
+		}
+
+		if(page->type != PageBase::RECORD_PAGE)
+		{
+			cerr << "Illegal Page Type!" << endl;
+			exit(-1);
 		}
 
 		record->enabled = 1;
@@ -97,7 +104,7 @@ public:
 		tableHeader->Save(header_b);
 		Global::bpm->markDirty(header_index);
 
-		bool full = page.AddRecord(b, record);
+		bool full = dynamic_cast<RecordPage*>(page)->AddRecord(b, record);
 		Global::bpm->markDirty(index);
 
 		if(full) {
@@ -107,6 +114,8 @@ public:
 			bitMap->save(header_b + (PAGE_INT_NUM >> 1));
 			Global::bpm->markDirty(header_index);
 		}
+
+		delete page;
 	}
 
 	void PrintTable() {
@@ -118,11 +127,10 @@ public:
 		for(int pageNumber = 1; pageNumber < tableHeader->numberOfPage; pageNumber++) {
 			int index;
 			BufType b = Global::bpm->getPage(fileID, pageNumber, index);
-			Page page;
-			page.LoadPageHeader(b);
-			if(page.type != 1)
+			PageBase *page = PageFactory::LoadPageHeader(b);
+			if(page->type != PageBase::RECORD_PAGE)
 				continue;
-			page.PrintPage(b, record);
+			dynamic_cast<RecordPage*>(page)->PrintPage(b, record);
 		}
 		delete record;
 	}
