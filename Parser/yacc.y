@@ -52,25 +52,20 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 
 program: 	program stmt
 		{
-			cout << "stmt" << endl;
 		}
 	|	/* empty */
 		{
-			cout << "empty stmt" << endl;
 		}
 	;
 
 stmt: 	sysStmt ';'
 		{
-			cout << "sysStmt" << endl;
 		}
 	| 	dbStmt ';'
 		{
-			cout << "dbStmt" << endl;
 		}
 	| 	tbStmt ';'
 		{
-			cout << "tbStmt" << endl;	
 		}
 	// | idxStmt ';'
 	// {
@@ -84,27 +79,30 @@ stmt: 	sysStmt ';'
 
 sysStmt: 	SHOW DATABASES
 			{
-				cout << "sysStmt: SHOW DATABASES" << endl;
+				cout << "show databases: -----------" << endl;
+				Database::ShowDatabases();
 			}
 		;
 
 dbStmt:		CREATE DATABASE dbName
 			{
-				cout << "dbStmt: CREATE DATABASE " << $3 << endl;
 				Database::CreateDatabase($3.c_str());
-				cout << "create succeed!" << endl;
+				cout << "CREATE DATABASE:" << $3 << " succeed!" << endl;
 			}
 		| 	DROP DATABASE dbName
 			{
-				cout << "dbStmt: DROP DATABASE" << endl;
+				// TODO
+				cout << "TODO: DROP DATABASE" << endl;
 			}
 		| 	USE dbName
 			{
-				cout << "dbStmt: USE" << endl;
+				Database::OpenDatabase($2.c_str());
+				cout << "USE " << $2 << ": OpenDatabase" << endl;
 			}
 		|	SHOW TABLES
 			{
-				cout << "SHOW TABLES" << endl;
+				// TODO
+				cout << "TODO: SHOW TABLES" << endl;
 			}
 		;
 tbStmt  : CREATE TABLE tbName '(' fieldList ')'
@@ -250,49 +248,23 @@ columnList  :	colName
 
 dbName  : 	IDENTIFIER
 			{
-				cout << "dbName: " << $1 << endl;
 				$$ = $1;
 			}
 		;
 tbName  :	IDENTIFIER
 			{
-				cout << "tbName: " << $1 << endl;
 			}
 		;
 colName :	IDENTIFIER
 			{
-				cout << "colName: " << $1 << endl;
 			}
 		| 	DATETOKEN
 			{
-				cout << "colName: " << $1 << endl;
 			}
 		| 	TABLES
 			{
-				cout << "colName: " << $1 << endl;
 			}
 		;
-// file:								//文件，由记号流组成
-// 	tokenlist						//这里仅显示记号流中的ID
-// 	{
-// 		cout<<"all id:"<<$1<<endl;	//$1是非终结符tokenlist的属性，由于该终结符是用%type<m_sId>定义的，即约定对其用YYSTYPE的m_sId属性，$1相当于$1.m_sId，其值已经在下层产生式中赋值(tokenlist IDENTIFIER)
-// 	};
-// tokenlist:							//记号流，或者为空，或者由若干数字、标识符、及其它符号组成
-// 	{
-// 	}
-// 	| tokenlist INTEGER
-// 	{
-// 		cout<<"int: "<<$2<<endl;	//$2是记号INTEGER的属性，由于该记号是用%token<m_nInt>定义的，即约定对其用YYSTYPE的m_nInt属性，$2会被替换为yylval.m_nInt，已在lex里赋值
-// 	}
-// 	| tokenlist IDENTIFIER
-// 	{
-// 		$$+=" " + $2;				//$$是非终结符tokenlist的属性，由于该终结符是用%type<m_sId>定义的，即约定对其用YYSTYPE的m_sId属性，$$相当于$$.m_sId，这里把识别到的标识符串保存在tokenlist属性中，到上层产生式里可以拿出为用
-// 		cout<<"id: "<<$2<<endl;		//$2是记号IDENTIFIER的属性，由于该记号是用%token<m_sId>定义的，即约定对其用YYSTYPE的m_sId属性，$2会被替换为yylval.m_sId，已在lex里赋值
-// 	}
-// 	| tokenlist OPERATOR
-// 	{
-// 		cout<<"op: "<<$2<<endl;		//$2是记号OPERATOR的属性，由于该记号是用%token<m_cOp>定义的，即约定对其用YYSTYPE的m_cOp属性，$2会被替换为yylval.m_cOp，已在lex里赋值
-// 	};
 
 %%
 
