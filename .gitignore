@@ -1,8 +1,10 @@
 CMakeFiles/
 CMakeCache.txt
 cmake_install.cmake
-Makefile
 build/
 Database/
 *.exe
 .vscode/
+Parser/lex.yy.c
+Parser/yacc.tab.c
+Parser/yacc.tab.h
