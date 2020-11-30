@@ -31,7 +31,7 @@ public:
 		LoadHeader();
 	}
 
-	Table(const char *databaseName, const char *tableName, vector<Field> fields): fields(fields) {
+	Table(const char *databaseName, const char *tableName,const vector<Field>& fields): fields(fields) {
 		StringValidator::Check(databaseName);
 		StringValidator::Check(tableName);
 		if(fields.size() >= MAX_COL_NUM) {

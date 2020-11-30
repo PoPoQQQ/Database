@@ -42,7 +42,7 @@ public:
 		long long longlongData;
 		float floatData;
 		double doubleData;
-		char* charData;
+		char* charData = NULL;
 	};
 	
 	Data(): dataType(UNDEFINED), dataSize(0), longlongData(0) {}
@@ -62,6 +62,8 @@ public:
 				dataSize = 3;
 				break;
 			case INTEGER:
+				// TODO: 显示宽度
+				// int 可能会传入一个参数，代表能够显示的最大长度，最大为 255
 				dataSize = 4;
 				break;
 			case BIGINT:
@@ -120,7 +122,74 @@ public:
 				break;
 		}
 	}
+	Data(const Data& data) {
+		this->dataType = data.dataType;
+		this->dataSize = data.dataSize;
 
+		switch(data.dataType & 0xff) {
+			case INTEGER:
+				this->intData = data.intData;
+				break;
+			case BIGINT:
+				this->longlongData = data.longlongData;
+				break;
+			case FLOAT:
+				this->floatData = data.floatData;
+				break;
+			case DOUBLE:
+				this->doubleData = data.doubleData;
+				break;
+			case CHAR:
+			case VARCHAR:
+			{
+				if(this->charData != NULL) {
+					delete this->charData;
+				}
+				this->charData = new char[this->dataSize];
+				memcpy(this->charData, data.charData, this->dataSize);
+				break;
+			}
+			default:
+				cerr << "Data type not supported yet!" << endl;
+				exit(-1);
+				break;
+		}
+	}
+	Data& operator = (const Data& data) {
+		this->dataType = data.dataType;
+		this->dataSize = data.dataSize;
+
+	switch(data.dataType & 0xff) {
+	case INTEGER:
+		this->intData = data.intData;
+		break;
+	case BIGINT:
+	  this->longlongData = data.longlongData;
+	  break;
+	 case FLOAT:
+	  this->floatData = data.floatData;
+	  break;
+	 case DOUBLE:
+	  this->doubleData = data.doubleData;
+	  break;
+	 case CHAR:
+	 case VARCHAR:
+	 {
+	  if(this->charData != NULL) {
+	   delete this->charData;
+	  }
+	  this->charData = new char[this->dataSize];
+	  memcpy(this->charData, data.charData, this->dataSize);
+	  break;
+	 }
+	 default:
+		cerr << "Data type not supported yet!" << endl;
+		exit(-1);
+		break;
+  }
+
+  return *this;
+ }
 	Data SetData(int data) {
 		intData = data;
 		return *this;
@@ -142,7 +211,8 @@ public:
 	}
 
 	Data SetData(const char *data) {
-		charData = new char[dataSize];
+		if(charData == NULL)
+			charData = new char[dataSize];
 		memset(charData, 0, dataSize);
 		memcpy(charData, data, min((size_t)dataSize, strlen(data)));
 		return *this;
@@ -242,7 +312,9 @@ public:
 	~Data()
 	{
 		if((dataType & 0xff) == CHAR || (dataType & 0xff) == VARCHAR)
-			if(charData != NULL)
+			if(charData != NULL){
 				delete charData;
+				charData = NULL;
+			}
 	}
 };

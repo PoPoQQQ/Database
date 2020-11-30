@@ -47,6 +47,11 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %left AND
 
 %type<m_sId> dbName
+%type<m_sId> tbName
+%type<m_sId> colName
+%type<m_cplx> type
+%type<m_cplx> field
+%type<m_vec> fieldList
 
 %%
 
@@ -107,11 +112,23 @@ dbStmt:		CREATE DATABASE dbName
 		;
 tbStmt  : CREATE TABLE tbName '(' fieldList ')'
 			{
-
+				vector<Field> fields;
+				for(int i = 0; i < $5.size(); ++i) {
+					fields.push_back(Field(
+						$5[i].field.fieldName,
+						Data(
+							$5[i].field.data.dataType,
+							$5[i].field.data.param1,
+							$5[i].field.data.param2
+						)
+					));
+				}
+				Database::CreateTable($3.c_str(), fields);
+				cout << "CREATE TABLE: " << $3 << "succeed!" << endl;
 			}
         | DROP TABLE tbName
 			{
-
+				cout << "TODO: DROP TABLE: " << $3 << endl;
 			}
         | DESC tbName
 			{
@@ -137,44 +154,61 @@ tbStmt  : CREATE TABLE tbName '(' fieldList ')'
 
 fieldList	:	field
 				{
-
+					if($1.field.type == FieldStruct::FieldType::DATA)
+						$$.push_back($1);
 				}
 			|	fieldList ',' field
 				{
-
+					if($3.field.type == FieldStruct::FieldType::DATA)
+						$$.push_back($3);
 				}
 			;
 
 field  	: 	colName type
 			{
-
+				$$.field.set($1.c_str(), $2.data, FieldStruct::FieldType::DATA);
 			}
       	| 	colName type NOT NULLTOKEN
 		  	{
-				
+				$$.field.set($1.c_str(), $2.data, FieldStruct::FieldType::DATA);
 			}
 		| 	colName	type DEFAULT	value
 			{
-
+				$$.field.set($1.c_str(), $2.data, FieldStruct::FieldType::DATA);
 			}
 		|	colName type NOT NULLTOKEN DEFAULT value
 			{
-
+				$$.field.set($1.c_str(), $2.data, FieldStruct::FieldType::DATA);
 			}
       	|	PRIMARY KEY '(' columnList ')'
 		  	{
-
+				$$.field.type = FieldStruct::FieldType::PRIMARY;
 			}
       	|	FOREIGN KEY '(' colName ')' REFERENCES  tbName '(' colName ')'
 			{
-
+				$$.field.type = FieldStruct::FieldType::FOREIGN;
 			}
 		;
 type  	: INTTOKEN '(' VALUE_INT ')'
+			{
+				$$.data.set(Data::DataType::INTEGER);
+			}
 		| CHARTOKEN '(' VALUE_INT ')'
+			{
+				$$.data.set(Data::DataType::CHAR, $3);
+			}
         | VARCHARTOKEN '(' VALUE_INT ')'
+			{
+				$$.data.set(Data::DataType::VARCHAR, $3);
+			}
         | DATETOKEN
+			{
+				$$.data.set(Data::DataType::DATE);
+			}
         | FLOATTOKEN
+			{
+				$$.data.set(Data::DataType::FLOAT);
+			}
 		;
 valueLists  : '('valueList')'
 				{
@@ -248,21 +282,30 @@ columnList  :	colName
 
 dbName  : 	IDENTIFIER
 			{
+				StringValidator::Check($1.c_str());
 				$$ = $1;
 			}
 		;
 tbName  :	IDENTIFIER
 			{
+				StringValidator::Check($1.c_str());
+				$$ = $1;
 			}
 		;
 colName :	IDENTIFIER
 			{
+				StringValidator::Check($1.c_str());
+				$$ = $1;
 			}
 		| 	DATETOKEN
 			{
+				StringValidator::Check($1.c_str());
+				$$ = $1;
 			}
 		| 	TABLES
 			{
+				StringValidator::Check($1.c_str());
+				$$ = $1;
 			}
 		;
 

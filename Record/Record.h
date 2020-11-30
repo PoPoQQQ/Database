@@ -11,12 +11,12 @@ public:
 	unsigned long long rid;
 	unsigned int bitMap;
 	vector<Field> fields;
-	Record(vector<Field> fields): fields(fields) {
+	Record(const vector<Field>& fields): fields(fields){
 		if(fields.empty()) {
 			cerr << "Invalid Fields!" << endl;
 			exit(-1);
 		}
-		CleanData();
+  		CleanData();
 	}
 	void CleanData() {
 		bitMap = 0;

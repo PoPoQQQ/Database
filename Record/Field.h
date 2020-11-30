@@ -17,11 +17,21 @@ public:
 	Field() {
 		fieldName[0] = '\0';
 	}
-	Field(const char *fieldName, Data data): data(data) {
+	Field(const char *fieldName, const Data& data): data(data) {
 		StringValidator::Check(fieldName);
 		memset(this->fieldName, 0, sizeof this->fieldName);
 		strcpy(this->fieldName, fieldName);
 	}
+	Field(const Field& other): data(other.data) {
+		memset(this->fieldName, 0, sizeof this->fieldName);
+		strcpy(this->fieldName, other.fieldName);
+	}
+	Field& operator = (const Field& field) {
+		this->data = field.data;
+		memset(this->fieldName, 0, sizeof this->fieldName);
+		strcpy(this->fieldName, field.fieldName);
+		return *this;
+ 	}
 	void SetDataType(Data data) {
 		this->data = data;
 	}

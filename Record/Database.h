@@ -175,7 +175,7 @@ public:
 	 * @param tableName 表名
 	 * @param fields 域列表
 	 * */
-	static Table *CreateTable(const char *tableName, vector<Field> fields) {
+	static Table *CreateTable(const char *tableName,const vector<Field>& fields) {
 		if(currentDatabase == NULL) {
 			cerr << "Current database does not exist!" << endl;
 			exit(-1);
