@@ -50,6 +50,14 @@
  * 数据库中记录长度的下限
  */
 #define MIN_RECORD_SIZE 64
+/*
+ * 联合索引键值数量的上限
+ */
+#define INDEX_MAX_KEYS 2
+/*
+ * B+树阶数
+ */
+#define BPLUS_TREE_RANK 
 
 #define RELEASE 1
 typedef unsigned int* BufType;
