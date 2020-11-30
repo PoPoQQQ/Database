@@ -1,6 +1,10 @@
 #include <iostream>
 #include <cstring>
 #include <stdio.h>
+#include <vector>
+#include "Record/Field.h"
+#include "Record/Table.h"
+#include "Record/Database.h"
 using namespace std;
 
 extern FILE *yyin;
@@ -25,6 +29,25 @@ int main(int argc, const char* argv[]) {
 	fclose(yyin);
 
     yyin = NULL;
+
+	vector<Field> fields;
+	fields.push_back(Field("a", Data(Data::INTEGER)));
+	fields.push_back(Field("b", Data(Data::INTEGER)));
+	fields.push_back(Field("c", Data(Data::CHAR, 40)));
+	Table *table = Database::CreateTable("TestTable", fields);
+
+	Record *record = table->CreateEmptyRecord();
+	for(int i = 0; i < 128; i++) {
+		record->CleanData();
+		record->FillData(0, Data(Data::INTEGER).SetData(0x003e2590));
+		record->FillData(1, Data(Data::INTEGER).SetData(0x23333333));
+		if(rand() & 1)
+			record->FillData(2, Data(Data::CHAR, 40).SetData("I think something is really happening.  "));
+		table->AddRecord(record);
+	}
+	delete record;
+	
+	table->PrintTable();
 
 	return 0;
 }
