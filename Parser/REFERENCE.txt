@@ -1,3 +1,4 @@
+https://blog.csdn.net/huyansoft/article/details/8860224
 作者: 胡彦 2013-4-28
 本框架是一个lex/yacc完整的示例，包括详细的注释，用于学习lex/yacc程序基本的搭建方法，在linux/cygwin下敲入make就可以编译和执行。大部分框架已经搭好了，你只要稍加扩展就可以成为一个计算器之类的程序，用于《编译原理》的课程设计，或者对照理解其它lex/yacc项目的代码。
 本例子虽小却演示了lex/yacc程序最重要和常用的特征：

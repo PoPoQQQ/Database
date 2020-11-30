@@ -8,41 +8,21 @@ project (BDDB)
 
 # 添加子目录
 
-# add_subdirectory(Bufmanager)
-# add_subdirectory(FileIO)
-# add_subdirectory(Utils)
 add_subdirectory(Parser)
-
-# bison and flex 
-
-find_package(BISON)
-find_package(FLEX)
-
-FLEX_TARGET(lexer lex.l ${CMAKE_CURRENT_BINARY_DIR}/lex.yy.c)
-
-BISON_TARGET(parser yacc.h ${CMAKE_CURRENT_BINARY_DIR}/yacc.tab.c
-            DEFINES_FILE ${CMAKE_CURRENT_BINARY_DIR}/yacc.tab.h
-            )
-
-ADD_FLEX_BISON_DEPENDENCY(lexer parser)
-
-# 
-
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
-set (MAIN_SRC ${BISON_ttest_parser_OUTPUTS}
-              ${FLEX_ttest_lexer_OUTPUTS}
-    )
-
 
 # 指定生成目标
 
-# add_executable(main main.cpp)
-add_executable(main ${MAIN_SRC})
+add_executable(main main.cpp)
 
-find_library(LEX_LIB l)
-target_link_libraries(ttest ${LEX_LIB})
+# 编译器选项
+
+add_compile_options(-Wall -g)
 
 # 链接
+find_library(LEX_LIB l)
+target_link_libraries(main ${LEX_LIB})
+
+target_link_libraries(main myparser)
 
 # 自定义指令
 

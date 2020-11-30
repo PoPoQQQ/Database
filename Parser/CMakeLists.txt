@@ -1,11 +1,3 @@
-# CMake 最低版本号要求
-
-cmake_minimum_required (VERSION 3.10)
-
-# 项目信息
-
-project (parser_test)
-
 # bison and flex 
 
 find_package(BISON)
@@ -19,21 +11,11 @@ BISON_TARGET(parser yacc.y ${CMAKE_CURRENT_BINARY_DIR}/yacc.tab.cpp
 
 ADD_FLEX_BISON_DEPENDENCY(lexer parser)
 
-# 
+# create library
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_library(myparser ${BISON_parser_OUTPUTS} ${FLEX_lexer_OUTPUTS})
 
+# complier options
 
-# 指定生成目标
-
-add_executable(ttest main.cpp)
-
-target_link_libraries(ttest myparser)
-
-find_library(LEX_LIB l)
-target_link_libraries(ttest ${LEX_LIB})
-
-# 链接
-
-# 自定义指令
+add_compile_options(-Wall -g)
