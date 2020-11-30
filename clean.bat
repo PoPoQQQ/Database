@@ -1,0 +1,1 @@
+rd Database /s/q
