@@ -5,6 +5,7 @@
 #include <iostream>//使用C++库
 #include <string>
 #include <stdio.h>//printf和FILE要用的
+#include "../Record/Database.h"
 
 using namespace std;
 
@@ -63,4 +64,4 @@ struct Type//通常这里面每个成员，每次只会使用其中一个，一�
 //     CHAR = 38
 // };
 
-#endif
+#endif // __PARSER_H__

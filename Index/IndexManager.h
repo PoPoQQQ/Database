@@ -13,16 +13,16 @@ public:
     IndexManager(){
     }
     bool createIndex() {
-        Global::fm->createFile("index.txt");
+        Global::getInstance()->fm->createFile("index.txt");
     }
     bool deleteIndex() {
-        Global::fm->removeFile("index.txt");
+        Global::getInstance()->fm->removeFile("index.txt");
     }
     bool openIndex(int& fileID) {
-        Global::fm->openFile("index.txt", fileID);
+        Global::getInstance()->fm->openFile("index.txt", fileID);
     }
     bool closeIndex(int fileID) {
-        Global::fm->closeFile(fileID);
+        Global::getInstance()->fm->closeFile(fileID);
     }
 private:
 };

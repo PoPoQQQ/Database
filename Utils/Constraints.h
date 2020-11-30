@@ -1,4 +1,6 @@
 #pragma once
+#ifndef __CONSTRAINTS_H__
+#define __CONSTRAINTS_H__
 #include <errno.h>
 #include <stdio.h>
 #include <dirent.h>
@@ -61,8 +63,8 @@ typedef long long ll;
 typedef double db;
 typedef int INT;
 typedef int(cf)(uchar*, uchar*);
-int current = 0;
-int tt = 0;
+extern int current;
+extern int tt;
 
 enum DataType {
 	TINYINT = 1,
@@ -91,3 +93,4 @@ enum DataType {
 	LONGBLOB = 22,
 	LONGTEXT = 23
 };
+#endif // __CONSTRAINTS_H__

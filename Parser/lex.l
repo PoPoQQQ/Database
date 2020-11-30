@@ -122,8 +122,8 @@ MULTILINE_COMMENT_END (\*\/)
 {SET}					{ return SET;		}
 {SELECT}				{ return SELECT;	}
 {IS}					{ return IS;		}
-{INT}					{ return INT;		}	
-{VARCHAR}				{ return VARCHAR;	}
+{INT}					{ return INTTOKEN;		}	
+{VARCHAR}				{ return VARCHARTOKEN;	}
 {DEFAULT}				{ return DEFAULT;	}
 {CONSTRAINT}			{ return CONSTRAINT;}
 {CHANGE}				{ return CHANGE;	}
@@ -136,11 +136,11 @@ MULTILINE_COMMENT_END (\*\/)
 {AND}					{ return AND;		}
 {DATE}					{ 
 	yylval.m_sId=yytext; // 用于解决 DATE 有可能作为列名出现的情况
-	return DATE;		
+	return DATETOKEN;		
 }	
-{FLOAT}					{ return FLOAT;		}
+{FLOAT}					{ return FLOATTOKEN;		}
 {FOREIGN}				{ return FOREIGN;	}
-{CHAR}					{ return CHAR;		}
+{CHAR}					{ return CHARTOKEN;		}
 
 {VALUE_INT}		{							//匹配整数串
 	yylval.m_nInt=atoi(yytext);//把识别出的整数串，转换为整型值，存储到yylval的整型成员里，到了yacc里用$n方式引用

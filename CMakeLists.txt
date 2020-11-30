@@ -9,6 +9,8 @@ project (BDDB)
 # 添加子目录
 
 add_subdirectory(Parser)
+add_subdirectory(Record)
+add_subdirectory(Utils)
 
 # 指定生成目标
 
@@ -23,6 +25,8 @@ find_library(LEX_LIB l)
 target_link_libraries(main ${LEX_LIB})
 
 target_link_libraries(main myparser)
+target_link_libraries(main record)
+target_link_libraries(main utils)
 
 # 自定义指令
 

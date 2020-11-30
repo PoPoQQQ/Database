@@ -37,11 +37,11 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %token DATABASE	DATABASES	TABLE		SHOW	CREATE
 %token DROP	USE	PRIMARY	KEY	NOT	NULLTOKEN
 %token INSERT	INTO	VALUES	DELETE	FROM	WHERE
-%token UPDATE	SET	SELECT	IS	INT	VARCHAR
+%token UPDATE	SET	SELECT	IS	INTTOKEN	VARCHARTOKEN
 %token DEFAULT	CONSTRAINT	CHANGE	ALTER	ADD	RENAME
-%token DESC	REFERENCES	INDEX	AND		FLOAT	FOREIGN
-%token CHAR
-%token<m_sId> DATE
+%token DESC	REFERENCES	INDEX	AND		FLOATTOKEN	FOREIGN
+%token CHARTOKEN
+%token<m_sId> DATETOKEN
 %token<m_sId> TABLES
 
 %left AND
@@ -91,6 +91,8 @@ sysStmt: 	SHOW DATABASES
 dbStmt:		CREATE DATABASE dbName
 			{
 				cout << "dbStmt: CREATE DATABASE " << $3 << endl;
+				Database::CreateDatabase($3.c_str());
+				cout << "create succeed!" << endl;
 			}
 		| 	DROP DATABASE dbName
 			{
@@ -170,11 +172,11 @@ field  	: 	colName type
 
 			}
 		;
-type  	: INT '(' VALUE_INT ')'
-		| CHAR '(' VALUE_INT ')'
-        | VARCHAR '(' VALUE_INT ')'
-        | DATE
-        | FLOAT
+type  	: INTTOKEN '(' VALUE_INT ')'
+		| CHARTOKEN '(' VALUE_INT ')'
+        | VARCHARTOKEN '(' VALUE_INT ')'
+        | DATETOKEN
+        | FLOATTOKEN
 		;
 valueLists  : '('valueList')'
 				{
@@ -261,7 +263,7 @@ colName :	IDENTIFIER
 			{
 				cout << "colName: " << $1 << endl;
 			}
-		| 	DATE
+		| 	DATETOKEN
 			{
 				cout << "colName: " << $1 << endl;
 			}

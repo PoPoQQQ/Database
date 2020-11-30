@@ -7,6 +7,7 @@ typedef unsigned int uint;
 #define MOD 61
 #define BIAS 5*/
 #include <iostream>
+#include <string.h>
 using namespace std;
 
 #define LEAF_BIT 32
@@ -14,7 +15,7 @@ using namespace std;
 #define MAX_INNER_NUM 67
 //#define MOD 61
 #define BIAS 5
-unsigned char h[61];
+extern unsigned char h[61];
 
 
 class MyBitMap {

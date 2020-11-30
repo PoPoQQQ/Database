@@ -23,10 +23,10 @@ public:
 
 		static char dir[1000];
 		sprintf(dir, "Database/%s/%s", databaseName, tableName);
-		Global::fm->openFile(dir, fileID);
+		Global::getInstance()->fm->openFile(dir, fileID);
 
 		int index;
-		BufType b = Global::bpm->getPage(fileID, 0, index);
+		BufType b = Global::getInstance()->bpm->getPage(fileID, 0, index);
 		tableHeader->Load(b);
 
 		bitMap = new MyBitMap(PAGE_SIZE << 2, b + (PAGE_INT_NUM >> 1));
@@ -35,22 +35,22 @@ public:
 	Table(TableHeader *tableHeader): tableHeader(new TableHeader(*tableHeader)) {
 		static char dir[1000];
 		sprintf(dir, "Database/%s/%s", tableHeader->databaseName, tableHeader->tableName);
-		Global::fm->createFile(dir);
-		Global::fm->openFile(dir, fileID);
+		Global::getInstance()->fm->createFile(dir);
+		Global::getInstance()->fm->openFile(dir, fileID);
 
 		int index;
-		BufType b = Global::bpm->allocPage(fileID, 0, index);
+		BufType b = Global::getInstance()->bpm->allocPage(fileID, 0, index);
 		tableHeader->Save(b);
 		
 		bitMap = new MyBitMap(PAGE_SIZE << 2, 1);
 		bitMap->setBit(0, 0);
 		bitMap->save(b + (PAGE_INT_NUM >> 1));
 
-		Global::bpm->markDirty(index);
+		Global::getInstance()->bpm->markDirty(index);
 	}
 
 	~Table() {
-		Global::fm->closeFile(fileID);
+		Global::getInstance()->fm->closeFile(fileID);
 		delete tableHeader;
 		delete bitMap;
 	}
@@ -75,19 +75,19 @@ public:
 		}
 
 		int header_index;
-		BufType header_b = Global::bpm->getPage(fileID, 0, header_index);
+		BufType header_b = Global::getInstance()->bpm->getPage(fileID, 0, header_index);
 
 		int index;
 		BufType b;
 		Page page;
 
 		if(pageNumber < tableHeader->numberOfPage) {
-			b = Global::bpm->getPage(fileID, pageNumber, index);
+			b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
 			page.LoadPageHeader(b);
 		}
 		else {
 			tableHeader->numberOfPage++;
-			b = Global::bpm->allocPage(fileID, pageNumber, index);
+			b = Global::getInstance()->bpm->allocPage(fileID, pageNumber, index);
 			page.SavePageHeader(b);
 		}
 
@@ -95,17 +95,17 @@ public:
 		record->rid = ++tableHeader->ridTimestamp;
 		++tableHeader->recordCount;
 		tableHeader->Save(header_b);
-		Global::bpm->markDirty(header_index);
+		Global::getInstance()->bpm->markDirty(header_index);
 
 		bool full = page.AddRecord(b, record);
-		Global::bpm->markDirty(index);
+		Global::getInstance()->bpm->markDirty(index);
 
 		if(full) {
 			bitMap->setBit(pageNumber, 0);
 
 			//temperate solution
 			bitMap->save(header_b + (PAGE_INT_NUM >> 1));
-			Global::bpm->markDirty(header_index);
+			Global::getInstance()->bpm->markDirty(header_index);
 		}
 	}
 
@@ -117,7 +117,7 @@ public:
 		Record *record = CreateEmptyRecord();
 		for(int pageNumber = 1; pageNumber < tableHeader->numberOfPage; pageNumber++) {
 			int index;
-			BufType b = Global::bpm->getPage(fileID, pageNumber, index);
+			BufType b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
 			Page page;
 			page.LoadPageHeader(b);
 			if(page.type != 1)

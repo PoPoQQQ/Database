@@ -266,10 +266,6 @@ public:
     bool released = false; // 用于动态管理内存。代表节点中的 children 数据是否被移交、保存或使用某种方法使其可以被管理
     BplusTree<K, T>* tree;
 };
-template<typename K, typename T>
-int BplusNode<K, T>::totalNum = 0;
-template<typename K, typename T>
-vector<BplusNode<K, T>*> BplusNode<K, T>::debug;
 
 template <typename K, typename T>
 struct BplusLeaf: public BplusNode<K, T> {
