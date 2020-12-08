@@ -121,6 +121,45 @@ public:
 		}
 	}
 
+	Data(const Data& data) {
+		*this = data;
+	}
+
+	Data& operator = (const Data& data) {
+		this->dataType = data.dataType;
+		this->dataSize = data.dataSize;
+
+		switch(data.dataType & 0xff) {
+			case INTEGER:
+				this->intData = data.intData;
+				break;
+			case BIGINT:
+				this->longlongData = data.longlongData;
+				break;
+			case FLOAT:
+				this->floatData = data.floatData;
+				break;
+			case DOUBLE:
+				this->doubleData = data.doubleData;
+				break;
+			case CHAR:
+			case VARCHAR: {
+				if(this->charData != NULL) {
+					delete this->charData;
+				}
+				this->charData = new char[this->dataSize];
+				memcpy(this->charData, data.charData, this->dataSize);
+				break;
+			}
+			default:
+				cerr << "Data type not supported yet!" << endl;
+				exit(-1);
+				break;
+		}
+
+		return *this;
+	}
+
 	Data SetData(int data) {
 		intData = data;
 		return *this;

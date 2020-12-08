@@ -2,6 +2,9 @@
 #include <map>
 #include <string>
 #include <cstring>
+#include "Field.h"
+#include "Record.h"
+#include "RecordPage.h"
 #include "PageFactory.h"
 #include "../Utils/Global.h"
 #include "../FileIO/FileManager.h"
@@ -64,8 +67,8 @@ public:
 	}
 
 	void LoadHeader() {
-		int index;
-		BufType b = Global::getInstance()->bpm->getPage(fileID, 0, index);
+		int pageIndex;
+		BufType b = Global::getInstance()->bpm->getPage(fileID, 0, pageIndex);
 
 		int offset = 0;
 		
@@ -101,8 +104,8 @@ public:
 	}
 
 	void SaveHeader() {
-		int index;
-		BufType b = Global::getInstance()->bpm->getPage(fileID, 0, index);
+		int pageIndex;
+		BufType b = Global::getInstance()->bpm->getPage(fileID, 0, pageIndex);
 		
 		int offset = 0;
 		
@@ -132,7 +135,7 @@ public:
 
 		bitMap->save(b + (PAGE_INT_NUM >> 1));
 
-		Global::getInstance()->bpm->markDirty(index);
+		Global::getInstance()->bpm->markDirty(pageIndex);
 	}
 
 	Record *CreateEmptyRecord() {
@@ -154,23 +157,16 @@ public:
 			exit(-1);
 		}
 
-		int index;
-		BufType b;
 		PageBase *page;
 
-		if(pageNumber < numberOfPage) {
-			b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
-			page = PageFactory::LoadPageHeader(b);
-		}
+		if(pageNumber < numberOfPage)
+			page = PageFactory::LoadPage(fileID, pageNumber);
 		else {
 			numberOfPage++;
-			b = Global::getInstance()->bpm->allocPage(fileID, pageNumber, index);
-			page = new RecordPage;
-			page->SavePageHeader(b);
+			page = PageFactory::CreatePage(fileID, pageNumber, PageBase::RECORD_PAGE);
 		}
 
-		if(page->type != PageBase::RECORD_PAGE)
-		{
+		if(page == NULL || page->pageType != PageBase::RECORD_PAGE) {
 			cerr << "Illegal Page Type!" << endl;
 			exit(-1);
 		}
@@ -179,9 +175,7 @@ public:
 		record->rid = ++ridTimestamp;
 		++recordCount;
 
-		bool full = dynamic_cast<RecordPage*>(page)->AddRecord(b, record);
-		Global::getInstance()->bpm->markDirty(index);
-
+		bool full = dynamic_cast<RecordPage*>(page)->AddRecord(record);
 		if(full)
 			bitMap->setBit(pageNumber, 0);
 
@@ -196,12 +190,12 @@ public:
 
 		Record *record = CreateEmptyRecord();
 		for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
-			int index;
-			BufType b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
-			PageBase *page = PageFactory::LoadPageHeader(b);
-			if(page->type != PageBase::RECORD_PAGE)
+			PageBase *page = PageFactory::LoadPage(fileID, pageNumber);
+			if(page == NULL)
 				continue;
-			dynamic_cast<RecordPage*>(page)->PrintPage(b, record);
+			if(page->pageType == PageBase::RECORD_PAGE)
+				dynamic_cast<RecordPage*>(page)->PrintPage(record);
+			delete page;
 		}
 		delete record;
 	}

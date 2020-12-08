@@ -1,17 +1,12 @@
 #pragma once
 #include "PageBase.h"
-#include "RecordPage.h"
 
 class PageFactory {
+private:
+	static PageBase *AllocPage(int index, BufType b, int pageType);
 public:
-	static PageBase *LoadPageHeader(BufType b) {
-		int type = b[0];
-		PageBase *ret = NULL;
-		if(type == PageBase::RECORD_PAGE)
-			ret = new RecordPage;
-		ret->LoadPageHeader(b);
-		return ret;
-	}
+	static PageBase *LoadPage(int fileID, int pageNumber);
+	static PageBase *CreatePage(int fileID, int pageNumber, int pageType);
 };
 
 

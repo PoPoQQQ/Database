@@ -8,7 +8,7 @@
 #include "../BufManager/BufPageManager.h"
 using namespace std;
 /*
-管理一个表的信息
+管理一个索引的信息
 */
 class Index {
 public:

@@ -10,7 +10,7 @@ Global::Global(const Global&) {
 
 }
 
-Global& Global::operator=(const Global&) {}
+Global& Global::operator=(const Global&) {return *this;}
 
 Global* Global::instance = new Global();
 Global* Global::getInstance() {

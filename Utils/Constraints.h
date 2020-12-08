@@ -59,7 +59,8 @@
 /*
  * B+树阶数
  */
-#define BPLUS_TREE_RANK 
+#define BPLUS_TREE_RANK 5
+//#define BPLUS_TREE_RANK 400
 
 #define RELEASE 1
 typedef unsigned int* BufType;
