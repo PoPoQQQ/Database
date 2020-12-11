@@ -1,12 +1,15 @@
 #pragma once
+#include "Table.h"
 #include "Record.h"
 #include "PageBase.h"
-#include "../Utils/Global.h"
 #define PAGE_OFFSET 64
 class RecordPage: public PageBase {
 public:
+	Table* context;
 	unsigned int bitMaps[4];
-	RecordPage(int pageIndex, BufType b): PageBase(pageIndex, b) {
+	RecordPage(void* context, int pageNumber, int pageIndex, BufType b): 
+		PageBase(pageNumber, pageIndex, b) {
+		this->context = (Table*)context;
 		pageType = RECORD_PAGE;
 		for(int i = 0; i < 4; i++)
 			bitMaps[i] = 0xffffffffu;
@@ -20,6 +23,7 @@ public:
 		b[0] = pageType;
 		for(int i = 0; i < 4; i++)
 			b[i + 1] = bitMaps[i];
+		MarkDirty();
 	}
 	int FindLeftOne() {
 		int index = -1;
@@ -30,7 +34,7 @@ public:
 				break;
 			}
 		if(index == -1) {
-			cerr << "Bit map error in class \"Page\"!" << endl;
+			cerr << "Bit map error in class \"RecordPage\"!" << endl;
 			exit(-1);
 		}
 		return index;
@@ -47,19 +51,20 @@ public:
 		bitMaps[index >> 5] ^= 1u << (index & 31);
 		SavePageHeader();
 		record->Save(b + (PAGE_OFFSET + index * recordSize) / 4);
-		Global::getInstance()->bpm->markDirty(pageIndex);
+		MarkDirty();
 
 		index = FindLeftOne();
 		return index == recordVolume;
 	}
-	void PrintPage(Record *emptyRecord) {
+	void PrintPage() {
+		Record *emptyRecord = context->CreateEmptyRecord();
 		int recordSize = emptyRecord->RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
-
 		for(int index = 0; index < recordVolume; index++)
 			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
 				emptyRecord->Load(b + (PAGE_OFFSET + index * recordSize) / 4);
 				emptyRecord->PrintRecord();
 			}
+		delete emptyRecord;
 	}
 };

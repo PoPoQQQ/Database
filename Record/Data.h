@@ -47,8 +47,7 @@ public:
 	
 	Data(): dataType(UNDEFINED), dataSize(0), longlongData(0) {}
 
-	Data(DataType dataType, int para1 = 10, int para2 = 0)
-	{
+	Data(DataType dataType, int para1 = 10, int para2 = 0) {
 		this->dataType = dataType;
 		longlongData = 0;
 		switch(dataType) {
@@ -187,12 +186,12 @@ public:
 		return *this;
 	}
 
-	void LoadType(unsigned char* b) {
+	void LoadType(unsigned int* b) {
 		dataType = b[0];
 		dataSize = b[1];
 	}
 
-	void SaveType(unsigned char*  b) {
+	void SaveType(unsigned int* b) {
 		b[0] = dataType;
 		b[1] = dataSize;
 	}
@@ -249,8 +248,7 @@ public:
 		}
 	}
 
-	friend ostream& operator << (ostream& os, const Data &data)
-	{
+	friend ostream& operator << (ostream& os, const Data &data) {
 		switch(data.dataType & 0xff) {
 			case INTEGER:
 				return os << data.intData;
@@ -278,8 +276,51 @@ public:
 		}
 	}
 
-	~Data()
-	{
+	friend bool operator < (const Data &data1, const Data &data2) {
+		if(data1.dataType != data2.dataType) {
+			cerr << "Data type distincts!" << endl;
+			exit(-1);
+		}
+		switch(data1.dataType) {
+			case INTEGER:
+				return data1.intData < data2.intData;
+			case BIGINT:
+				return data1.longlongData < data2.longlongData;
+			case FLOAT:
+				return data1.floatData < data2.floatData;
+			case DOUBLE:
+				return data1.doubleData < data2.doubleData;
+			default:
+				cerr << "Data type not supported yet!" << endl;
+				exit(-1);
+				break;
+		}
+		return false;
+	}
+
+	friend bool operator == (const Data &data1, const Data &data2) {
+		if(data1.dataType != data2.dataType) {
+			cerr << "Data type distincts!" << endl;
+			exit(-1);
+		}
+		switch(data1.dataType) {
+			case INTEGER:
+				return data1.intData == data2.intData;
+			case BIGINT:
+				return data1.longlongData == data2.longlongData;
+			case FLOAT:
+				return data1.floatData == data2.floatData;
+			case DOUBLE:
+				return data1.doubleData == data2.doubleData;
+			default:
+				cerr << "Data type not supported yet!" << endl;
+				exit(-1);
+				break;
+		}
+		return false;
+	}
+
+	~Data() {
 		if((dataType & 0xff) == CHAR || (dataType & 0xff) == VARCHAR)
 			if(charData != NULL)
 				delete charData;

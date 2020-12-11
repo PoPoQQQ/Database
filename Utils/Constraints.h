@@ -55,12 +55,12 @@
 /*
  * 联合索引键值数量的上限
  */
-#define INDEX_MAX_KEYS 2
+#define INDEX_MAX_KEYS 4
 /*
  * B+树阶数
  */
 #define BPLUS_TREE_RANK 5
-//#define BPLUS_TREE_RANK 400
+//#define BPLUS_TREE_RANK 200
 
 #define RELEASE 1
 typedef unsigned int* BufType;

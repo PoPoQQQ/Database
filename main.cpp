@@ -1,10 +1,12 @@
-#include <iostream>
+#include <vector>
 #include <cstring>
 #include <stdio.h>
-#include <vector>
-#include "Record/Database.h"
+#include <iostream>
+#include "Index/Index.h"
 #include "Record/Field.h"
 #include "Record/Table.h"
+#include "Utils/Global.h"
+#include "Record/Database.h"
 #include "Utils/Constraints.h"
 #include "FileIO/FileManager.h"
 #include "BufManager/BufPageManager.h"
@@ -14,19 +16,24 @@ extern FILE *yyin;
 extern int yyparse();
 
 int main(int argc, const char* argv[]) {
+	/*
     if (argc != 2) {
         printf("Usage: %s filename\n", argv[0]);
         return 0;
     }
+    */
+
+    
 	// 初始化数据库管理系统
 	Global::getInstance()->fm = new FileManager();
 	Global::getInstance()->bpm = new BufPageManager(Global::getInstance()->fm);
 	// 创建数据库管理文件夹
-	Database::LoadDatabases();
+	//Database::LoadDatabases();
+
 
 	Database::CreateDatabase("MyDatabase");
 	Database::OpenDatabase("MyDatabase");
-
+/*
 	vector<Field> fields;
 	fields.push_back(Field("a", Data(Data::INTEGER)));
 	fields.push_back(Field("b", Data(Data::INTEGER)));
@@ -45,6 +52,7 @@ int main(int argc, const char* argv[]) {
 	delete record;
 	
 	table->PrintTable();
+*/
 	
 	/*
     yyin = fopen(argv[1], "r");
@@ -61,6 +69,23 @@ int main(int argc, const char* argv[]) {
 
 	yyin = NULL;
 	*/
+
+	vector<Data> keys;
+	keys.push_back(Data(Data::INTEGER));
+	Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
+	for(int i = 1; i <= 21; i++) {
+		keys[0].SetData(i);
+		index->Insert(keys, i * 10);
+		cout << "=============================" << i << endl;
+		index->Print();
+	}
+	for(int i = 1; i <= 21; i++) {
+		keys[0].SetData(i);
+		index->Remove(keys);
+		cout << "=============================" << i << endl;
+		index->Print();
+	}
+	
 
 	Global::getInstance()->bpm->close();
 	return 0;

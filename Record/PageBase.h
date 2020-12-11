@@ -1,4 +1,5 @@
 #pragma once
+#include "../Utils/Global.h"
 #include "../BufManager/BufPageManager.h"
 class PageBase {
 public:
@@ -9,12 +10,17 @@ public:
 		BPLUS_INNER_NODE_PAGE = 3
 
 	};
+	
+	int pageType;
+	int pageNumber;
 	int pageIndex;
 	BufType b;
-
-	int pageType;
 	
-	PageBase(int pageIndex, BufType b): pageIndex(pageIndex), b(b) {}
+	PageBase(int pageNumber, int pageIndex, BufType b): 
+		pageNumber(pageNumber), pageIndex(pageIndex), b(b) {}
 	virtual void LoadPageHeader() = 0;
 	virtual void SavePageHeader() = 0;
+	void MarkDirty() {
+		Global::getInstance()->bpm->markDirty(pageIndex);
+	}
 };

@@ -3,39 +3,39 @@
 #include "../Index/BPlusLeafNodePage.h"
 #include "../Index/BplusInnerNodePage.h"
 
-PageBase* PageFactory::AllocPage(int index, BufType b, int pageType) {
+PageBase* PageFactory::AllocPage(void* context, int pageNumber, int index, BufType b, int pageType) {
 	switch(pageType)
 	{
 		case PageBase::UNDEFINED:
 			return NULL;
 		case PageBase::RECORD_PAGE:
-			return new RecordPage(index, b);
+			return new RecordPage(context, pageNumber, index, b);
 		case PageBase::BPLUS_LEAF_NODE_PAGE:
-			return new BplusLeafNodePage(index, b);
+			return new BplusLeafNodePage(context, pageNumber, index, b);
 		case PageBase::BPLUS_INNER_NODE_PAGE:
-			return new BplusInnerNodePage(index, b);
+			return new BplusInnerNodePage(context, pageNumber, index, b);
 		default:
-			cerr << "Invalid page type!" << endl;
+			cerr << "Invalid page type: " << pageType << "!" << endl;
 			exit(-1);
 			break;
 	}
 	return NULL;
 }
 
-PageBase* PageFactory::LoadPage(int fileID, int pageNumber) {
+PageBase* PageFactory::LoadPage(void* context, int fileID, int pageNumber) {
 	int index;
 	BufType b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
 	int pageType = b[0];
-	PageBase* page = AllocPage(index, b, pageType);
+	PageBase* page = AllocPage(context, pageNumber, index, b, pageType);
 	if(page != NULL)
 		page->LoadPageHeader();
 	return page;
 }
 
-PageBase* PageFactory::CreatePage(int fileID, int pageNumber, int pageType) {
+PageBase* PageFactory::CreatePage(void* context, int fileID, int pageNumber, int pageType) {
 	int index;
 	BufType b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
-	PageBase* page = AllocPage(index, b, pageType);
+	PageBase* page = AllocPage(context, pageNumber, index, b, pageType);
 	if(page == NULL) {
 		cerr << "What r u doing?" << endl;
 		exit(-1);

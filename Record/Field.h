@@ -28,10 +28,10 @@ public:
 	void Load(BufType b) {
 		memcpy(fieldName, b, MAX_STRING_LEN);
 		fieldName[MAX_STRING_LEN] = 0;
-		data.LoadType(reinterpret_cast<unsigned char*>(b) + MAX_STRING_LEN);
+		data.LoadType(b + (MAX_STRING_LEN >> 2));
 	}
 	void Save(BufType b) {
 		memcpy(b, fieldName, MAX_STRING_LEN);
-		data.SaveType(reinterpret_cast<unsigned char*>(b) + MAX_STRING_LEN);
+		data.SaveType(b + (MAX_STRING_LEN >> 2));
 	}
 };
