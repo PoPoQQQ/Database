@@ -16,62 +16,64 @@ extern FILE *yyin;
 extern int yyparse();
 
 int main(int argc, const char* argv[]) {
-	/*
-    if (argc != 2) {
-        printf("Usage: %s filename\n", argv[0]);
-        return 0;
-    }
-    */
-
-    
+	
 	// 初始化数据库管理系统
 	Global::getInstance()->fm = new FileManager();
 	Global::getInstance()->bpm = new BufPageManager(Global::getInstance()->fm);
+
 	// 创建数据库管理文件夹
 	//Database::LoadDatabases();
 
+    if (argc == 2) {
+    	yyin = fopen(argv[1], "r");
+	    if (yyin == NULL) {
+	        printf("Open file failed: %s\n", argv[1]);
+	        return 0;
+	    }
 
-	Database::CreateDatabase("MyDatabase");
-	Database::OpenDatabase("MyDatabase");
-/*
-	vector<Field> fields;
-	fields.push_back(Field("a", Data(Data::INTEGER)));
-	fields.push_back(Field("b", Data(Data::INTEGER)));
-	fields.push_back(Field("c", Data(Data::CHAR, 40)));
-	Table *table = Database::CreateTable("TestTable", fields);
+		printf("-----begin parsing %s\n", argv[1]);
+		yyparse();						//使yacc开始读取输入和解析，它会调用lex的yylex()读取记号
+		puts("-----end parsing");
 
-	Record *record = table->CreateEmptyRecord();
-	for(int i = 0; i < 128; i++) {
-		record->CleanData();
-		record->FillData(0, Data(Data::INTEGER).SetData(0x003e2590));
-		record->FillData(1, Data(Data::INTEGER).SetData(0x23333333));
-		if(rand() & 1)
-			record->FillData(2, Data(Data::CHAR, 40).SetData("I think something is really happening.  "));
-		table->AddRecord(record);
-	}
-	delete record;
-	
-	table->PrintTable();
-*/
-	
-	/*
-    yyin = fopen(argv[1], "r");
-    if (yyin == NULL) {
-        printf("Open file failed: %s\n", argv[1]);
-        return 0;
+		fclose(yyin);
+
+		yyin = NULL;
     }
+    else {
+    	Database::CreateDatabase("MyDatabase");
+		Database::OpenDatabase("MyDatabase");
 
-	printf("-----begin parsing %s\n", argv[1]);
-	yyparse();						//使yacc开始读取输入和解析，它会调用lex的yylex()读取记号
-	puts("-----end parsing");
+		vector<Field> fields;
+		fields.push_back(Field("a", Data(Data::INT)));
+		fields.push_back(Field("b", Data(Data::DATE)));
+		fields.push_back(Field("c", Data(Data::FLOAT)));
+		fields.push_back(Field("d", Data(Data::VARCHAR, 255)));
+		Table *table = Database::CreateTable("TestTable", fields);
 
-	fclose(yyin);
+		cout << 0 << endl;
+		Record *record = table->CreateEmptyRecord();
+		for(int i = 0; i < 128; i++) {
+			record->CleanData();
+			cout << 1 << endl;
+			record->FillData(0, Data(Data::INT).SetData((unsigned)i));
+			cout << 2 << endl;
+			record->FillData(1, Data(Data::DATE).SetData("1998/04/02"));
+			cout << 3 << endl;
+			record->FillData(2, Data(Data::FLOAT).SetData(233.33f));
+			cout << 4 << endl;
+			record->FillData(3, Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
+			cout << 5 << endl;
+			table->AddRecord(record);
+		}
+		delete record;
+		
+		table->PrintTable();
+    }
+    
 
-	yyin = NULL;
-	*/
-
+    /*
 	vector<Data> keys;
-	keys.push_back(Data(Data::INTEGER));
+	keys.push_back(Data(Data::INT));
 	Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
 	for(int i = 1; i <= 21; i++) {
 		keys[0].SetData(i);
@@ -84,7 +86,7 @@ int main(int argc, const char* argv[]) {
 		index->Remove(keys);
 		cout << "=============================" << i << endl;
 		index->Print();
-	}
+	}*/
 	
 
 	Global::getInstance()->bpm->close();
