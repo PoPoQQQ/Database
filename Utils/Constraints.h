@@ -39,15 +39,15 @@
 /*
  * 一个表中列的上限
  */
-#define MAX_COL_NUM 31
+#define MAX_COL_NUM 20
 /*
  * 数据库中表的个数上限
  */
 #define MAX_TB_NUM 31
 /*
- * 数据库中字符串的长度上限
+ * 数据库中标识符的长度上限
  */
-#define MAX_STRING_LEN 96
+#define MAX_IDENTIFIER_LEN 20
 /*
  * 数据库中记录长度的下限
  */

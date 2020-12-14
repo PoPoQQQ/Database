@@ -27,36 +27,36 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 另外用<>定义记号后，非终结符如file, tokenlist，必须用%type<member>来定义(否则会报错)，以指明它们的属性对应YYSTYPE中哪个成员，这时对该非终结符的引用，如$$，会自动替换为$$.member*/
 // %token<m_nInt> INTEGER
 // %token<m_nString> STRING
-%token<m_sId> IDENTIFIER
-%token<m_cOp> OPERATOR
 // %type<m_sId> file
 // %type<m_sId> tokenlist
-
+%token<m_sId> IDENTIFIER
 %token<m_nInt> VALUE_INT
+%token<m_nFloat> VALUE_FLOAT
 %token<m_nString> VALUE_STRING
-%token DATABASE	DATABASES	TABLE		SHOW	CREATE
-%token DROP	USE	PRIMARY	KEY	NOT	NULLTOKEN
-%token INSERT	INTO	VALUES	DELETE	FROM	WHERE
-%token UPDATE	SET	SELECT	IS	INTTOKEN	VARCHARTOKEN
-%token DEFAULT	CONSTRAINT	CHANGE	ALTER	ADD	RENAME
-%token DESC	REFERENCES	INDEX	AND		FLOATTOKEN	FOREIGN
-%token CHARTOKEN
-%token<m_sId> DATETOKEN
-%token<m_sId> TABLES
+%token DATABASE DATABASES TABLE SHOW CREATE
+%token DROP USE PRIMARY KEY NOT NULLTOKEN
+%token INSERT INTO VALUES DELETE FROM WHERE
+%token UPDATE SET SELECT IS INTTOKEN VARCHARTOKEN
+%token DEFAULT CONSTRAINT CHANGE ALTER ADD RENAME
+%token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN TABLES
+%token<m_sId> DATETOKEN 
 
 %left AND
 
-%type<m_sId> dbName
+%type<m_sId> dbName tbName colName
+%type<m_data> value type
+%type<m_field> field
+%type<m_fieldList> fieldList
 
 %%
 
-program: 	program stmt
-		{
-		}
-	|	/* empty */
-		{
-		}
-	;
+program:	program stmt
+			{
+			}
+		|	/* empty */
+			{
+			}
+		;
 
 stmt: 	sysStmt ';'
 		{
@@ -79,7 +79,6 @@ stmt: 	sysStmt ';'
 
 sysStmt: 	SHOW DATABASES
 			{
-				cout << "show databases: -----------" << endl;
 				Database::ShowDatabases();
 			}
 		;
@@ -87,17 +86,14 @@ sysStmt: 	SHOW DATABASES
 dbStmt:		CREATE DATABASE dbName
 			{
 				Database::CreateDatabase($3.c_str());
-				cout << "CREATE DATABASE:" << $3 << " succeed!" << endl;
 			}
 		| 	DROP DATABASE dbName
 			{
-				// TODO
-				cout << "TODO: DROP DATABASE" << endl;
+				Database::DropDatabase($3.c_str());
 			}
 		| 	USE dbName
 			{
 				Database::OpenDatabase($2.c_str());
-				cout << "USE " << $2 << ": OpenDatabase" << endl;
 			}
 		|	SHOW TABLES
 			{
@@ -105,31 +101,31 @@ dbStmt:		CREATE DATABASE dbName
 				cout << "TODO: SHOW TABLES" << endl;
 			}
 		;
-tbStmt  : CREATE TABLE tbName '(' fieldList ')'
+tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
+			{
+				Database::CreateTable(($3).c_str(), $5);
+			}
+        |	DROP TABLE tbName
 			{
 
 			}
-        | DROP TABLE tbName
+        |	DESC tbName
 			{
 
 			}
-        | DESC tbName
+        |	INSERT INTO tbName VALUES valueLists
 			{
 
 			}
-        | INSERT INTO tbName VALUES valueLists
+        |	DELETE FROM tbName WHERE whereClause
 			{
 
 			}
-        | DELETE FROM tbName WHERE whereClause
+        |	UPDATE tbName SET setClause WHERE whereClause
 			{
 
 			}
-        | UPDATE tbName SET setClause WHERE whereClause
-			{
-
-			}
-        | SELECT selector FROM tableList WHERE whereClause
+        |	SELECT selector FROM tableList WHERE whereClause
 			{
 
 			}
@@ -137,44 +133,67 @@ tbStmt  : CREATE TABLE tbName '(' fieldList ')'
 
 fieldList	:	field
 				{
-
+					$$ = FieldList();
+					$$.AddField($1);
 				}
 			|	fieldList ',' field
 				{
-
+					$$ = $1;
+					$$.AddField($3);
+				}
+			|	fieldList ',' PRIMARY KEY '(' columnList ')'
+			  	{
+			  		$$ = $1;
+			  		//TODO
+				}
+			|	fieldList ',' FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
+				{
+					$$ = $1;
+					//TODO
 				}
 			;
 
 field  	: 	colName type
 			{
-
+				$$ = Field($1.c_str());
+				$$.SetDataType($2);
 			}
       	| 	colName type NOT NULLTOKEN
 		  	{
-				
+				$$ = Field($1.c_str());
+				$$.SetDataType($2);
+				$$.SetNotNull();
 			}
-		| 	colName	type DEFAULT	value
+		| 	colName	type DEFAULT value
 			{
-
+				$$ = Field($1.c_str());
+				$$.SetDataType($2);
+				$$.SetDefault($4);
 			}
 		|	colName type NOT NULLTOKEN DEFAULT value
 			{
-
-			}
-      	|	PRIMARY KEY '(' columnList ')'
-		  	{
-
-			}
-      	|	FOREIGN KEY '(' colName ')' REFERENCES  tbName '(' colName ')'
-			{
-
+				$$ = Field($1.c_str());
+				$$.SetDataType($2);
+				$$.SetNotNull();
+				$$.SetDefault($6);
 			}
 		;
-type  	: INTTOKEN '(' VALUE_INT ')'
-		| CHARTOKEN '(' VALUE_INT ')'
-        | VARCHARTOKEN '(' VALUE_INT ')'
-        | DATETOKEN
-        | FLOATTOKEN
+type  	:	INTTOKEN '(' VALUE_INT ')'
+			{
+				$$ = Data(Data::INT, $3);
+			}
+        |	VARCHARTOKEN '(' VALUE_INT ')'
+        	{
+        		$$ = Data(Data::VARCHAR, $3);
+			}
+        |	DATETOKEN
+        	{
+        		$$ = Data(Data::DATE);
+			}
+        |	FLOATTOKEN
+        	{
+        		$$ = Data(Data::FLOAT);
+			}
 		;
 valueLists  : '('valueList')'
 				{
@@ -197,15 +216,19 @@ valueList  	: value
 
 value	:	VALUE_INT
 			{
-
+				$$ = Data(Data::INT).SetData($1);
+			}
+		|	VALUE_FLOAT
+			{
+				$$ = Data(Data::FLOAT).SetData($1);
 			}
         | 	VALUE_STRING
 			{
-
+				$$ = Data(Data::VARCHAR, 255).SetData(($1).c_str());
 			}
         | 	NULLTOKEN
 			{
-
+				$$ = Data(Data::UNDEFINED);
 			}
 		;
 
@@ -253,24 +276,27 @@ dbName  : 	IDENTIFIER
 		;
 tbName  :	IDENTIFIER
 			{
+				$$ = $1;
 			}
 		;
 colName :	IDENTIFIER
 			{
+				$$ = $1;
 			}
 		| 	DATETOKEN
 			{
+				$$ = $1;
 			}
-		| 	TABLES
+/*		| 	TABLES
 			{
-			}
+			}*/
 		;
 
 %%
 
 void yyerror(const char *s)			//当yacc遇到语法错误时，会回调yyerror函数，并且把错误信息放在参数s中
 {
-	cerr<<s<<endl;					//直接输出错误信息
+	cerr << s << endl;					//直接输出错误信息
 }
 
 

@@ -29,6 +29,15 @@ void CheckDate(int year, int month, int day) {
 		throw "Invalid day!";
 }
 
+int GetDigit(unsigned int number) {
+	int ret = 0;
+	while(number > 0) {
+		++ret;
+		number /= 10;
+	}
+	return ret;
+}
+
 Data::Data(): 
 	dataType(UNDEFINED), dataSize(0), stringData(NULL) {}
 
@@ -36,6 +45,9 @@ Data::Data(DataType dataType, int para) {
 	this->dataType = dataType;
 	stringData = NULL;
 	switch(dataType) {
+		case UNDEFINED:
+			dataSize = 0;
+			break;
 		case INT:
 			if(para < 1 || para > 255) {
 				cerr << "Parameter invalid" << endl;
@@ -83,6 +95,9 @@ Data& Data::operator = (const Data& data) {
 	dataSize = data.dataSize;
 
 	switch(data.dataType & 0xff) {
+		case UNDEFINED:
+			stringData = NULL;
+			break;
 		case INT:
 			intData = data.intData;
 			break;
@@ -110,12 +125,15 @@ Data& Data::operator = (const Data& data) {
 }
 
 Data Data::SetData(unsigned int data) {
-	if((dataType & 0xff) == INT)
+	if((dataType & 0xff) == INT) {
+		if(GetDigit(data) > (dataType >> 8))
+			throw "Integer is too big!";
 		intData = data;
+	}
 	else if((dataType & 0xff) == FLOAT)
 		floatData = data;
 	else
-		throw "Invalid data type! Should be: INT or FLOAT";
+		throw "Invalid data type!";
 	return *this;
 }
 
@@ -123,7 +141,7 @@ Data Data::SetData(float data) {
 	if((dataType & 0xff) == FLOAT)
 		floatData = data;
 	else
-		throw "Invalid data type! Should be: FLOAT";
+		throw "Invalid data type!";
 	return *this;
 }
 
@@ -142,7 +160,7 @@ Data Data::SetData(const char *data) {
 		intData = (year * 13 + month) * 32 + day;
 	}
 	else
-		throw "Invalid data type! Should be: VARCHAR or DATE";
+		throw "Invalid data type!";
 	return *this;
 }
 

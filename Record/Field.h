@@ -3,35 +3,37 @@
 #include <cstring>
 #include "Data.h"
 #include "../Utils/Constraints.h"
-#include "../Utils/StringValidator.h"
 #include "../BufManager/BufPageManager.h"
-#define FIELD_SIZE (MAX_STRING_LEN + 8)
-using namespace std;
 /*
 实现了一个字段的定义
 */
 class Field {
 public:
-	char fieldName[MAX_STRING_LEN + 1];
+	char columnName[MAX_IDENTIFIER_LEN + 1];
+	//1-NOT NULL 2-DEFAULT 4-PRIMARY KEY 8-FOREIGN KEY
 	Data data;
-	Field() {
-		fieldName[0] = '\0';
-	}
-	Field(const char *fieldName, Data data): data(data) {
-		StringValidator::Check(fieldName);
-		memset(this->fieldName, 0, sizeof this->fieldName);
-		strcpy(this->fieldName, fieldName);
-	}
-	void SetDataType(Data data) {
-		this->data = data;
-	}
-	void Load(BufType b) {
-		memcpy(fieldName, b, MAX_STRING_LEN);
-		fieldName[MAX_STRING_LEN] = 0;
-		data.LoadType(b + (MAX_STRING_LEN >> 2));
-	}
-	void Save(BufType b) {
-		memcpy(b, fieldName, MAX_STRING_LEN);
-		data.SaveType(b + (MAX_STRING_LEN >> 2));
-	}
+	int constraints;
+	char primaryKeyName[MAX_IDENTIFIER_LEN + 1];
+	char foreignKeyTable[MAX_IDENTIFIER_LEN + 1];
+	char foreignKeyColumn[MAX_IDENTIFIER_LEN + 1];
+	char foreignKeyName[MAX_IDENTIFIER_LEN + 1];
+	
+	Field();
+	Field(const char *columnName);
+
+	Data GetData();
+	void SetData(Data data);
+	Field SetDataType(Data data);
+	Field SetNotNull();
+	Field SetDefault(Data data);
+	Field SetPrimaryKey(const char* primaryKeyName = "");
+	Field SetForeignKey(const char* foreignKeyTable, const char* foreignKeyColumn, const char* foreignKeyName = "");
+
+	int DataSize();
+	int RoundedDataSize();
+	int FieldSize();
+	void Load(BufType b);
+	void Save(BufType b);
+	void LoadData(unsigned char* b);
+	void SaveData(unsigned char* b);
 };

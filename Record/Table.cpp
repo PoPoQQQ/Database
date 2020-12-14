@@ -18,16 +18,16 @@ Table::Table(const char *databaseName, const char *tableName) {
 	LoadHeader();
 }
 
-Table::Table(const char *databaseName, const char *tableName, vector<Field> fields): fields(fields) {
-	StringValidator::Check(databaseName);
-	StringValidator::Check(tableName);
-	if(fields.size() >= MAX_COL_NUM) {
-		cerr << "Too many fields!" << endl;
-		exit(-1);
-	}
+Table::Table(const char *databaseName, const char *tableName, FieldList fieldList): fieldList(fieldList) {
+	if(strlen(databaseName) > MAX_IDENTIFIER_LEN)
+		throw "Identifier is too long!";
+	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
+		throw "Identifier is too long!";
+	if(fieldList.FieldCount() >= MAX_COL_NUM)
+		throw "Too many fields!";
 
-	memset(this->databaseName, 0, MAX_STRING_LEN + 1);
-	memset(this->tableName, 0, MAX_STRING_LEN + 1);
+	memset(this->databaseName, 0, MAX_IDENTIFIER_LEN + 1);
+	memset(this->tableName, 0, MAX_IDENTIFIER_LEN + 1);
 	strcpy(this->databaseName, databaseName);
 	strcpy(this->tableName, tableName);
 	numberOfPage = 1;
@@ -56,13 +56,13 @@ void Table::LoadHeader() {
 
 	int offset = 0;
 	
-	memcpy(databaseName, b + (offset >> 2), MAX_STRING_LEN);
-	databaseName[MAX_STRING_LEN] = 0;
-	offset += MAX_STRING_LEN;
+	memset(databaseName, 0, sizeof databaseName);
+	memcpy(databaseName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	offset += MAX_IDENTIFIER_LEN;
 	
-	memcpy(tableName, b + (offset >> 2), MAX_STRING_LEN);
-	tableName[MAX_STRING_LEN] = 0;
-	offset += MAX_STRING_LEN;
+	memset(tableName, 0, sizeof databaseName);
+	memcpy(tableName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	offset += MAX_IDENTIFIER_LEN;
 
 	numberOfPage = b[offset >> 2];
 	offset += 4;
@@ -73,14 +73,7 @@ void Table::LoadHeader() {
 	recordCount = b[offset >> 2];
 	offset += 4;
 	
-	unsigned int size = b[offset >> 2];
-	offset += 4;
-
-	fields.resize(size);
-	for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++) {
-		it->Load(b + (offset >> 2));
-		offset += FIELD_SIZE;
-	}
+	fieldList.LoadFields(b + (offset >> 2));
 
 	if(bitMap != NULL)
 		delete bitMap;
@@ -93,11 +86,11 @@ void Table::SaveHeader() {
 	
 	int offset = 0;
 	
-	memcpy(b + (offset >> 2), databaseName, MAX_STRING_LEN);
-	offset += MAX_STRING_LEN;
+	memcpy(b + (offset >> 2), databaseName, MAX_IDENTIFIER_LEN);
+	offset += MAX_IDENTIFIER_LEN;
 	
-	memcpy(b + (offset >> 2), tableName, MAX_STRING_LEN);
-	offset += MAX_STRING_LEN;
+	memcpy(b + (offset >> 2), tableName, MAX_IDENTIFIER_LEN);
+	offset += MAX_IDENTIFIER_LEN;
 
 	b[offset >> 2] = numberOfPage;
 	offset += 4;
@@ -108,14 +101,8 @@ void Table::SaveHeader() {
 	
 	b[offset >> 2] = recordCount;
 	offset += 4;
-	
-	b[offset >> 2] = fields.size();
-	offset += 4;
 
-	for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++) {
-		it->Save(b + (offset >> 2));
-		offset += FIELD_SIZE;
-	}
+	fieldList.SaveFields(b + (offset >> 2));
 
 	bitMap->save(b + (PAGE_INT_NUM >> 1));
 
@@ -123,7 +110,7 @@ void Table::SaveHeader() {
 }
 
 Record* Table::CreateEmptyRecord() {
-	return new Record(fields);
+	return new Record(fieldList);
 }
 
 void Table::AddRecord(Record *record) {
@@ -164,9 +151,7 @@ void Table::AddRecord(Record *record) {
 }
 
 void Table::PrintTable() {
-	for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++)
-		cout << " | " << it->fieldName;
-	cout << " | " << endl;
+	fieldList.PrintFields();
 
 	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
 		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);

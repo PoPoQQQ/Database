@@ -3,6 +3,7 @@
 using namespace std;
 
 void CheckDate(int year, int month, int day);
+int GetDigit(unsigned int number);
 
 class Data {
 public:

@@ -3,10 +3,10 @@
 #include <stdio.h>
 #include <iostream>
 #include "Index/Index.h"
-#include "Record/Field.h"
 #include "Record/Table.h"
 #include "Utils/Global.h"
 #include "Record/Database.h"
+#include "Record/FieldList.h"
 #include "Utils/Constraints.h"
 #include "FileIO/FileManager.h"
 #include "BufManager/BufPageManager.h"
@@ -22,7 +22,7 @@ int main(int argc, const char* argv[]) {
 	Global::getInstance()->bpm = new BufPageManager(Global::getInstance()->fm);
 
 	// 创建数据库管理文件夹
-	//Database::LoadDatabases();
+	Database::LoadDatabases();
 
     if (argc == 2) {
     	yyin = fopen(argv[1], "r");
@@ -32,7 +32,13 @@ int main(int argc, const char* argv[]) {
 	    }
 
 		printf("-----begin parsing %s\n", argv[1]);
-		yyparse();						//使yacc开始读取输入和解析，它会调用lex的yylex()读取记号
+		try {
+			yyparse(); //使yacc开始读取输入和解析，它会调用lex的yylex()读取记号
+		}
+		catch (const char* err) {
+			cout << err << endl;
+		}
+		
 		puts("-----end parsing");
 
 		fclose(yyin);
@@ -43,26 +49,20 @@ int main(int argc, const char* argv[]) {
     	Database::CreateDatabase("MyDatabase");
 		Database::OpenDatabase("MyDatabase");
 
-		vector<Field> fields;
-		fields.push_back(Field("a", Data(Data::INT)));
-		fields.push_back(Field("b", Data(Data::DATE)));
-		fields.push_back(Field("c", Data(Data::FLOAT)));
-		fields.push_back(Field("d", Data(Data::VARCHAR, 255)));
-		Table *table = Database::CreateTable("TestTable", fields);
+		FieldList fieldList;
+		fieldList.AddField(Field("a").SetDataType(Data(Data::INT)));
+		fieldList.AddField(Field("b").SetDataType(Data(Data::DATE)));
+		fieldList.AddField(Field("c").SetDataType(Data(Data::FLOAT)));
+		fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
+		Table *table = Database::CreateTable("TestTable", fieldList);
 
-		cout << 0 << endl;
 		Record *record = table->CreateEmptyRecord();
 		for(int i = 0; i < 128; i++) {
 			record->CleanData();
-			cout << 1 << endl;
-			record->FillData(0, Data(Data::INT).SetData((unsigned)i));
-			cout << 2 << endl;
-			record->FillData(1, Data(Data::DATE).SetData("1998/04/02"));
-			cout << 3 << endl;
-			record->FillData(2, Data(Data::FLOAT).SetData(233.33f));
-			cout << 4 << endl;
-			record->FillData(3, Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
-			cout << 5 << endl;
+			record->FillData("a", Data(Data::INT).SetData((unsigned)i));
+			record->FillData("b", Data(Data::DATE).SetData("1998/04/02"));
+			record->FillData("c", Data(Data::FLOAT).SetData(233.33f));
+			record->FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
 			table->AddRecord(record);
 		}
 		delete record;

@@ -1,7 +1,7 @@
 #pragma once
 #include <vector>
-#include "Field.h"
 #include "Record.h"
+#include "FieldList.h"
 #include "../Utils/MyBitMap.h"
 using namespace std;
 /*
@@ -10,16 +10,16 @@ using namespace std;
 class Table {
 public:
 	int fileID;
-	char databaseName[MAX_STRING_LEN + 1];
-	char tableName[MAX_STRING_LEN + 1];
+	char databaseName[MAX_IDENTIFIER_LEN + 1];
+	char tableName[MAX_IDENTIFIER_LEN + 1];
 	int numberOfPage;
 	unsigned long long ridTimestamp;
 	int recordCount;
-	vector<Field> fields;
+	FieldList fieldList;
 	MyBitMap *bitMap;
 
 	Table(const char *databaseName, const char *tableName);
-	Table(const char *databaseName, const char *tableName, vector<Field> fields);
+	Table(const char *databaseName, const char *tableName, FieldList fieldList);
 	~Table();
 
 	void LoadHeader();

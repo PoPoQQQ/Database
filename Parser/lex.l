@@ -74,15 +74,13 @@ AND			(?i:AND)
 DATE		(?i:DATE)     	
 FLOAT		(?i:FLOAT)
 FOREIGN		(?i:FOREIGN)
-CHAR		(?i:CHAR)
 
 /* pattern */
-NEWLINE		(\r|\n|\r\n)
-IDENTIFIER	([A-Za-z][_0-9A-Za-z]*)
-IDENTIFIER2 (`[^`]*`)
-VALUE_INT	([0-9]+)
+NEWLINE			(\r|\n|\r\n)
+IDENTIFIER		([A-Za-z][_0-9A-Za-z]*)
+VALUE_INT		([0-9]+)
+VALUE_FLOAT		((-?[0-9]+)(\.[0-9]+)?)
 VALUE_STRING	('[^']*')
-/*OPERATOR	(= | (<>) | (<=) | (>=) | < | >)*/
 
 SINGLELINE_COMMENT_SIGN (--)|#
 MULTILINE_COMMENT_BEGIN (\/\*)
@@ -100,10 +98,7 @@ MULTILINE_COMMENT_END (\*\/)
 {DATABASE}				{ return DATABASE;	}
 {DATABASES}				{ return DATABASES;	}
 {TABLE}					{ return TABLE;		}	
-{TABLES}				{ 
-	yylval.m_sId=yytext;
-	return TABLES;	
-}
+{TABLES}				{ return TABLES;	}
 {SHOW}					{ return SHOW;		}	
 {CREATE}				{ return CREATE;	}
 {DROP}					{ return DROP;		}
@@ -134,17 +129,20 @@ MULTILINE_COMMENT_END (\*\/)
 {REFERENCES}			{ return REFERENCES;}
 {INDEX}					{ return INDEX;		}
 {AND}					{ return AND;		}
-{DATE}					{ 
-	yylval.m_sId=yytext; // 用于解决 DATE 有可能作为列名出现的情况
-	return DATETOKEN;		
-}	
-{FLOAT}					{ return FLOATTOKEN;		}
+{DATE}					{
+	yylval.m_sId = yytext;
+	return DATETOKEN;	
+}
+{FLOAT}					{ return FLOATTOKEN;}
 {FOREIGN}				{ return FOREIGN;	}
-{CHAR}					{ return CHARTOKEN;		}
 
 {VALUE_INT}		{							//匹配整数串
-	yylval.m_nInt=atoi(yytext);//把识别出的整数串，转换为整型值，存储到yylval的整型成员里，到了yacc里用$n方式引用
+	yylval.m_nInt = atoi(yytext);//把识别出的整数串，转换为整型值，存储到yylval的整型成员里，到了yacc里用$n方式引用
 	return VALUE_INT;			//向yacc返回: 识别出的记号类型是INTEGER
+}
+{VALUE_FLOAT}	{
+	yylval.m_nFloat = atof(yytext);
+	return VALUE_FLOAT;
 }
 {VALUE_STRING}	{
 	yylval.m_nString = yytext;
@@ -158,16 +156,11 @@ MULTILINE_COMMENT_END (\*\/)
 	BEGIN MULTILINE_COMMENT;
 }
 {IDENTIFIER}	{							//匹配标识符串，此时串值由yytext保存
-	yylval.m_sId=yytext;	//通过yylval向yacc传递识别出的记号的值，由于yylval已定义为struct Type，这里就可以把yytext赋给其m_sId成员，到了yacc里就可以用$n的方式来引用了
+	yylval.m_sId = yytext;	//通过yylval向yacc传递识别出的记号的值，由于yylval已定义为struct Type，这里就可以把yytext赋给其m_sId成员，到了yacc里就可以用$n的方式来引用了
 	return IDENTIFIER;		//向yacc返回: 识别出的记号类型是IDENTIFIER
 }
-{IDENTIFIER2}	{
-	yylval.m_sId=yytext;
-	yylval.m_sId = yylval.m_sId.substr(1, yylval.m_sId.length() - 2);
-	return IDENTIFIER;
-}
 .				{							//.表示除\n以外的其它字符，注意这个规则要放在最后，因为一旦匹配了.就不会匹配后面的规则了(以其它状态<>开头的规则除外)
-	yylval.m_cOp=yytext[0];	//由于只匹配一个字符，这时它对应yytext[0]，把该字符存放到yylval的m_cOp成员里，到了yacc里用$n方式引用
+	yylval.m_cOp = yytext[0];	//由于只匹配一个字符，这时它对应yytext[0]，把该字符存放到yylval的m_cOp成员里，到了yacc里用$n方式引用
 	return yytext[0];		//向yacc返回: 识别出的记号类型是OPERATOR
 }
 

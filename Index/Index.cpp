@@ -1,10 +1,10 @@
+#include <cstring>
 #include "Index.h"
 #include "../Utils/Global.h"
 #include "BplusLeafNodePage.h"
 #include "BplusInnerNodePage.h"
 #include "../FileIO/FileManager.h"
 #include "../Record/PageFactory.h"
-#include "../Utils/StringValidator.h"
 #include "../BufManager/BufPageManager.h"
 using namespace std;
 
@@ -19,9 +19,13 @@ Index::Index(const char *databaseName, const char *tableName, const char *indexN
 }
 
 Index::Index(const char *databaseName, const char *tableName, const char *indexName, vector<Data> keys): keys(keys) {
-	StringValidator::Check(databaseName);
-	StringValidator::Check(tableName);
-	StringValidator::Check(indexName);
+	if(strlen(databaseName) > MAX_IDENTIFIER_LEN)
+		throw "Identifier is too long!";
+	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
+		throw "Identifier is too long!";
+	if(strlen(indexName) > MAX_IDENTIFIER_LEN)
+		throw "Identifier is too long!";
+	
 	if(keys.empty()) {
 		cerr << "No keys!" << endl;
 		exit(-1);
@@ -31,9 +35,9 @@ Index::Index(const char *databaseName, const char *tableName, const char *indexN
 		exit(-1);
 	}
 
-	memset(this->databaseName, 0, MAX_STRING_LEN + 1);
-	memset(this->tableName, 0, MAX_STRING_LEN + 1);
-	memset(this->indexName, 0, MAX_STRING_LEN + 1);
+	memset(this->databaseName, 0, MAX_IDENTIFIER_LEN + 1);
+	memset(this->tableName, 0, MAX_IDENTIFIER_LEN + 1);
+	memset(this->indexName, 0, MAX_IDENTIFIER_LEN + 1);
 	strcpy(this->databaseName, databaseName);
 	strcpy(this->tableName, tableName);
 	strcpy(this->indexName, indexName);
@@ -68,17 +72,17 @@ void Index::LoadHeader() {
 
 	int offset = 0;
 	
-	memcpy(databaseName, b + (offset >> 2), MAX_STRING_LEN);
-	databaseName[MAX_STRING_LEN] = 0;
-	offset += MAX_STRING_LEN;
+	memcpy(databaseName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	databaseName[MAX_IDENTIFIER_LEN] = 0;
+	offset += MAX_IDENTIFIER_LEN;
 	
-	memcpy(tableName, b + (offset >> 2), MAX_STRING_LEN);
-	tableName[MAX_STRING_LEN] = 0;
-	offset += MAX_STRING_LEN;
+	memcpy(tableName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	tableName[MAX_IDENTIFIER_LEN] = 0;
+	offset += MAX_IDENTIFIER_LEN;
 
-	memcpy(indexName, b + (offset >> 2), MAX_STRING_LEN);
-	indexName[MAX_STRING_LEN] = 0;
-	offset += MAX_STRING_LEN;
+	memcpy(indexName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	indexName[MAX_IDENTIFIER_LEN] = 0;
+	offset += MAX_IDENTIFIER_LEN;
 
 	numberOfPage = b[offset >> 2];
 	offset += 4;
@@ -106,14 +110,14 @@ void Index::SaveHeader() {
 	
 	int offset = 0;
 	
-	memcpy(b + (offset >> 2), databaseName, MAX_STRING_LEN);
-	offset += MAX_STRING_LEN;
+	memcpy(b + (offset >> 2), databaseName, MAX_IDENTIFIER_LEN);
+	offset += MAX_IDENTIFIER_LEN;
 	
-	memcpy(b + (offset >> 2), tableName, MAX_STRING_LEN);
-	offset += MAX_STRING_LEN;
+	memcpy(b + (offset >> 2), tableName, MAX_IDENTIFIER_LEN);
+	offset += MAX_IDENTIFIER_LEN;
 
-	memcpy(b + (offset >> 2), indexName, MAX_STRING_LEN);
-	offset += MAX_STRING_LEN;
+	memcpy(b + (offset >> 2), indexName, MAX_IDENTIFIER_LEN);
+	offset += MAX_IDENTIFIER_LEN;
 
 	b[offset >> 2] = numberOfPage;
 	offset += 4;

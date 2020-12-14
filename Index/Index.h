@@ -11,9 +11,9 @@ using namespace std;
 class Index {
 public:
 	int fileID;
-	char databaseName[MAX_STRING_LEN + 1];
-	char tableName[MAX_STRING_LEN + 1];
-	char indexName[MAX_STRING_LEN + 1];
+	char databaseName[MAX_IDENTIFIER_LEN + 1];
+	char tableName[MAX_IDENTIFIER_LEN + 1];
+	char indexName[MAX_IDENTIFIER_LEN + 1];
 	int numberOfPage;
 	int rootPage;
 	vector<Data> keys;

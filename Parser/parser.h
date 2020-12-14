@@ -16,9 +16,13 @@ yylval是用YYSTYPE宏定义的，只要重定义YYSTYPE宏，就能重新指定
 struct Type//通常这里面每个成员，每次只会使用其中一个，一般是定义成union以节省空间(但这里用了string等复杂类型造成不可以)
 {
 	string m_sId;
-	int m_nInt;
+	unsigned int m_nInt;
+	float m_nFloat;
 	string m_nString;
 	char m_cOp;
+	Data m_data;
+	Field m_field;
+	FieldList m_fieldList;
 };
 
 #define YYSTYPE Type//把YYSTYPE(即yylval变量)重定义为struct Type类型，这样lex就能向yacc返回更多的数据了
