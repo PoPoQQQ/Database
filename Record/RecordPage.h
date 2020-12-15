@@ -39,8 +39,8 @@ public:
 		}
 		return index;
 	}
-	bool AddRecord(Record *record) {
-		int recordSize = record->RecordSize();
+	bool AddRecord(Record record) {
+		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
 		
 		int index = FindLeftOne();
@@ -50,21 +50,20 @@ public:
 		}
 		bitMaps[index >> 5] ^= 1u << (index & 31);
 		SavePageHeader();
-		record->Save(b + (PAGE_OFFSET + index * recordSize) / 4);
+		record.Save(b + (PAGE_OFFSET + index * recordSize) / 4);
 		MarkDirty();
 
 		index = FindLeftOne();
 		return index == recordVolume;
 	}
 	void PrintPage() {
-		Record *emptyRecord = context->CreateEmptyRecord();
-		int recordSize = emptyRecord->RecordSize();
+		Record record = context->EmptyRecord();
+		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
 		for(int index = 0; index < recordVolume; index++)
 			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
-				emptyRecord->Load(b + (PAGE_OFFSET + index * recordSize) / 4);
-				emptyRecord->PrintRecord();
+				record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
+				record.PrintRecord();
 			}
-		delete emptyRecord;
 	}
 };

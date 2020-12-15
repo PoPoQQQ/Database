@@ -1,6 +1,7 @@
 #pragma once
 #include <map>
 #include <set>
+#include <vector>
 #include "Table.h"
 using namespace std;
 
@@ -43,6 +44,10 @@ public:
 	*/
 	static void CloseDatabase();
 	/**
+	 * 打印当前数据库中所有的数据库名称
+	 */
+	static void ShowTables();
+	/**
 	 * 在当前打开的数据库中创建一个新的表
 	 * 如果当前没有打开数据库或是表已经存在则会报错退出
 	 * @param tableName 表名
@@ -56,6 +61,7 @@ public:
 	 * @return Table* 指向该表的指针
 	 * */
 	static Table* GetTable(const char *tableName);
+	static void Insert(const char *tableName, vector<vector<Data> > dataLists);
 };
 
 

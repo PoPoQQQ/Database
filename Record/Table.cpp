@@ -109,11 +109,11 @@ void Table::SaveHeader() {
 	Global::getInstance()->bpm->markDirty(pageIndex);
 }
 
-Record* Table::CreateEmptyRecord() {
-	return new Record(fieldList);
+Record Table::EmptyRecord() {
+	return Record(fieldList);
 }
 
-void Table::AddRecord(Record *record) {
+void Table::AddRecord(Record record) {
 	int pageNumber = bitMap->findLeftOne();
 	if(pageNumber == -1) {
 		cerr << "File volume not enough!" << endl;
@@ -138,8 +138,8 @@ void Table::AddRecord(Record *record) {
 		exit(-1);
 	}
 
-	record->enabled = 1;
-	record->rid = ++ridTimestamp;
+	record.enabled = 1;
+	record.rid = ++ridTimestamp;
 	++recordCount;
 
 	bool full = dynamic_cast<RecordPage*>(page)->AddRecord(record);

@@ -3,11 +3,6 @@ SHOW DATABASES;
 
 USE orderDB;
 --DROP DATABASE orderDB;
-
-/****************************************************************
-comment!
-*/
--- Hello World!
 CREATE TABLE restaurant (
   id INT(10) NOT NULL,
   name VARCHAR(25) NOT NULL,
@@ -44,4 +39,7 @@ CREATE TABLE orders(
 	FOREIGN KEY (food_id) REFERENCES food(id)
 );
 
+SHOW TABLES;
+
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
+--INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');

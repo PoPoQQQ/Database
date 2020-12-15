@@ -24,7 +24,7 @@ public:
 
 	void LoadHeader();
 	void SaveHeader();
-	Record *CreateEmptyRecord();
-	void AddRecord(Record *record);
+	Record EmptyRecord();
+	void AddRecord(Record record);
 	void PrintTable();
 };

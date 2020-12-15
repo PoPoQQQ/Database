@@ -195,6 +195,41 @@ void Database::CloseDatabase() {
 	delete currentDatabase;
 	currentDatabase = NULL;
 }
+void Database::ShowTables() {
+	if(currentDatabase == NULL)
+		throw "No database selected!";
+
+	int maxLength = 10 + strlen(currentDatabase->databaseName);
+	for(map<string, Table*>::iterator it = currentDatabase->tables.begin(); it != currentDatabase->tables.end(); it++)
+		maxLength = max(maxLength, (int)strlen(it->second->tableName));
+
+	cout << "+-";
+	for(int i = 0; i < maxLength; i++)
+		cout << "-";
+	cout << "-+" << endl;
+
+	cout << "| Tables_in_" << currentDatabase->databaseName;
+	for(int i = maxLength - 10 - strlen(currentDatabase->databaseName); i > 0; i--)
+		cout << " ";
+	cout << " |" << endl;
+
+	cout << "+-";
+	for(int i = 0; i < maxLength; i++)
+		cout << "-";
+	cout << "-+" << endl;
+
+	for(map<string, Table*>::iterator it = currentDatabase->tables.begin(); it != currentDatabase->tables.end(); it++) {
+		cout << "| " << it->second->tableName;
+		for(int i = maxLength - strlen(it->second->tableName); i > 0 ; i--)
+			cout << " ";
+		cout << " |" << endl;
+	}
+
+	cout << "+-";
+	for(int i = 0; i < maxLength; i++)
+		cout << "-";
+	cout << "-+" << endl;
+}
 Table* Database::CreateTable(const char *tableName, FieldList fieldList) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
@@ -211,7 +246,24 @@ Table* Database::GetTable(const char *tableName) {
 		throw "No database selected!";
 	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
-	if(currentDatabase->tables.find(tableName) != currentDatabase->tables.end())
+	if(currentDatabase->tables.find(tableName) == currentDatabase->tables.end())
 		throw "Table not found!";
 	return currentDatabase->tables[tableName];
+}
+void Database::Insert(const char *tableName, vector<vector<Data> > dataLists) {
+	vector<Record> recordList;
+	Table* table = GetTable(tableName);
+	for(vector<vector<Data> >::iterator it = dataLists.begin(); it != dataLists.end(); it++) {
+		Record record = table->EmptyRecord();
+		vector<Data> dataList = *it;
+		if(dataList.size() != record.fieldList.FieldCount())
+			throw "Insert failed!";
+		for(int i = 0; i < (signed)dataList.size(); i++)
+			record.FillData(i, dataList[i]);
+		record.NullCheck();
+		recordList.push_back(record);
+	}
+	for(vector<Record>::iterator it = recordList.begin(); it != recordList.end(); it++)
+		table->AddRecord(*it);
+	table->PrintTable();
 }

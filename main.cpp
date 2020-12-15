@@ -56,16 +56,15 @@ int main(int argc, const char* argv[]) {
 		fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
 		Table *table = Database::CreateTable("TestTable", fieldList);
 
-		Record *record = table->CreateEmptyRecord();
+		Record record = table->EmptyRecord();
 		for(int i = 0; i < 128; i++) {
-			record->CleanData();
-			record->FillData("a", Data(Data::INT).SetData((unsigned)i));
-			record->FillData("b", Data(Data::DATE).SetData("1998/04/02"));
-			record->FillData("c", Data(Data::FLOAT).SetData(233.33f));
-			record->FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
+			record.CleanData();
+			record.FillData("a", Data(Data::INT).SetData((unsigned)i));
+			record.FillData("b", Data(Data::DATE).SetData("1998/04/02"));
+			record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
+			record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
 			table->AddRecord(record);
 		}
-		delete record;
 		
 		table->PrintTable();
     }

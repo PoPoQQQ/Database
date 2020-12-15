@@ -14,29 +14,25 @@ Data Field::GetData() {
 	return data;
 }
 void Field::SetData(Data data) {
-	if(this->data.dataType != data.dataType)
-		throw "Invalid data type!";
-	this->data = data;
+	this->data.SetData(data);
 }
 Field Field::SetDataType(Data data) {
 	this->data = data;
 	return *this;
 }
 Field Field::SetNotNull() {
-	constraints |= 1;
+	constraints |= NOT_NULL;
 	return *this;
 }
 Field Field::SetDefault(Data data) {
-	constraints |= 2;
-	if(this->data.dataType != data.dataType)
-		throw "Invalid data type!";
-	this->data = data;
+	constraints |= DEFAULT;
+	SetData(data);
 	return *this;
 }
 Field Field::SetPrimaryKey(const char* primaryKeyName) {
 	if(strlen(primaryKeyName) > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
-	constraints |= 4;
+	constraints |= NOT_NULL | PRIMARY_KEY;
 	strcpy(this->primaryKeyName, primaryKeyName);
 	return *this;
 }
@@ -45,6 +41,7 @@ Field Field::SetForeignKey(const char *foreignKeyTable, const char *foreignKeyCo
 		throw "Identifier is too long!";
 	if(strlen(foreignKeyColumn) > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
+	constraints |= FOREIGN_KEY;
 	strcpy(this->foreignKeyTable, foreignKeyTable);
 	strcpy(this->foreignKeyColumn, foreignKeyColumn);
 	strcpy(this->foreignKeyName, foreignKeyName);

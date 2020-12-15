@@ -20,13 +20,24 @@ public:
 	}
 	void CleanData() {
 		bitMap = 0;
+		for(int index = 0; index < fieldList.FieldCount(); index++)
+			if(fieldList.GetColumn(index).constraints & Field::DEFAULT)
+				bitMap |= (1 << index);
 	}
 	void FillData(const char* columnName, Data data) {
 		int index = fieldList.GetColumnIndex(columnName);
 		if(index == -1)
 			throw "Field not found!";
-		fieldList.GetColumn(index).SetData(data);
-		bitMap |= (1 << index);
+		FillData(index, data);
+	}
+	void FillData(int index, Data data) {
+		if(index < 0 || index >= fieldList.FieldCount())
+			throw "Invalid index!";
+		Field& field = fieldList.GetColumn(index);
+		if(data.dataType != Data::UNDEFINED) {
+			field.SetData(data);
+			bitMap |= (1 << index);
+		}
 	}
 	void Load(BufType b) {
 		enabled = b[0];
@@ -46,6 +57,12 @@ public:
 		if(recordSize < MIN_RECORD_SIZE)
 			recordSize = MIN_RECORD_SIZE;
 		return recordSize;
+	}
+	void NullCheck() {
+		for(int index = 0; index < fieldList.FieldCount(); index++)
+			if((bitMap & (1 << index)) == 0)
+				if(fieldList.GetColumn(index).constraints & Field::NOT_NULL)
+					throw "Value should not be null!";
 	}
 	void PrintRecord() {
 		fieldList.PrintDatas(bitMap);

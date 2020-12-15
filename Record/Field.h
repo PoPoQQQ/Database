@@ -9,8 +9,13 @@
 */
 class Field {
 public:
+	enum {
+		NOT_NULL = 1,
+		DEFAULT = 2,
+		PRIMARY_KEY = 4,
+		FOREIGN_KEY = 8
+	};
 	char columnName[MAX_IDENTIFIER_LEN + 1];
-	//1-NOT NULL 2-DEFAULT 4-PRIMARY KEY 8-FOREIGN KEY
 	Data data;
 	int constraints;
 	char primaryKeyName[MAX_IDENTIFIER_LEN + 1];

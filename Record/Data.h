@@ -33,6 +33,7 @@ public:
 	Data SetData(unsigned int data);
 	Data SetData(float data);
 	Data SetData(const char *data);
+	Data SetData(const Data &data);
 
 	void LoadType(unsigned int* b);
 	void SaveType(unsigned int* b);

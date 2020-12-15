@@ -164,6 +164,35 @@ Data Data::SetData(const char *data) {
 	return *this;
 }
 
+Data Data::SetData(const Data &data) {
+	if((dataType & 0xff) == INT) {
+		if((data.dataType & 0xff) == INT)
+			SetData(data.intData);
+		else if((data.dataType & 0xff) == FLOAT)
+			SetData((unsigned int)data.floatData);
+		else
+			throw "Invalid data type!";
+	}
+	else if((dataType & 0xff) == VARCHAR) {
+		if((data.dataType & 0xff) != VARCHAR)
+			throw "Invalid data type!";
+		SetData(data.stringData);
+	}
+	else if((dataType & 0xff) == DATE) {
+		if((data.dataType & 0xff) != VARCHAR)
+			throw "Invalid data type!";
+		SetData(data.stringData);
+	}
+	else if((dataType & 0xff) == FLOAT) {
+		if((data.dataType & 0xff) == FLOAT)
+			SetData(data.floatData);
+		else if((data.dataType & 0xff) == INT)
+			SetData((float)data.intData);
+		else
+			throw "Invalid data type!";
+	}
+}
+
 void Data::LoadType(unsigned int* b) {
 	if((dataType & 0xff) == VARCHAR) {
 		delete stringData;

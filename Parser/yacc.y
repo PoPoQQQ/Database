@@ -47,6 +47,8 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %type<m_data> value type
 %type<m_field> field
 %type<m_fieldList> fieldList
+%type<m_valueList> valueList
+%type<m_valueLists> valueLists
 
 %%
 
@@ -97,8 +99,7 @@ dbStmt:		CREATE DATABASE dbName
 			}
 		|	SHOW TABLES
 			{
-				// TODO
-				cout << "TODO: SHOW TABLES" << endl;
+				Database::ShowTables();
 			}
 		;
 tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
@@ -115,7 +116,7 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	INSERT INTO tbName VALUES valueLists
 			{
-
+				Database::Insert($3.c_str(), $5);
 			}
         |	DELETE FROM tbName WHERE whereClause
 			{
@@ -196,22 +197,24 @@ type  	:	INTTOKEN '(' VALUE_INT ')'
 			}
 		;
 valueLists  : '('valueList')'
-				{
-
-				}
+			{
+				$$.push_back($2);
+			}
 			| valueLists','  '('valueList')'
-				{
-
-				}
+			{
+				$$ = $1;
+				$$.push_back($4);
+			}
 			;
 valueList  	: value
-				{
-
-				}
+			{
+				$$.push_back($1);
+			}
 			| valueList ',' value
-				{
-
-				}
+			{
+				$$ = $1;
+				$$.push_back($3);
+			}
 			;
 
 value	:	VALUE_INT
