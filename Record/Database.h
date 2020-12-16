@@ -5,7 +5,7 @@
 #include "Table.h"
 using namespace std;
 
-void RemoveDirectory(const char* dir);
+int RemoveDirectory(const char* dir);
 
 class Database {
 public:

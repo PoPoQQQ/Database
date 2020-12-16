@@ -12,7 +12,8 @@
 #include <algorithm>
 #include "Database.h"
 
-void RemoveDirectory(const char* dir) {
+int RemoveDirectory(const char* dir) {
+#ifndef __linux__
 	char __dir[1000];
 	sprintf(__dir, "%s/*", dir);
     _finddata_t fileinfo;
@@ -33,7 +34,50 @@ void RemoveDirectory(const char* dir) {
 		} while(_findnext(hFile, &fileinfo) == 0);  
 		_findclose(hFile);
 	}
-	rmdir(dir);   
+	rmdir(dir);
+	return 0;
+#else
+	// from https://www.cnblogs.com/StartoverX/p/4600866.html
+	DIR* dirp = opendir(dir);    
+    if(!dirp){
+        return -1;
+    }
+    struct dirent *dir_entity;
+    struct stat st;
+    while((dir_entity = readdir(dirp)) != NULL){
+        if(strcmp(dir_entity->d_name,".") == 0
+        || strcmp(dir_entity->d_name,"..") == 0){
+            continue;
+        }    
+		char sub_path[1000];
+		sprintf(sub_path, "%s/", dir_entity->d_name);
+        if(lstat(sub_path,&st) == -1){
+            cerr << "rm_dir:lstat " << sub_path <<" error" << endl;
+            continue;
+        }    
+        if(S_ISDIR(st.st_mode)){
+            if(RemoveDirectory(sub_path) == -1) { // 如果是目录文件，递归删除
+                closedir(dirp);
+                return -1;
+            }
+            rmdir(sub_path);
+        }
+        else if(S_ISREG(st.st_mode)){
+            unlink(sub_path);     // 如果是普通文件，则unlink
+        }
+        else{
+            cerr << "rm_dir:st_mode " << sub_path << " error" << endl;
+            continue;
+        }
+    }
+    if(rmdir(dir) == -1)//delete dir itself.
+    {
+        closedir(dirp);
+        return -1;
+    }
+    closedir(dirp);
+    return 0;
+#endif
 }
 
 set<string> Database::databases;
@@ -106,7 +150,6 @@ void Database::LoadDatabases() {
 	if(dir == NULL)
 		throw "Can't open Database base directory!";
 	
-	int iName=0;
 	while((fileinfo = readdir(dir)) != NULL){
 		if(fileinfo->d_type == DT_DIR){
 			if( strcmp( fileinfo->d_name , "." ) != 0 &&
@@ -115,6 +158,7 @@ void Database::LoadDatabases() {
 			}
 		}
 	}
+	closedir(dir);
 #endif
 }
 void Database::CreateDatabase(const char *databaseName) {
@@ -170,6 +214,7 @@ void Database::OpenDatabase(const char *databaseName) {
 	currentDatabase = new Database;
 	memset(currentDatabase->databaseName, 0, sizeof currentDatabase->databaseName);
 	strcpy(currentDatabase->databaseName, databaseName);
+#ifndef __linux__
 	// 为新创建的数据库实例读取 table 信息
 	_finddata_t fileinfo;
 	static char dir[1000];
@@ -185,6 +230,22 @@ void Database::OpenDatabase(const char *databaseName) {
 		} while(_findnext(hFile, &fileinfo) == 0);  
 		_findclose(hFile);
 	}
+#else
+	struct dirent *fileinfo;
+
+	char sub_path[1000];
+	sprintf(sub_path, "Database/%s/", databaseName);
+	DIR *dir = opendir(sub_path);
+	if(dir == NULL)
+		throw "Can't open Database base directory!";
+	
+	while((fileinfo = readdir(dir)) != NULL){
+		if(fileinfo->d_type != DT_DIR && !strstr(fileinfo->d_name, "-")){
+			currentDatabase->tables[fileinfo->d_name] = new Table(currentDatabase->databaseName, fileinfo->d_name);
+		}
+	}
+	closedir(dir);
+#endif
 	cout << "Database changed to " << databaseName << "." << endl;
 }
 void Database::CloseDatabase() {

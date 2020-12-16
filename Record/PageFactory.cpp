@@ -1,6 +1,6 @@
 #include "RecordPage.h"
 #include "PageFactory.h"
-#include "../Index/BPlusLeafNodePage.h"
+#include "../Index/BplusLeafNodePage.h"
 #include "../Index/BplusInnerNodePage.h"
 
 PageBase* PageFactory::AllocPage(void* context, int pageNumber, int index, BufType b, int pageType) {

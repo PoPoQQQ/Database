@@ -1,5 +1,5 @@
 #pragma once
-#include "BPlusNodePage.h"
+#include "BplusNodePage.h"
 #define PAGE_OFFSET 64
 class BplusInnerNodePage: public BplusNodePage {
 public:
