@@ -107,6 +107,9 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
 				// TODO: 需要通过数组来生成
 				// Database::CreateTable(($3).c_str(), $5);
+				FieldList fieldList;
+				fieldList.AddFieldDescVec($5);
+				Database::CreateTable(($3).c_str(), fieldList);
 			}
         |	DROP TABLE tbName
 			{
@@ -114,7 +117,7 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	DESC tbName
 			{
-
+				Database::GetTable($2.c_str())->PrintTable();
 			}
         |	INSERT INTO tbName VALUES valueLists
 			{
@@ -137,13 +140,11 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 fieldList	:	field
 				{
 					$$.push_back($1);
-					// $$.AddField($1);
 				}
 			|	fieldList ',' field
 				{
 					$$ = $1;
 					$$.push_back($3);
-					// $$.AddFiel;d($3);
 				}
 			;
 

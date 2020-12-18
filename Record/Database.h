@@ -53,7 +53,7 @@ public:
 	 * @param tableName 表名
 	 * @param fieldList 域列表
 	 * */
-	static Table* CreateTable(const char *tableName, FieldList fieldList);
+	static Table* CreateTable(const char *tableName, const FieldList& fieldList);
 	/**
 	 * 从当前打开的数据库中获得某个 table 对象指针
 	 * 如果当前数据库不存在或者表名不存在则会直接报错退出
@@ -61,7 +61,7 @@ public:
 	 * @return Table* 指向该表的指针
 	 * */
 	static Table* GetTable(const char *tableName);
-	static void Insert(const char *tableName, vector<vector<Data> > dataLists);
+	static void Insert(const char *tableName, const vector<vector<Data>>& dataLists);
 };
 
 

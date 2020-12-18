@@ -291,7 +291,7 @@ void Database::ShowTables() {
 		cout << "-";
 	cout << "-+" << endl;
 }
-Table* Database::CreateTable(const char *tableName, FieldList fieldList) {
+Table* Database::CreateTable(const char *tableName, const FieldList& fieldList) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
 	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
@@ -311,10 +311,10 @@ Table* Database::GetTable(const char *tableName) {
 		throw "Table not found!";
 	return currentDatabase->tables[tableName];
 }
-void Database::Insert(const char *tableName, vector<vector<Data> > dataLists) {
+void Database::Insert(const char *tableName, const vector<vector<Data>>& dataLists) {
 	vector<Record> recordList;
 	Table* table = GetTable(tableName);
-	for(vector<vector<Data> >::iterator it = dataLists.begin(); it != dataLists.end(); it++) {
+	for(vector<vector<Data> >::const_iterator it = dataLists.begin(); it != dataLists.end(); it++) {
 		Record record = table->EmptyRecord();
 		vector<Data> dataList = *it;
 		if(dataList.size() != record.fieldList.FieldCount())

@@ -2,6 +2,11 @@
 #include "FieldList.h"
 #include "../Utils/Constraints.h"
 
+FieldList::FieldList(const FieldList& other)
+	:fields(other.fields),pkConstraint(other.pkConstraint){
+
+}
+
 void FieldList::LoadFields(BufType b) {
 	unsigned int size = b[0];
 	b += 1;
@@ -45,6 +50,34 @@ void FieldList::AddField(const Field& field) {
 	}
 	fields.push_back(field);
 }
+
+void FieldList::AddFieldDescVec(const vector<FieldDesc>& field_desc_vec) {
+	for(vector<FieldDesc>::const_iterator it = field_desc_vec.begin(); it != field_desc_vec.end(); it++) {
+		switch(it->type) {
+			case FieldDesc::DEFAULT:
+				this->fields.push_back(it->field);
+				break;
+			case FieldDesc::PRIMARY:
+				if(this->pkConstraint.pkList.size() > 0) {
+					// 在声明的时候只能定义一个主键，所以此时有语法错误
+					throw "Error: Multiple Primary keys defined";
+				} else {
+					// 否则记录下来所有的主键，最后进行检验
+					this->pkConstraint.pkList = it->columnList;
+				}
+				break;
+			case FieldDesc::FOREIGN:
+				// TODO: 增加对外键的支持
+				break;
+			default:
+				throw "Error in FieldList::AddFieldDescVec: error FieldType";
+				break;
+		}
+	}
+	// pkConstraint.validate(this->fields);
+	pkConstraint.apply(this->fields);
+}
+
 void FieldList::PrintFields() {
 	for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++)
 		cout << " | " << it->columnName;

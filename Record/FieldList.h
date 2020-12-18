@@ -2,7 +2,8 @@
 #include <vector>
 #include "Field.h"
 #include "../BufManager/BufPageManager.h"
-// #include "FieldDesc.h"
+#include "./PrimaryKeyCstrnt.h"
+#include "FieldDesc.h"
 using namespace std;
 /*
 实现了一个字段的定义
@@ -10,7 +11,7 @@ using namespace std;
 class FieldList {
 public:
 	vector<Field> fields;
-	// vector<string> pkList; // 用于储存所有主键列名的 vector（主键只有一个，长度代表是否有主键和主键是否是联合的）
+	PrimaryKeyCstrnt pkConstraint;
 
 	void LoadFields(BufType b);
 	void SaveFields(BufType b) const;
@@ -19,6 +20,7 @@ public:
 	void SaveDatas(unsigned char* b) const;
 
 	void AddField(const Field& field);
+	void AddFieldDescVec(const vector<FieldDesc>& field_desc_vec);
 	void PrintFields();
 	void PrintDatas(unsigned int bitMap);
 
@@ -27,4 +29,6 @@ public:
 	Field& GetColumn(int index);
 	int GetColumnIndex(const char* columnName);
 
+	FieldList(){};
+	FieldList(const FieldList&);
 };

@@ -3,7 +3,8 @@ YACC := bison
 CC := g++
 CFLAGS := -g
 TARGET := main.exe
-SRCS := $(wildcard *.cpp Utils/*.cpp Index/*.cpp Record/*.cpp)
+SRCS := $(wildcard *.cpp Utils/*.cpp Index/*.cpp Record/*.cpp FieldConstraint/*.cpp)
+INCLUDE_PATH := Utils/
 
 all: $(TARGET)
 

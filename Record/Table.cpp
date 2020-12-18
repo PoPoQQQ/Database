@@ -18,7 +18,7 @@ Table::Table(const char *databaseName, const char *tableName) {
 	LoadHeader();
 }
 
-Table::Table(const char *databaseName, const char *tableName, FieldList fieldList): fieldList(fieldList) {
+Table::Table(const char *databaseName, const char *tableName, const FieldList& fieldList): fieldList(fieldList) {
 	if(strlen(databaseName) > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	if(strlen(tableName) > MAX_IDENTIFIER_LEN)

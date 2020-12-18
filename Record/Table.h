@@ -19,7 +19,7 @@ public:
 	MyBitMap *bitMap;
 
 	Table(const char *databaseName, const char *tableName); // 仅用于读取表格。从给定的数据库和表中读取信息到内存中
-	Table(const char *databaseName, const char *tableName, FieldList fieldList); // 创建表格数据结构并进行创建对应的文件进行保存
+	Table(const char *databaseName, const char *tableName, const FieldList& fieldList); // 创建表格数据结构并进行创建对应的文件进行保存
 	~Table();
 
 	Record EmptyRecord();
