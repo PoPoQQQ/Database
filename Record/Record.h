@@ -11,12 +11,12 @@ public:
 	unsigned long long rid;
 	unsigned int bitMap;
 	FieldList fieldList;
-	Record(FieldList fieldList): fieldList(fieldList) {
+	Record(const FieldList& fieldList): fieldList(fieldList) {
 		if(fieldList.FieldCount() == 0) {
 			cerr << "Invalid Fields!" << endl;
 			exit(-1);
 		}
-		CleanData();
+  		CleanData();
 	}
 	void CleanData() {
 		bitMap = 0;

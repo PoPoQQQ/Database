@@ -29,7 +29,7 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 // %token<m_nString> STRING
 // %type<m_sId> file
 // %type<m_sId> tokenlist
-%token<m_sId> IDENTIFIER
+%token<m_sId> IDENTIFIER IDENTIFIER2
 %token<m_nInt> VALUE_INT
 %token<m_nFloat> VALUE_FLOAT
 %token<m_nString> VALUE_STRING
@@ -38,17 +38,18 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %token INSERT INTO VALUES DELETE FROM WHERE
 %token UPDATE SET SELECT IS INTTOKEN VARCHARTOKEN
 %token DEFAULT CONSTRAINT CHANGE ALTER ADD RENAME
-%token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN TABLES
-%token<m_sId> DATETOKEN 
+%token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN ON TO
+%token<m_sId> DATETOKEN TABLES
 
 %left AND
 
 %type<m_sId> dbName tbName colName
 %type<m_data> value type
-%type<m_field> field
-%type<m_fieldList> fieldList
+%type<m_field_desc> field
+%type<m_field_desc_list> fieldList
 %type<m_valueList> valueList
 %type<m_valueLists> valueLists
+%type<m_stringList> columnList
 
 %%
 
@@ -104,11 +105,12 @@ dbStmt:		CREATE DATABASE dbName
 		;
 tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
-				Database::CreateTable(($3).c_str(), $5);
+				// TODO: 需要通过数组来生成
+				// Database::CreateTable(($3).c_str(), $5);
 			}
         |	DROP TABLE tbName
 			{
-
+				cout << "TODO: DROP TABLE: " << $3 << endl;
 			}
         |	DESC tbName
 			{
@@ -134,55 +136,64 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 
 fieldList	:	field
 				{
-					$$ = FieldList();
-					$$.AddField($1);
+					$$.push_back($1);
+					// $$.AddField($1);
 				}
 			|	fieldList ',' field
 				{
 					$$ = $1;
-					$$.AddField($3);
-				}
-			|	fieldList ',' PRIMARY KEY '(' columnList ')'
-			  	{
-			  		$$ = $1;
-			  		//TODO
-				}
-			|	fieldList ',' FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
-				{
-					$$ = $1;
-					//TODO
+					$$.push_back($3);
+					// $$.AddFiel;d($3);
 				}
 			;
 
 field  	: 	colName type
 			{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
 			}
       	| 	colName type NOT NULLTOKEN
 		  	{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
-				$$.SetNotNull();
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
+				$$.field.SetNotNull();
 			}
 		| 	colName	type DEFAULT value
 			{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
-				$$.SetDefault($4);
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
+				$$.field.SetDefault($4);
 			}
 		|	colName type NOT NULLTOKEN DEFAULT value
 			{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
-				$$.SetNotNull();
-				$$.SetDefault($6);
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
+				$$.field.SetNotNull();
+				$$.field.SetDefault($6);
+			}
+		|	PRIMARY KEY '(' columnList ')'
+			{
+				$$.type = FieldDesc::FieldType::PRIMARY;
+				$$.columnList = $4;
+			}
+		| 	FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
+			{
+				$$.type = FieldDesc::FieldType::FOREIGN;
+				$$.columnList = $4;
+				$$.tbName = $7;
+				$$.ref_columnList = $9;
 			}
 		;
 type  	:	INTTOKEN '(' VALUE_INT ')'
 			{
 				$$ = Data(Data::INT, $3);
 			}
+		/*
+		| CHARTOKEN '(' VALUE_INT ')'
+			{
+				$$ = Data(Data::CHAR, $3);
+			}
+        */
         |	VARCHARTOKEN '(' VALUE_INT ')'
         	{
         		$$ = Data(Data::VARCHAR, $3);
@@ -195,6 +206,7 @@ type  	:	INTTOKEN '(' VALUE_INT ')'
         	{
         		$$ = Data(Data::FLOAT);
 			}
+
 		;
 valueLists  : '('valueList')'
 			{
@@ -269,7 +281,14 @@ tableList	:	tbName
 			;
 
 columnList  :	colName
+				{
+					$$.push_back($1);
+				}
             |	columnList ',' colName
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 
 dbName  : 	IDENTIFIER
@@ -290,9 +309,10 @@ colName :	IDENTIFIER
 			{
 				$$ = $1;
 			}
-/*		| 	TABLES
+		| 	TABLES
 			{
-			}*/
+				$$ = $1;
+			}
 		;
 
 %%

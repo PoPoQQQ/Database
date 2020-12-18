@@ -179,9 +179,9 @@ Data Data::SetData(const Data &data) {
 		SetData(data.stringData);
 	}
 	else if((dataType & 0xff) == DATE) {
-		if((data.dataType & 0xff) != VARCHAR)
+		if((data.dataType & 0xff) != DATE)
 			throw "Invalid data type!";
-		SetData(data.stringData);
+		*this = data;
 	}
 	else if((dataType & 0xff) == FLOAT) {
 		if((data.dataType & 0xff) == FLOAT)
@@ -206,7 +206,7 @@ void Data::LoadType(unsigned int* b) {
 	}
 }
 
-void Data::SaveType(unsigned int* b) {
+void Data::SaveType(unsigned int* b) const {
 	b[0] = dataType;
 	b[1] = dataSize;
 }
@@ -234,7 +234,7 @@ void Data::LoadData(unsigned char*  b) {
 	}
 }
 
-void Data::SaveData(unsigned char*  b) {
+void Data::SaveData(unsigned char*  b) const {
 	switch(dataType & 0xff) {
 		case INT:
 			memcpy(b, &intData, dataSize);

@@ -17,12 +17,13 @@ public:
 	};
 	char columnName[MAX_IDENTIFIER_LEN + 1];
 	Data data;
+
 	int constraints;
 	char primaryKeyName[MAX_IDENTIFIER_LEN + 1];
 	char foreignKeyTable[MAX_IDENTIFIER_LEN + 1];
 	char foreignKeyColumn[MAX_IDENTIFIER_LEN + 1];
 	char foreignKeyName[MAX_IDENTIFIER_LEN + 1];
-	
+
 	Field();
 	Field(const char *columnName);
 
@@ -41,4 +42,15 @@ public:
 	void Save(BufType b);
 	void LoadData(unsigned char* b);
 	void SaveData(unsigned char* b);
+
+	// Field(const Field& other): data(other.data) {
+	// 	memset(this->fieldName, 0, sizeof this->fieldName);
+	// 	strcpy(this->fieldName, other.fieldName);
+	// }
+	// Field& operator = (const Field& field) {
+	// 	this->data = field.data;
+	// 	memset(this->fieldName, 0, sizeof this->fieldName);
+	// 	strcpy(this->fieldName, field.fieldName);
+	// 	return *this;
+ 	// }
 };

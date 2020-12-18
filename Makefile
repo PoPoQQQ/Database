@@ -21,3 +21,6 @@ clean:
 
 love:
 	rd Database /s/q
+
+rmdb:
+	rm -rf Database

@@ -56,7 +56,7 @@ void FieldList::PrintDatas(unsigned int bitMap) {
 	cout << " | " << endl;
 }
 
-int FieldList::FieldCount() {
+int FieldList::FieldCount() const {
 	return fields.size();
 }
 int FieldList::RoundedDataSize() {

@@ -78,6 +78,7 @@ FOREIGN		(?i:FOREIGN)
 /* pattern */
 NEWLINE			(\r|\n|\r\n)
 IDENTIFIER		([A-Za-z][_0-9A-Za-z]*)
+IDENTIFIER2 	(`[^`]*`)
 VALUE_INT		([0-9]+)
 VALUE_FLOAT		((-?[0-9]+)(\.[0-9]+)?)
 VALUE_STRING	('[^']*')
@@ -98,7 +99,10 @@ MULTILINE_COMMENT_END (\*\/)
 {DATABASE}				{ return DATABASE;	}
 {DATABASES}				{ return DATABASES;	}
 {TABLE}					{ return TABLE;		}	
-{TABLES}				{ return TABLES;	}
+{TABLES}				{ 
+	yylval.m_sId = yytext;
+	return TABLES;	
+}
 {SHOW}					{ return SHOW;		}	
 {CREATE}				{ return CREATE;	}
 {DROP}					{ return DROP;		}
@@ -159,6 +163,13 @@ MULTILINE_COMMENT_END (\*\/)
 	yylval.m_sId = yytext;	//通过yylval向yacc传递识别出的记号的值，由于yylval已定义为struct Type，这里就可以把yytext赋给其m_sId成员，到了yacc里就可以用$n的方式来引用了
 	return IDENTIFIER;		//向yacc返回: 识别出的记号类型是IDENTIFIER
 }
+
+{IDENTIFIER2}	{
+	yylval.m_sId=yytext;
+	yylval.m_sId = yylval.m_sId.substr(1, yylval.m_sId.length() - 2);
+	return IDENTIFIER;
+}
+
 .				{							//.表示除\n以外的其它字符，注意这个规则要放在最后，因为一旦匹配了.就不会匹配后面的规则了(以其它状态<>开头的规则除外)
 	yylval.m_cOp = yytext[0];	//由于只匹配一个字符，这时它对应yytext[0]，把该字符存放到yylval的m_cOp成员里，到了yacc里用$n方式引用
 	return yytext[0];		//向yacc返回: 识别出的记号类型是OPERATOR
