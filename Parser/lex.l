@@ -74,6 +74,8 @@ AND			(?i:AND)
 DATE		(?i:DATE)     	
 FLOAT		(?i:FLOAT)
 FOREIGN		(?i:FOREIGN)
+ON  		(?i:ON)
+TO  		(?i:TO)
 
 /* pattern */
 NEWLINE			(\r|\n|\r\n)
@@ -139,6 +141,8 @@ MULTILINE_COMMENT_END (\*\/)
 }
 {FLOAT}					{ return FLOATTOKEN;}
 {FOREIGN}				{ return FOREIGN;	}
+{ON}					{ return ON;		}
+{TO}					{ return TO; 		}
 
 {VALUE_INT}		{							//匹配整数串
 	yylval.m_nInt = atoi(yytext);//把识别出的整数串，转换为整型值，存储到yylval的整型成员里，到了yacc里用$n方式引用
