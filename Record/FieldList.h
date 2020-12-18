@@ -23,7 +23,7 @@ public:
 	void PrintDatas(unsigned int bitMap);
 
 	int FieldCount() const;
-	int RoundedDataSize();
+	int RoundedDataSize() const;
 	Field& GetColumn(int index);
 	int GetColumnIndex(const char* columnName);
 

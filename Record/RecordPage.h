@@ -39,7 +39,7 @@ public:
 		}
 		return index;
 	}
-	bool AddRecord(Record record) {
+	bool AddRecord(const Record& record) {
 		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
 		

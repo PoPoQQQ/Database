@@ -18,13 +18,15 @@ public:
 	FieldList fieldList;
 	MyBitMap *bitMap;
 
-	Table(const char *databaseName, const char *tableName);
-	Table(const char *databaseName, const char *tableName, FieldList fieldList);
+	Table(const char *databaseName, const char *tableName); // 仅用于读取表格。从给定的数据库和表中读取信息到内存中
+	Table(const char *databaseName, const char *tableName, FieldList fieldList); // 创建表格数据结构并进行创建对应的文件进行保存
 	~Table();
 
-	void LoadHeader();
-	void SaveHeader();
 	Record EmptyRecord();
 	void AddRecord(Record record);
 	void PrintTable();
+
+private:
+	void LoadHeader();
+	void SaveHeader() const;
 };

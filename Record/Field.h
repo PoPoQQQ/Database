@@ -35,13 +35,13 @@ public:
 	Field SetPrimaryKey(const char* primaryKeyName = "");
 	Field SetForeignKey(const char* foreignKeyTable, const char* foreignKeyColumn, const char* foreignKeyName = "");
 
-	int DataSize();
-	int RoundedDataSize();
-	int FieldSize();
+	int DataSize() const;
+	int RoundedDataSize() const;
+	int FieldSize() const;
 	void Load(BufType b);
-	void Save(BufType b);
+	void Save(BufType b) const;
 	void LoadData(unsigned char* b);
-	void SaveData(unsigned char* b);
+	void SaveData(unsigned char* b) const;
 
 	// Field(const Field& other): data(other.data) {
 	// 	memset(this->fieldName, 0, sizeof this->fieldName);

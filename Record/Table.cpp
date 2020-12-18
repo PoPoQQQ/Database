@@ -80,7 +80,7 @@ void Table::LoadHeader() {
 	bitMap = new MyBitMap(PAGE_SIZE << 2, b + (PAGE_INT_NUM >> 1));
 }
 
-void Table::SaveHeader() {
+void Table::SaveHeader() const {
 	int pageIndex;
 	BufType b = Global::getInstance()->bpm->getPage(fileID, 0, pageIndex);
 	
@@ -114,6 +114,7 @@ Record Table::EmptyRecord() {
 }
 
 void Table::AddRecord(Record record) {
+	// 查看是否还有表是否还有空间
 	int pageNumber = bitMap->findLeftOne();
 	if(pageNumber == -1) {
 		cerr << "File volume not enough!" << endl;
@@ -123,7 +124,8 @@ void Table::AddRecord(Record record) {
 		cerr << "Bit map error in class \"Table\"!" << endl;
 		exit(-1);
 	}
-
+	// 获得（或创建）用于储存 Record 的页面
+	// 此时获得的页面必然有空间储存 Record
 	PageBase *page;
 
 	if(pageNumber < numberOfPage)
@@ -145,7 +147,7 @@ void Table::AddRecord(Record record) {
 	bool full = dynamic_cast<RecordPage*>(page)->AddRecord(record);
 	if(full)
 		bitMap->setBit(pageNumber, 0);
-
+	// 更新 Header 数据，比如说 recordCount
 	SaveHeader();
 	delete page;
 }

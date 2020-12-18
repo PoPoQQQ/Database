@@ -12,11 +12,11 @@ void FieldList::LoadFields(BufType b) {
 		b += it->FieldSize() >> 2;
 	}
 }
-void FieldList::SaveFields(BufType b) {
+void FieldList::SaveFields(BufType b) const {
 	b[0] = fields.size();
 	b += 1;
 
-	for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++) {
+	for(vector<Field>::const_iterator it = fields.begin(); it != fields.end(); it++) {
 		it->Save(b);
 		b += it->FieldSize() >> 2;
 	}
@@ -27,18 +27,22 @@ void FieldList::LoadDatas(unsigned char* b) {
 		b += it->DataSize();
 	}
 }
-void FieldList::SaveDatas(unsigned char* b) {
-	for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++) {
+void FieldList::SaveDatas(unsigned char* b) const{
+	for(vector<Field>::const_iterator it = fields.begin(); it != fields.end(); it++) {
 		it->SaveData(b);
 		b += it->DataSize();
 	}
 }
 
-void FieldList::AddField(Field field) {
-	if(FieldCount() >= MAX_COL_NUM)
+void FieldList::AddField(const Field& field) {
+	if(FieldCount() >= MAX_COL_NUM){
+		printf("MAX_COL_NUM = %d, FieldCount = %d", MAX_COL_NUM, FieldCount());
 		throw "Too many fields!";
-	if(GetColumnIndex(field.columnName) >= 0)
+	}
+	if(GetColumnIndex(field.columnName) >= 0) {
+		cerr << field.columnName << endl;
 		throw "Field already exists!";
+	}
 	fields.push_back(field);
 }
 void FieldList::PrintFields() {
@@ -59,9 +63,9 @@ void FieldList::PrintDatas(unsigned int bitMap) {
 int FieldList::FieldCount() const {
 	return fields.size();
 }
-int FieldList::RoundedDataSize() {
+int FieldList::RoundedDataSize() const {
 	int dataSize = 0;
-	for(vector<Field>::iterator it = fields.begin(); it != fields.end(); it++)
+	for(vector<Field>::const_iterator it = fields.begin(); it != fields.end(); it++)
 		dataSize += it->DataSize();
 	return ((dataSize | 3) ^ 3) + ((dataSize & 3) ? 4 : 0);
 }

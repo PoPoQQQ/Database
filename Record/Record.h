@@ -45,14 +45,14 @@ public:
 		bitMap = b[3];
 		fieldList.LoadDatas((unsigned char*)(b + 4));
 	}
-	void Save(BufType b) {
+	void Save(BufType b) const {
 		b[0] = enabled;
 		b[1] = rid & 0xFFFFFFFFull;
 		b[2] = rid >> 32ll;
 		b[3] = bitMap;
 		fieldList.SaveDatas((unsigned char*)(b + 4));
 	}
-	int RecordSize() {
+	int RecordSize() const {
 		int recordSize = 16 + fieldList.RoundedDataSize();
 		if(recordSize < MIN_RECORD_SIZE)
 			recordSize = MIN_RECORD_SIZE;
