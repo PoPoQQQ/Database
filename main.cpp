@@ -46,27 +46,33 @@ int main(int argc, const char* argv[]) {
 		yyin = NULL;
     }
     else {
-    	Database::CreateDatabase("MyDatabase");
-		Database::OpenDatabase("MyDatabase");
+		try {
+			Database::CreateDatabase("MyDatabase");
+			Database::OpenDatabase("MyDatabase");
 
-		FieldList fieldList;
-		fieldList.AddField(Field("a").SetDataType(Data(Data::INT)));
-		fieldList.AddField(Field("b").SetDataType(Data(Data::DATE)));
-		fieldList.AddField(Field("c").SetDataType(Data(Data::FLOAT)));
-		fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
-		Table *table = Database::CreateTable("TestTable", fieldList);
+			FieldList fieldList;
+			fieldList.AddField(Field("a").SetDataType(Data(Data::INT)));
+			fieldList.AddField(Field("b").SetDataType(Data(Data::DATE)));
+			fieldList.AddField(Field("c").SetDataType(Data(Data::FLOAT)));
+			fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
+			Table *table = Database::CreateTable("TestTable", fieldList);
 
-		Record record = table->EmptyRecord();
-		for(int i = 0; i < 128; i++) {
-			record.CleanData();
-			record.FillData("a", Data(Data::INT).SetData((unsigned)i));
-			record.FillData("b", Data(Data::DATE).SetData("1998/04/02"));
-			record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
-			record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
-			table->AddRecord(record);
+			Record record = table->EmptyRecord();
+			for(int i = 0; i < 128; i++) {
+				record.CleanData();
+				record.FillData("a", Data(Data::INT).SetData((unsigned)i));
+				record.FillData("b", Data(Data::DATE).SetData("1998/04/02"));
+				record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
+				record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
+				table->AddRecord(record);
+			}
+			
+			table->PrintTable();
 		}
-		
-		table->PrintTable();
+    	catch (const char* err) {
+			cout << "error: " << endl;
+			cout << err << endl;
+		}
     }
     
 
