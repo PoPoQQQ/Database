@@ -117,7 +117,7 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	DESC tbName
 			{
-				Database::GetTable($2.c_str())->PrintTable();
+				Database::GetTable($2.c_str())->DescTable();
 			}
         |	INSERT INTO tbName VALUES valueLists
 			{

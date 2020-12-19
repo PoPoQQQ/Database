@@ -130,3 +130,9 @@ void Field::LoadData(unsigned char* b) {
 void Field::SaveData(unsigned char* b) const {
 	data.SaveData(b);
 }
+
+string Field::toString() const {
+	char buf[256];
+	snprintf(buf, sizeof(buf), "Field{colName: %s, type: %d, constraints: %d }", columnName, data.dataType, constraints);
+	return string(buf);
+}

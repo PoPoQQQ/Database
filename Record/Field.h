@@ -43,6 +43,7 @@ public:
 	void LoadData(unsigned char* b);
 	void SaveData(unsigned char* b) const;
 
+	string toString() const;
 	// Field(const Field& other): data(other.data) {
 	// 	memset(this->fieldName, 0, sizeof this->fieldName);
 	// 	strcpy(this->fieldName, other.fieldName);
