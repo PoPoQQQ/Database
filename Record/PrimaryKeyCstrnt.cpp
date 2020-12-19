@@ -4,7 +4,7 @@
 
 PrimaryKeyCstrnt::PrimaryKeyCstrnt(const char* name, FieldConstraint::ConstraintType type) 
     :FieldConstraint(name, type) {
-
+        
 }
 
 PrimaryKeyCstrnt::PrimaryKeyCstrnt(const PrimaryKeyCstrnt& other)

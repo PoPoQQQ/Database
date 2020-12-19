@@ -105,8 +105,6 @@ dbStmt:		CREATE DATABASE dbName
 		;
 tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
-				// TODO: 需要通过数组来生成
-				// Database::CreateTable(($3).c_str(), $5);
 				FieldList fieldList;
 				fieldList.AddFieldDescVec($5);
 				Database::CreateTable(($3).c_str(), fieldList);

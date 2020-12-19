@@ -3,6 +3,7 @@
 #include "Field.h"
 #include "../BufManager/BufPageManager.h"
 #include "./PrimaryKeyCstrnt.h"
+#include "./ForeignKeyCstrnt.h"
 #include "FieldDesc.h"
 using namespace std;
 /*
@@ -12,6 +13,7 @@ class FieldList {
 public:
 	vector<Field> fields;
 	PrimaryKeyCstrnt pkConstraint;
+	vector<ForeignKeyCstrnt> fkConstraints;
 
 	void LoadFields(BufType b);
 	void SaveFields(BufType b) const;
