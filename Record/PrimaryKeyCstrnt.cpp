@@ -1,4 +1,5 @@
 #include "PrimaryKeyCstrnt.h"
+#include "FieldList.h"
 #include <iostream>
 #include <sstream>
 
@@ -26,18 +27,16 @@ string PrimaryKeyCstrnt::toString() const {
     return string(buf);
 }
 
-void PrimaryKeyCstrnt::apply(vector<Field>& fields) {
+void PrimaryKeyCstrnt::apply(FieldList& fieldList) {
     bool found = false;
     for(vector<string>::const_iterator it = pkList.begin(); it != pkList.end(); ++it) {
-        found = false;
-        for(vector<Field>::iterator it2 = fields.begin(); it2 != fields.end(); ++it2) {
-            if(strcmp(it2->columnName, it->c_str()) == 0) {
-                found = true;
-                it2->SetPrimaryKey(this->name);
-            }
+        if(fieldList.GetColumnIndex(it->c_str()) == -1) {
+            char buf[256];
+            snprintf(buf, 256, "Error: Primary key `%s` doesn't exist", it->c_str());
+            throw string(buf);
         }
-        if(!found) { // 说明该列描述符不存在
-            throw "Error: Primary key doesn't exist";
-        }
+    }
+    for(vector<string>::const_iterator it = pkList.begin(); it != pkList.end(); ++it) {
+        fieldList.GetColumn(fieldList.GetColumnIndex(it->c_str())).SetPrimaryKey(this->name);
     }
 }

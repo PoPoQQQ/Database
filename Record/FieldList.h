@@ -12,7 +12,7 @@ using namespace std;
 class FieldList {
 public:
 	vector<Field> fields;
-	PrimaryKeyCstrnt pkConstraint;
+	vector<PrimaryKeyCstrnt> pkConstraints;
 	vector<ForeignKeyCstrnt> fkConstraints;
 
 	void LoadFields(BufType b);
@@ -22,15 +22,16 @@ public:
 	void SaveDatas(unsigned char* b) const;
 
 	void AddField(const Field& field);
-	void AddFieldDescVec(const vector<FieldDesc>& field_desc_vec);
+	void AddFieldDescVec(const char* tbName, const vector<FieldDesc>& field_desc_vec);
 	void PrintFields();
 	void PrintDatas(unsigned int bitMap);
 
 	int FieldCount() const;
 	int RoundedDataSize() const;
 	Field& GetColumn(int index);
-	int GetColumnIndex(const char* columnName);
+	int GetColumnIndex(const char* columnName) const;
 
 	FieldList(){};
 	FieldList(const FieldList&);
+	~FieldList();
 };

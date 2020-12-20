@@ -40,7 +40,10 @@ CREATE TABLE orders(
 );
 
 SHOW TABLES;
+DESC restaurant;
+desc customer;
 DESC food;
+desc orders;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');

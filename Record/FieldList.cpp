@@ -3,8 +3,11 @@
 #include "../Utils/Constraints.h"
 
 FieldList::FieldList(const FieldList& other)
-	:fields(other.fields),pkConstraint(other.pkConstraint){
+	:fields(other.fields),pkConstraints(other.pkConstraints){
 
+}
+
+FieldList::~FieldList() {
 }
 
 void FieldList::LoadFields(BufType b) {
@@ -51,31 +54,53 @@ void FieldList::AddField(const Field& field) {
 	fields.push_back(field);
 }
 
-void FieldList::AddFieldDescVec(const vector<FieldDesc>& field_desc_vec) {
+void FieldList::AddFieldDescVec(const char* tbName, const vector<FieldDesc>& field_desc_vec) {
 	for(vector<FieldDesc>::const_iterator it = field_desc_vec.begin(); it != field_desc_vec.end(); it++) {
 		switch(it->type) {
 			case FieldDesc::DEFAULT:
 				this->fields.push_back(it->field);
 				break;
 			case FieldDesc::PRIMARY:
-				if(this->pkConstraint.pkList.size() > 0) {
-					// 在声明的时候只能定义一个主键，所以此时有语法错误
-					throw "Error: Multiple Primary keys defined";
-				} else {
-					// 否则记录下来所有的主键，最后进行检验
-					this->pkConstraint.pkList = it->columnList;
+				{
+					if(this->pkConstraints.size() > 0) {
+						// 在声明的时候只能定义一个主键，所以此时有语法错误
+						throw "Error: Multiple Primary keys defined";
+					} else {
+						// 否则记录下来所有的主键，最后进行检验
+						char shrink_name[10];
+						snprintf(shrink_name, sizeof(shrink_name), "%s", tbName);
+						char buf [MAX_IDENTIFIER_LEN + 1];
+						snprintf(buf, MAX_IDENTIFIER_LEN, "%s..._prk_0", shrink_name);
+						this->pkConstraints.push_back(PrimaryKeyCstrnt(buf));
+						this->pkConstraints.back().pkList = it->columnList;
+					}
+					break;
 				}
-				break;
 			case FieldDesc::FOREIGN:
-				// TODO: 增加对外键的支持
+			{
+				char shrink_name[10];
+				snprintf(shrink_name, sizeof(shrink_name), "%s", tbName);
+				char buf [MAX_IDENTIFIER_LEN + 1];
+				snprintf(buf, MAX_IDENTIFIER_LEN, "%s..._prk_0", shrink_name);
+				this->fkConstraints.push_back(ForeignKeyCstrnt(buf));
+				this->fkConstraints.back().colList = it->columnList;
+				this->fkConstraints.back().ref_colList = it->ref_columnList;
+				strcpy(this->fkConstraints.back().tbName, it->tbName.c_str());
 				break;
+			}
 			default:
 				throw "Error in FieldList::AddFieldDescVec: error FieldType";
 				break;
 		}
 	}
-	// pkConstraint.validate(this->fields);
-	pkConstraint.apply(this->fields);
+
+	if(pkConstraints.size() > 0) {
+		pkConstraints[0].apply(*this);
+	}
+	
+	for(int i = 0;i < this->fkConstraints.size(); ++i) {
+		fkConstraints[i].apply(*this);
+	}
 }
 
 void FieldList::PrintFields() {
@@ -107,7 +132,7 @@ Field& FieldList::GetColumn(int index) {
 		throw "Invalid index!";
 	return fields[index];
 }
-int FieldList::GetColumnIndex(const char* columnName) {
+int FieldList::GetColumnIndex(const char* columnName) const {
 	for(int i = 0; i < (signed)fields.size(); i++)
 		if(strcmp(fields[i].columnName, columnName) == 0)
 			return i;

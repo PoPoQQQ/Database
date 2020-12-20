@@ -106,7 +106,7 @@ dbStmt:		CREATE DATABASE dbName
 tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
 				FieldList fieldList;
-				fieldList.AddFieldDescVec($5);
+				fieldList.AddFieldDescVec($3.c_str(), $5);
 				Database::CreateTable(($3).c_str(), fieldList);
 			}
         |	DROP TABLE tbName
@@ -177,6 +177,11 @@ field  	: 	colName type
 			}
 		| 	FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
 			{
+				// 在索引的时候就事先进行部分可行的检查
+				// 1. 检查两个 List 的长度是否相等
+				if($4.size() != $9.size()) {
+					throw "Error: Foreign key lists have different length.";
+				}
 				$$.type = FieldDesc::FieldType::FOREIGN;
 				$$.columnList = $4;
 				$$.tbName = $7;

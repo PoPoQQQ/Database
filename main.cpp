@@ -38,6 +38,9 @@ int main(int argc, const char* argv[]) {
 		catch (const char* err) {
 			cout << err << endl;
 		}
+		catch (string err) {
+			cout << err << endl;
+		}
 		
 		puts("-----end parsing");
 
