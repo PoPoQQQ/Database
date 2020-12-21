@@ -6,8 +6,18 @@
 struct ColObj {
     std::string tbName;
     std::string colName;
+    ColObj(){}
+    ColObj(const ColObj& other) {
+        tbName = other.tbName;
+        colName = other.colName;
+    }
+    ColObj& operator = (const ColObj& other) {
+        tbName = other.tbName;
+        colName = other.colName;
+        return *this;
+    }
     void print() {
-        std::cout << "Col{tbName:" << tbName << ", colName: " << colName << " }" << endl;
+        std::cout << "Col{tbName:" << tbName << ", colName: " << colName << " }" << std::endl;
     }
 };
 #endif // __COL_OBJ_H__

@@ -7,6 +7,26 @@ struct ExprObj {
     bool isCol;
     Data value;
     ColObj col;
+    ExprObj() {
+        isCol = true;
+    }
+    ExprObj(const ExprObj& other) {
+        isCol = other.isCol;
+        if(isCol) {
+            col = other.col;
+        } else {
+            value = other.value;
+        }
+    }
+    ExprObj& operator = (const ExprObj& other) {
+        isCol = other.isCol;
+        if(isCol) {
+            col = other.col;
+        } else {
+            value = other.value;
+        }
+        return *this;
+    }
     void print() {
         if(isCol) {
             cout << "ExprObj(col){" << endl;

@@ -55,6 +55,7 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %type<m_set_clause> setClause
 %type<m_expr> expr
 %type<m_op> op
+%type<m_whereClause> whereClause
 
 %%
 
@@ -140,6 +141,7 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 				for(int i = 0;i < $2.size(); ++i) {
 					$2[i].print();
 				}
+				$6.print();
 			}
 		;
 idxStmt		:	CREATE INDEX idxName ON tbName '(' columnList ')'
@@ -276,14 +278,27 @@ value	:	VALUE_INT
 
 whereClause : 	col op expr
 				{
-					cout << "whereClause: ----" << endl;
-					$1.print();
-					cout << "op = " << $2 << endl;
-					$3.print();
+					$$.type = WhereCondition::CondType::EXPR;
+					$$.col = $1;
+					$$.op = $2;
+					$$.expr = $3;
 				}
 			| 	col	IS NULLTOKEN
+				{
+					$$.type = WhereCondition::CondType::IS_NULL;
+					$$.col = $1;
+				}
             | 	col IS NOT NULLTOKEN
+				{
+					$$.type = WhereCondition::CondType::IS_NOT_NULL;
+					$$.col = $1;
+				}
             | 	whereClause	AND	whereClause
+				{
+					$$.type = WhereCondition::CondType::COMBINDED;
+					$$.condition1 = new WhereCondition($1);
+					$$.condition2 = new WhereCondition($3);
+				}
 			;
 
 col			: 	tbName '.' colName
