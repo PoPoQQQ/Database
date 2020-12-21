@@ -22,6 +22,8 @@ clean:
 
 love:
 	rd Database /s/q
-
+# linux
+rmps:
+	rm ./Parser/yacc.tab.c Parser/yacc.tab.h Parser/lex.yy.c $(TARGET)
 rmdb:
 	rm -rf Database

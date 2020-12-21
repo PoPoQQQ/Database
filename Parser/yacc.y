@@ -43,13 +43,18 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 
 %left AND
 
-%type<m_sId> dbName tbName colName
+%type<m_sId> dbName tbName colName pkName fkName idxName
 %type<m_data> value type
 %type<m_field_desc> field
 %type<m_field_desc_list> fieldList
 %type<m_valueList> valueList
 %type<m_valueLists> valueLists
-%type<m_stringList> columnList
+%type<m_stringList> columnList tableList
+%type<m_col> col
+%type<m_colList> colList selector
+%type<m_set_clause> setClause
+%type<m_expr> expr
+%type<m_op> op
 
 %%
 
@@ -70,14 +75,13 @@ stmt: 	sysStmt ';'
 	| 	tbStmt ';'
 		{
 		}
-	// | idxStmt ';'
-	// {
+	| 	idxStmt ';'
+		{
 
-	// }
-	// | alterStmt ';'
-	// {
-
-	// }
+		}
+	| 	alterStmt ';'
+		{
+		}
 	;
 
 sysStmt: 	SHOW DATABASES
@@ -127,14 +131,33 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	UPDATE tbName SET setClause WHERE whereClause
 			{
-
+				cout << "TODO: UPDATE " << $2 << endl;
+				$4.print();
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{
-
+				cout << "TODO: SELECT ----" << endl;
+				for(int i = 0;i < $2.size(); ++i) {
+					$2[i].print();
+				}
 			}
 		;
-
+idxStmt		:	CREATE INDEX idxName ON tbName '(' columnList ')'
+			|	DROP INDEX idxName
+			|	ALTER TABLE tbName ADD INDEX idxName '(' columnList ')'
+			|	ALTER TABLE tbName DROP INDEX idxName
+			;
+			
+alterStmt	:	ALTER TABLE tbName ADD field
+			|   ALTER TABLE tbName DROP colName
+			|	ALTER TABLE tbName CHANGE colName field
+			|	ALTER TABLE tbName RENAME TO tbName
+			|	ALTER TABLE tbName DROP PRIMARY KEY
+			|	ALTER TABLE tbName ADD CONSTRAINT pkName PRIMARY KEY '(' columnList ')'
+			|	ALTER TABLE tbName DROP PRIMARY KEY pkName
+			|	ALTER TABLE tbName ADD CONSTRAINT fkName FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
+			|	ALTER TABLE tbName DROP FOREIGN KEY fkName
+			;
 fieldList	:	field
 				{
 					$$.push_back($1);
@@ -213,24 +236,24 @@ type  	:	INTTOKEN '(' VALUE_INT ')'
 
 		;
 valueLists  : '('valueList')'
-			{
-				$$.push_back($2);
-			}
-			| valueLists','  '('valueList')'
-			{
-				$$ = $1;
-				$$.push_back($4);
-			}
+				{
+					$$.push_back($2);
+				}
+			| valueLists ',' '(' valueList ')'
+				{
+					$$ = $1;
+					$$.push_back($4);
+				}
 			;
 valueList  	: value
-			{
-				$$.push_back($1);
-			}
+				{
+					$$.push_back($1);
+				}
 			| valueList ',' value
-			{
-				$$ = $1;
-				$$.push_back($3);
-			}
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 
 value	:	VALUE_INT
@@ -252,36 +275,106 @@ value	:	VALUE_INT
 		;
 
 whereClause : 	col op expr
+				{
+					cout << "whereClause: ----" << endl;
+					$1.print();
+					cout << "op = " << $2 << endl;
+					$3.print();
+				}
 			| 	col	IS NULLTOKEN
             | 	col IS NOT NULLTOKEN
             | 	whereClause	AND	whereClause
 			;
 
 col			: 	tbName '.' colName
+				{
+					$$.tbName = $1;
+					$$.colName = $3;
+				}
 			|	colName
+				{
+					$$.colName = $1;
+				}
 			;
-op  : '=' | "<>" | "<=" | ">=" | '<' | '>'
+op  : '='
+		{
+			$$ = OpEnum::EQUAL;
+		}
+	| "<>" 
+		{
+			$$ = OpEnum::NOTEQUAL;
+		}
+	| "<=" 
+		{
+			$$ = OpEnum::LEQUAL;
+		}
+	| ">=" 
+		{
+			$$ = OpEnum::GEQUAL;
+		}
+	| '<' 
+		{
+			$$ = OpEnum::LESS;
+		}
+	| '>'
+		{
+			$$ = OpEnum::GREATER;
+		}
 	;
 
 expr  : value
+		{
+			$$.isCol = false;
+			$$.value = $1;
+		}
       | col
+	  	{
+			$$.isCol = true;
+			$$.col = $1;
+		}
 	  ;
 
 setClause  	: colName '=' value
+				{
+					$$.colNames.push_back($1);
+					$$.values.push_back($3);
+				}
 			| setClause ',' colName '=' value
+				{
+					$$ = $1;
+					$$.colNames.push_back($3);
+					$$.values.push_back($5);
+				}
 			;
 selector	: '*'
-			| colList
-			;
-
-colList 	: col
-			| colList ',' col
 				{
 
 				}
+			| colList
+				{
+					$$ = $1;
+				}
+			;
+
+colList 	: col
+				{
+					$$.push_back($1);
+				}
+			| colList ',' col
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 tableList	:	tbName
+				{
+					$$.push_back($1);
+				}
 			|	tableList ',' tbName
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 
 columnList  :	colName
@@ -319,6 +412,22 @@ colName :	IDENTIFIER
 			}
 		;
 
+pkName : IDENTIFIER
+			{
+				$$ = $1;
+			}
+		;
+
+fkName : IDENTIFIER
+			{
+				$$ = $1;
+			}
+		;
+idxName : IDENTIFIER
+			{
+				$$ = $1;
+			}
+		;
 %%
 
 void yyerror(const char *s)			//当yacc遇到语法错误时，会回调yyerror函数，并且把错误信息放在参数s中
