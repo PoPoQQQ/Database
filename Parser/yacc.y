@@ -134,9 +134,16 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
 				cout << "TODO: UPDATE " << $2 << endl;
 				$4.print();
+				$6.print();
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{
+				//TODO
+				// if($2.size() == 0) { // 说明是 *
+				// 	for(int i = 0;i < $4.size(); ++i) {
+				// 		$4[i].fieldList;
+				// 	}
+				// }
 				cout << "TODO: SELECT ----" << endl;
 				for(int i = 0;i < $2.size(); ++i) {
 					$2[i].print();
