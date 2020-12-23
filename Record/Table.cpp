@@ -167,6 +167,17 @@ void Table::PrintTable() {
 	}
 }
 
+void Table::IterTable() {
+	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
+		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);
+		if(page == NULL)
+			continue;
+		if(page->pageType == PageBase::RECORD_PAGE)
+			dynamic_cast<RecordPage*>(page)->IterPage();
+		delete page;
+	}
+}
+
 void Table::DescTable() const {
 	// get max length
 	int max_field_length = 5;

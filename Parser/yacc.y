@@ -132,6 +132,7 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	UPDATE tbName SET setClause WHERE whereClause
 			{
+				Table *table = Database::GetTable($2.c_str()); 
 				cout << "TODO: UPDATE " << $2 << endl;
 				$4.print();
 				$6.print();
@@ -358,14 +359,25 @@ expr  : value
 
 setClause  	: colName '=' value
 				{
-					$$.colNames.push_back($1);
-					$$.values.push_back($3);
+					// 如果语句中有重复的列名，则报错退出
+					if($$.setClauseMap.find($1) != $$.setClauseMap.end()) {
+						char buf[256];
+						snprintf(buf, 256, "Error: set clause has duplicate colName: %s", $1.c_str());
+						throw string(buf);
+					} else {
+						$$.setClauseMap.insert({$1, $3});
+					}
 				}
 			| setClause ',' colName '=' value
 				{
 					$$ = $1;
-					$$.colNames.push_back($3);
-					$$.values.push_back($5);
+					if($$.setClauseMap.find($3) != $$.setClauseMap.end()) {
+						char buf[256];
+						snprintf(buf, 256, "Error: set clause has duplicate colName: %s", $3.c_str());
+						throw string(buf);
+					} else {
+						$$.setClauseMap.insert({$3, $5});
+					}
 				}
 			;
 selector	: '*'

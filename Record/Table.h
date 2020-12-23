@@ -25,6 +25,7 @@ public:
 	Record EmptyRecord();
 	void AddRecord(Record record);
 	void PrintTable();
+	void IterTable();
 	// 对应 mysql 的 desc table 命令
 	// 将表头信息以及约束按照一定的规则进行打印
 	void DescTable() const;

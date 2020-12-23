@@ -66,4 +66,14 @@ public:
 				record.PrintRecord();
 			}
 	}
+	void IterPage() {
+		Record record = context->EmptyRecord();
+		int recordSize = record.RecordSize();
+		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
+		for(int index = 0; index < recordVolume; index++)
+			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
+				record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
+				// 逐个对 record 进行处理
+			}
+	}
 };

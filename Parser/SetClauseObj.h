@@ -3,16 +3,18 @@
 #define __SET_CLAUSE_OBJ_H__
 #include <string>
 #include <vector>
+#include <map>
 #include "../Record/Data.h"
+class FieldList;
 struct SetClauseObj {
-    vector<string> colNames;
-    vector<Data> values;
+    map<string, Data> setClauseMap;
     void print() {
         cout << "SetClause {" << endl;
-        for(int i = 0;i < colNames.size(); ++i) {
-            cout << "  " << colNames[i] << ": " << values[i] << endl;
+        for(map<string, Data>::const_iterator iter = setClauseMap.begin(); iter != setClauseMap.end(); ++iter) {
+            cout << "  " << iter->first << ": " << iter->second << endl;
         }
         cout << "}" << endl;
     }
+    bool validate(const FieldList& fieldList);
 };
 #endif // __SET_CLAUSE_OBJ_H__
