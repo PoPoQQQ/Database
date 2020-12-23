@@ -5,6 +5,7 @@
 #include "../Parser/ColObj.h"
 #include "../Parser/OpEnum.h"
 #include "../Parser/ExprObj.h"
+class Table;
 class WhereCondition {
 public:
     enum CondType {
@@ -27,6 +28,10 @@ public:
     ~WhereCondition();
 
     void print();
+    // 给出一个 table，检查该 whereClause 中的内容是否可以用于限制该表
+    // 所有属于语法层面上的错误都会抛出错误终止执行
+    //* @throws: const char * err
+    bool validateUpdate(Table&);
     bool check(); //TODO
 };
 #endif // __WHERE_CONDITION_H__

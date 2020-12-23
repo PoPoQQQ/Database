@@ -138,8 +138,9 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 				// 检查 setClause
 				$4.validate(table->fieldList);
 				// 检查 whereClause
-				// $6.validate(table);
-				$6.print();
+				$6.validateUpdate(*table);
+				// $6.print();
+				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{
@@ -353,11 +354,13 @@ expr  : value
 		{
 			$$.isCol = false;
 			$$.value = $1;
+			$$.isInited = true;
 		}
       | col
 	  	{
 			$$.isCol = true;
 			$$.col = $1;
+			$$.isInited = true;
 		}
 	  ;
 

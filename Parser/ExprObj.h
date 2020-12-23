@@ -5,13 +5,16 @@
 #include "../Record/Data.h"
 struct ExprObj {
     bool isCol;
+    bool isInited;
     Data value;
     ColObj col;
     ExprObj() {
         isCol = true;
+        isInited = false;
     }
     ExprObj(const ExprObj& other) {
         isCol = other.isCol;
+        isInited = other.isInited;
         if(isCol) {
             col = other.col;
         } else {
@@ -20,6 +23,7 @@ struct ExprObj {
     }
     ExprObj& operator = (const ExprObj& other) {
         isCol = other.isCol;
+        isInited = other.isInited;
         if(isCol) {
             col = other.col;
         } else {
