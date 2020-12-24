@@ -1,6 +1,8 @@
 #pragma once
+#include <string>
 #include <vector>
 #include "../Record/Data.h"
+#include "../Pages/FileBase.h"
 #include "../Utils/MyBitMap.h"
 #include "../Record/PageBase.h"
 #include "../Utils/Constraints.h"
@@ -8,19 +10,17 @@ using namespace std;
 /*
 管理一个索引的信息
 */
-class Index {
+class Index: FileBase {
 public:
-	int fileID;
-	char databaseName[MAX_IDENTIFIER_LEN + 1];
-	char tableName[MAX_IDENTIFIER_LEN + 1];
-	char indexName[MAX_IDENTIFIER_LEN + 1];
-	int numberOfPage;
+	string databaseName;
+	string tableName;
+	string indexName;
 	int rootPage;
 	vector<Data> keys;
 	MyBitMap *bitMap;
 
-	Index(const char *databaseName, const char *tableName, const char *indexName);
-	Index(const char *databaseName, const char *tableName, const char *indexName, vector<Data> keys);
+	Index(string databaseName, string tableName, string indexName);
+	Index(string databaseName, string tableName, string indexName, vector<Data> keys);
 	~Index();
 
 	void LoadHeader();

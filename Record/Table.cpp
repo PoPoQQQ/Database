@@ -8,7 +8,8 @@
 #include "../FileIO/FileManager.h"
 #include "../BufManager/BufPageManager.h"
 
-Table::Table(const char *databaseName, const char *tableName) {
+Table::Table(string databaseName, string tableName): 
+	FileBase("Database/" + databaseName + "/" + tableName) {
 	bitMap = NULL;
 
 	static char dir[1000];
@@ -18,7 +19,7 @@ Table::Table(const char *databaseName, const char *tableName) {
 	LoadHeader();
 }
 
-Table::Table(const char *databaseName, const char *tableName, FieldList fieldList): fieldList(fieldList) {
+Table::Table(string databaseName, string tableName, FieldList fieldList): fieldList(fieldList) {
 	if(strlen(databaseName) > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
