@@ -3,7 +3,8 @@ YACC := bison
 CC := g++
 CFLAGS := -g
 TARGET := main.exe
-SRCS := $(wildcard *.cpp Utils/*.cpp Index/*.cpp Record/*.cpp)
+SRCS := $(wildcard *.cpp Utils/*.cpp Index/*.cpp Record/*.cpp FieldConstraint/*.cpp Pages/*.cpp)
+INCLUDE_PATH := Utils/
 
 all: $(TARGET)
 
@@ -21,3 +22,8 @@ clean:
 
 love:
 	rd Database /s/q
+# linux
+rmps:
+	rm ./Parser/yacc.tab.c Parser/yacc.tab.h Parser/lex.yy.c $(TARGET)
+rmdb:
+	rm -rf Database

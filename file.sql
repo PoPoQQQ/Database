@@ -1,7 +1,8 @@
-CREATE DATABASE orderDB;
+-- CREATE DATABASE orderDB;
 
 USE orderDB;
-
+SHOW TABLES;
+SHOW DATABASES;
 /****************************************************************
 comment!
 */

@@ -29,7 +29,7 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 // %token<m_nString> STRING
 // %type<m_sId> file
 // %type<m_sId> tokenlist
-%token<m_sId> IDENTIFIER
+%token<m_sId> IDENTIFIER IDENTIFIER2
 %token<m_nInt> VALUE_INT
 %token<m_nFloat> VALUE_FLOAT
 %token<m_nString> VALUE_STRING
@@ -38,17 +38,24 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %token INSERT INTO VALUES DELETE FROM WHERE
 %token UPDATE SET SELECT IS INTTOKEN VARCHARTOKEN
 %token DEFAULT CONSTRAINT CHANGE ALTER ADD RENAME
-%token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN TABLES
-%token<m_sId> DATETOKEN 
+%token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN ON TO
+%token<m_sId> DATETOKEN TABLES
 
 %left AND
 
-%type<m_sId> dbName tbName colName
+%type<m_sId> dbName tbName colName pkName fkName idxName
 %type<m_data> value type
-%type<m_field> field
-%type<m_fieldList> fieldList
+%type<m_field_desc> field
+%type<m_field_desc_list> fieldList
 %type<m_valueList> valueList
 %type<m_valueLists> valueLists
+%type<m_stringList> columnList tableList
+%type<m_col> col
+%type<m_colList> colList selector
+%type<m_set_clause> setClause
+%type<m_expr> expr
+%type<m_op> op
+%type<m_whereClause> whereClause
 
 %%
 
@@ -69,14 +76,13 @@ stmt: 	sysStmt ';'
 	| 	tbStmt ';'
 		{
 		}
-	// | idxStmt ';'
-	// {
+	| 	idxStmt ';'
+		{
 
-	// }
-	// | alterStmt ';'
-	// {
-
-	// }
+		}
+	| 	alterStmt ';'
+		{
+		}
 	;
 
 sysStmt: 	SHOW DATABASES
@@ -104,15 +110,17 @@ dbStmt:		CREATE DATABASE dbName
 		;
 tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
-				Database::CreateTable(($3).c_str(), $5);
+				FieldList fieldList;
+				fieldList.AddFieldDescVec($3.c_str(), $5);
+				Database::CreateTable(($3).c_str(), fieldList);
 			}
         |	DROP TABLE tbName
 			{
-
+				cout << "TODO: DROP TABLE: " << $3 << endl;
 			}
         |	DESC tbName
 			{
-
+				Database::GetTable($2.c_str())->DescTable();
 			}
         |	INSERT INTO tbName VALUES valueLists
 			{
@@ -124,65 +132,105 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	UPDATE tbName SET setClause WHERE whereClause
 			{
-
+				Table *table = Database::GetTable($2.c_str()); 
+				cout << "TODO: UPDATE " << $2 << endl;
+				$4.print();
+				$6.print();
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{
-
+				//TODO
+				// if($2.size() == 0) { // 说明是 *
+				// 	for(int i = 0;i < $4.size(); ++i) {
+				// 		$4[i].fieldList;
+				// 	}
+				// }
+				cout << "TODO: SELECT ----" << endl;
+				for(int i = 0;i < $2.size(); ++i) {
+					$2[i].print();
+				}
+				$6.print();
 			}
 		;
-
+idxStmt		:	CREATE INDEX idxName ON tbName '(' columnList ')'
+			|	DROP INDEX idxName
+			|	ALTER TABLE tbName ADD INDEX idxName '(' columnList ')'
+			|	ALTER TABLE tbName DROP INDEX idxName
+			;
+			
+alterStmt	:	ALTER TABLE tbName ADD field
+			|   ALTER TABLE tbName DROP colName
+			|	ALTER TABLE tbName CHANGE colName field
+			|	ALTER TABLE tbName RENAME TO tbName
+			|	ALTER TABLE tbName DROP PRIMARY KEY
+			|	ALTER TABLE tbName ADD CONSTRAINT pkName PRIMARY KEY '(' columnList ')'
+			|	ALTER TABLE tbName DROP PRIMARY KEY pkName
+			|	ALTER TABLE tbName ADD CONSTRAINT fkName FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
+			|	ALTER TABLE tbName DROP FOREIGN KEY fkName
+			;
 fieldList	:	field
 				{
-					$$ = FieldList();
-					$$.AddField($1);
+					$$.push_back($1);
 				}
 			|	fieldList ',' field
 				{
 					$$ = $1;
-					$$.AddField($3);
-				}
-			|	fieldList ',' PRIMARY KEY '(' columnList ')'
-			  	{
-			  		$$ = $1;
-			  		//TODO
-				}
-			|	fieldList ',' FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
-				{
-					$$ = $1;
-					//TODO
+					$$.push_back($3);
 				}
 			;
 
 field  	: 	colName type
 			{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
 			}
       	| 	colName type NOT NULLTOKEN
 		  	{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
-				$$.SetNotNull();
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
+				$$.field.SetNotNull();
 			}
 		| 	colName	type DEFAULT value
 			{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
-				$$.SetDefault($4);
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
+				$$.field.SetDefault($4);
 			}
 		|	colName type NOT NULLTOKEN DEFAULT value
 			{
-				$$ = Field($1.c_str());
-				$$.SetDataType($2);
-				$$.SetNotNull();
-				$$.SetDefault($6);
+				$$.field = Field($1.c_str());
+				$$.field.SetDataType($2);
+				$$.field.SetNotNull();
+				$$.field.SetDefault($6);
+			}
+		|	PRIMARY KEY '(' columnList ')'
+			{
+				$$.type = FieldDesc::PRIMARY;
+				$$.columnList = $4;
+			}
+		| 	FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
+			{
+				// 在索引的时候就事先进行部分可行的检查
+				// 1. 检查两个 List 的长度是否相等
+				if($4.size() != $9.size()) {
+					throw "Error: Foreign key lists have different length.";
+				}
+				$$.type = FieldDesc::FOREIGN;
+				$$.columnList = $4;
+				$$.tbName = $7;
+				$$.ref_columnList = $9;
 			}
 		;
 type  	:	INTTOKEN '(' VALUE_INT ')'
 			{
 				$$ = Data(Data::INT, $3);
 			}
+		/*
+		| CHARTOKEN '(' VALUE_INT ')'
+			{
+				$$ = Data(Data::CHAR, $3);
+			}
+        */
         |	VARCHARTOKEN '(' VALUE_INT ')'
         	{
         		$$ = Data(Data::VARCHAR, $3);
@@ -195,26 +243,27 @@ type  	:	INTTOKEN '(' VALUE_INT ')'
         	{
         		$$ = Data(Data::FLOAT);
 			}
+
 		;
 valueLists  : '('valueList')'
-			{
-				$$.push_back($2);
-			}
-			| valueLists','  '('valueList')'
-			{
-				$$ = $1;
-				$$.push_back($4);
-			}
+				{
+					$$.push_back($2);
+				}
+			| valueLists ',' '(' valueList ')'
+				{
+					$$ = $1;
+					$$.push_back($4);
+				}
 			;
 valueList  	: value
-			{
-				$$.push_back($1);
-			}
+				{
+					$$.push_back($1);
+				}
 			| valueList ',' value
-			{
-				$$ = $1;
-				$$.push_back($3);
-			}
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 
 value	:	VALUE_INT
@@ -236,40 +285,141 @@ value	:	VALUE_INT
 		;
 
 whereClause : 	col op expr
+				{
+					$$.type = WhereCondition::EXPR;
+					$$.col = $1;
+					$$.op = $2;
+					$$.expr = $3;
+				}
 			| 	col	IS NULLTOKEN
+				{
+					$$.type = WhereCondition::IS_NULL;
+					$$.col = $1;
+				}
             | 	col IS NOT NULLTOKEN
+				{
+					$$.type = WhereCondition::IS_NOT_NULL;
+					$$.col = $1;
+				}
             | 	whereClause	AND	whereClause
+				{
+					$$.type = WhereCondition::COMBINDED;
+					$$.condition1 = new WhereCondition($1);
+					$$.condition2 = new WhereCondition($3);
+				}
 			;
 
 col			: 	tbName '.' colName
+				{
+					$$.tbName = $1;
+					$$.colName = $3;
+				}
 			|	colName
+				{
+					$$.colName = $1;
+				}
 			;
-op  : '=' | "<>" | "<=" | ">=" | '<' | '>'
+op  : '='
+		{
+			$$ = OpEnum::EQUAL;
+		}
+	| "<>" 
+		{
+			$$ = OpEnum::NOTEQUAL;
+		}
+	| "<=" 
+		{
+			$$ = OpEnum::LEQUAL;
+		}
+	| ">=" 
+		{
+			$$ = OpEnum::GEQUAL;
+		}
+	| '<' 
+		{
+			$$ = OpEnum::LESS;
+		}
+	| '>'
+		{
+			$$ = OpEnum::GREATER;
+		}
 	;
 
 expr  : value
+		{
+			$$.isCol = false;
+			$$.value = $1;
+		}
       | col
+	  	{
+			$$.isCol = true;
+			$$.col = $1;
+		}
 	  ;
 
 setClause  	: colName '=' value
+				{
+					// 如果语句中有重复的列名，则报错退出
+					if($$.setClauseMap.find($1) != $$.setClauseMap.end()) {
+						char buf[256];
+						snprintf(buf, 256, "Error: set clause has duplicate colName: %s", $1.c_str());
+						throw string(buf);
+					} else {
+						$$.setClauseMap.insert(make_pair($1, $3));
+					}
+				}
 			| setClause ',' colName '=' value
+				{
+					$$ = $1;
+					if($$.setClauseMap.find($3) != $$.setClauseMap.end()) {
+						char buf[256];
+						snprintf(buf, 256, "Error: set clause has duplicate colName: %s", $3.c_str());
+						throw string(buf);
+					} else {
+						$$.setClauseMap.insert(make_pair($3, $5));
+					}
+				}
 			;
 selector	: '*'
-			| colList
-			;
-
-colList 	: col
-			| colList ',' col
 				{
 
 				}
+			| colList
+				{
+					$$ = $1;
+				}
+			;
+
+colList 	: col
+				{
+					$$.push_back($1);
+				}
+			| colList ',' col
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 tableList	:	tbName
+				{
+					$$.push_back($1);
+				}
 			|	tableList ',' tbName
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 
 columnList  :	colName
+				{
+					$$.push_back($1);
+				}
             |	columnList ',' colName
+				{
+					$$ = $1;
+					$$.push_back($3);
+				}
 			;
 
 dbName  : 	IDENTIFIER
@@ -290,11 +440,28 @@ colName :	IDENTIFIER
 			{
 				$$ = $1;
 			}
-/*		| 	TABLES
+		| 	TABLES
 			{
-			}*/
+				$$ = $1;
+			}
 		;
 
+pkName : IDENTIFIER
+			{
+				$$ = $1;
+			}
+		;
+
+fkName : IDENTIFIER
+			{
+				$$ = $1;
+			}
+		;
+idxName : IDENTIFIER
+			{
+				$$ = $1;
+			}
+		;
 %%
 
 void yyerror(const char *s)			//当yacc遇到语法错误时，会回调yyerror函数，并且把错误信息放在参数s中

@@ -1,9 +1,9 @@
 #pragma once
-#include "BPlusNodePage.h"
+#include "BplusNodePage.h"
 #define PAGE_OFFSET 64
 class BplusInnerNodePage: public BplusNodePage {
 public:
-	BplusInnerNodePage(void* context, int pageNumber, int pageIndex, BufType b);
+	BplusInnerNodePage(FileBase* context, int pageNumber, int pageIndex, BufType b);
 	
 	void Zig(int index, BplusNodePage* leftSon, BplusNodePage* rightSon);
 	void Zag(int index, BplusNodePage* leftSon, BplusNodePage* rightSon);

@@ -11,7 +11,6 @@ CREATE TABLE restaurant (
   rate FLOAT,
   PRIMARY KEY (id)
 );
-
 CREATE TABLE customer(
 	id INT(10) NOT NULL,
 	name VARCHAR(25) NOT NULL,
@@ -40,6 +39,13 @@ CREATE TABLE orders(
 );
 
 SHOW TABLES;
+DESC restaurant;
+desc customer;
+DESC food;
+desc orders;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
+select id, name, orders.customer_ids from customer where id IS NOT NULL;
+update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
+select id from customer where id IS NOT NULL and name > '1234';

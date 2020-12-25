@@ -1,9 +1,9 @@
 #include "BplusNodePage.h"
 #include "BplusLeafNodePage.h"
 
-BplusNodePage::BplusNodePage(void* context, int pageNumber, int pageIndex, BufType b):
+BplusNodePage::BplusNodePage(FileBase* context, int pageNumber, int pageIndex, BufType b):
 PageBase(pageNumber, pageIndex, b) {
-	this->context = (Index*)context;
+	this->context = dynamic_cast<Index*>(context);
 	keyCount = 0;
 }
 void BplusNodePage::LoadPageHeader() {

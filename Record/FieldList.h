@@ -2,6 +2,9 @@
 #include <vector>
 #include "Field.h"
 #include "../BufManager/BufPageManager.h"
+#include "./PrimaryKeyCstrnt.h"
+#include "./ForeignKeyCstrnt.h"
+#include "FieldDesc.h"
 using namespace std;
 /*
 实现了一个字段的定义
@@ -9,19 +12,26 @@ using namespace std;
 class FieldList {
 public:
 	vector<Field> fields;
+	vector<PrimaryKeyCstrnt> pkConstraints;
+	vector<ForeignKeyCstrnt> fkConstraints;
 
 	void LoadFields(BufType b);
-	void SaveFields(BufType b);
+	void SaveFields(BufType b) const;
 	void LoadDatas(unsigned char* b);
-	void SaveDatas(unsigned char* b);
+	// 将 FieldList 中储存的所有数据保存到 buffer 中（按 Byte 进行储存）
+	void SaveDatas(unsigned char* b) const;
 
-	void AddField(Field field);
+	void AddField(const Field& field);
+	void AddFieldDescVec(const char* tbName, const vector<FieldDesc>& field_desc_vec);
 	void PrintFields();
 	void PrintDatas(unsigned int bitMap);
 
-	int FieldCount();
-	int RoundedDataSize();
+	int FieldCount() const;
+	int RoundedDataSize() const;
 	Field& GetColumn(int index);
-	int GetColumnIndex(const char* columnName);
+	int GetColumnIndex(const char* columnName) const;
 
+	FieldList(){};
+	FieldList(const FieldList&);
+	~FieldList();
 };

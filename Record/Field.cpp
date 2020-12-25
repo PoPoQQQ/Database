@@ -48,13 +48,13 @@ Field Field::SetForeignKey(const char *foreignKeyTable, const char *foreignKeyCo
 	return *this;
 }
 
-int Field::DataSize() {
+int Field::DataSize() const {
 	return data.dataSize;
 }
-int Field::RoundedDataSize() {
+int Field::RoundedDataSize() const {
 	return ((DataSize() | 3) ^ 3) + ((DataSize() & 3) ? 4 : 0);
 }
-int Field::FieldSize() {
+int Field::FieldSize() const {
 	int size = MAX_IDENTIFIER_LEN + 12;
 	if(constraints & 2)
 		size += RoundedDataSize();
@@ -93,7 +93,7 @@ void Field::Load(BufType b) {
 		b += MAX_IDENTIFIER_LEN >> 2;
 	}
 }
-void Field::Save(BufType b) {
+void Field::Save(BufType b) const{
 	memcpy(b, columnName, MAX_IDENTIFIER_LEN);
 	b += MAX_IDENTIFIER_LEN >> 2;
 
@@ -127,6 +127,12 @@ void Field::Save(BufType b) {
 void Field::LoadData(unsigned char* b) {
 	data.LoadData(b);
 }
-void Field::SaveData(unsigned char* b) {
+void Field::SaveData(unsigned char* b) const {
 	data.SaveData(b);
+}
+
+string Field::toString() const {
+	char buf[256];
+	snprintf(buf, sizeof(buf), "Field{colName: %s, type: %d, constraints: %d }", columnName, data.dataType, constraints);
+	return string(buf);
 }

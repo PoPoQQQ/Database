@@ -1,7 +1,7 @@
 #include "BplusLeafNodePage.h"
 #include "BplusInnerNodePage.h"
 
-BplusInnerNodePage::BplusInnerNodePage(void* context, int pageNumber, int pageIndex, BufType b):
+BplusInnerNodePage::BplusInnerNodePage(FileBase* context, int pageNumber, int pageIndex, BufType b):
 	BplusNodePage(context, pageNumber, pageIndex, b) {
 	pageType = PageBase::BPLUS_INNER_NODE_PAGE;
 }
@@ -96,7 +96,8 @@ void BplusInnerNodePage::Insert(vector<Data> keys, int value,
 		return;
 	int leftCount = BPLUS_TREE_RANK >> 1;
 	int rightCount = keyCount - leftCount - 1;
-	BplusInnerNodePage* _page = dynamic_cast<BplusInnerNodePage*>(context->CreatePage(PageBase::BPLUS_INNER_NODE_PAGE));
+	BplusInnerNodePage* _page = dynamic_cast<BplusInnerNodePage*>(context->GetAvailablePage(PageBase::BPLUS_INNER_NODE_PAGE));
+	context->bitMap->setBit(_page->pageNumber, 0);
 	added = true;
 	addedKey = GetKey(leftCount);
 	addedValue = _page->pageNumber << 8;
