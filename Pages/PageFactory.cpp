@@ -1,3 +1,4 @@
+#include "BitMapPage.h"
 #include "PageFactory.h"
 #include "../Record/RecordPage.h"
 #include "../Index/BplusLeafNodePage.h"
@@ -14,6 +15,8 @@ PageBase* PageFactory::AllocPage(FileBase* context, int pageNumber, int index, B
 			return new BplusLeafNodePage(context, pageNumber, index, b);
 		case PageBase::BPLUS_INNER_NODE_PAGE:
 			return new BplusInnerNodePage(context, pageNumber, index, b);
+		case PageBase::BITMAP_PAGE:
+			return new BitMapPage(context, pageNumber, index, b);
 		default:
 			throw "Invalid page type!";
 	}

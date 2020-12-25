@@ -1,24 +1,27 @@
 #include "FileBase.h"
+#include "BitMapPage.h"
 #include "PageFactory.h"
 #include "../Utils/Global.h"
 
 FileBase::FileBase(string fileDirectory, bool createFile): 
-	numberOfPage(1), fileDirectory(fileDirectory) {
+	numberOfPage(2), fileDirectory(fileDirectory), bitMapPage(-1) {
 	if(createFile) {
 		Global::getInstance()->fm->createFile(fileDirectory.c_str());
 		Global::getInstance()->fm->openFile(fileDirectory.c_str(), fileID);
-		bitMap = new MyBitMap(PAGE_SIZE << 2, 1);
-		bitMap->setBit(0, 0);
+		delete PageFactory::CreatePage(this, fileID, 0, PageBase::BITMAP_PAGE);
+		PageBase* page = PageFactory::CreatePage(this, fileID, 1, PageBase::BITMAP_PAGE);
+		bitMapPage = page->pageNumber;
+		dynamic_cast<BitMapPage*>(page)->SetBit(0, 0);
+		dynamic_cast<BitMapPage*>(page)->SetBit(1, 0);
+		delete page;
 	}
 	else {
 		Global::getInstance()->fm->openFile(fileDirectory.c_str(), fileID);
-		bitMap = NULL;
 	}
 }
 
 FileBase::~FileBase() {
 	Global::getInstance()->fm->closeFile(fileID);
-	delete bitMap;
 }
 
 BufType FileBase::GetHeaderBufType() const {
@@ -31,9 +34,7 @@ void FileBase::MarkDirty() const {
 
 PageBase* FileBase::GetAvailablePage(int pageType) {
 	// 查看是否还有表是否还有空间
-	int pageNumber = bitMap->findLeftOne();
-	if(pageNumber == -1)
-		throw "File volume not enough!";
+	int pageNumber = FindLeftOne();
 	if(pageNumber <= 0 || pageNumber > numberOfPage)
 		throw "Bit map error in class \"Table\"!";
 	// 获得（或创建）用于储存 Record 的页面
@@ -68,9 +69,25 @@ PageBase* FileBase::CreatePage(int pageType) {
 }
 
 void FileBase::FreePage(int pageNumber) {
-	if(pageNumber == 0 || pageNumber >= numberOfPage)
+	if(pageNumber <= 0 || pageNumber >= numberOfPage)
 		throw "Unable to free this page!";
 	PageFactory::FreePage(fileID, pageNumber);
-	bitMap->setBit(pageNumber, 1);
+	SetBit(pageNumber, 1);
 }
 
+void FileBase::SetBit(int index, int bit) {
+	PageBase* page = LoadPage(bitMapPage);
+	if(page == NULL || page->pageType != PageBase::BITMAP_PAGE)
+		throw "Invalid page type!";
+	dynamic_cast<BitMapPage*>(page)->SetBit(index, bit);
+	delete page;
+}
+
+int FileBase::FindLeftOne() {
+	PageBase* page = LoadPage(bitMapPage);
+	if(page == NULL || page->pageType != PageBase::BITMAP_PAGE)
+		throw "Invalid page type!";
+	int ret = dynamic_cast<BitMapPage*>(page)->FindLeftOne();
+	delete page;
+	return ret;
+}

@@ -33,7 +33,7 @@ Index::Index(string databaseName, string tableName, string indexName, vector<Dat
 	SaveHeader();
 
 	PageBase* page = GetAvailablePage(PageBase::BPLUS_LEAF_NODE_PAGE);
-	bitMap->setBit(page->pageNumber, 0);
+	SetBit(page->pageNumber, 0);
 	rootPage = page->pageNumber;
 	delete page;
 
@@ -78,10 +78,6 @@ void Index::LoadHeader() {
 		it->LoadType(b + (offset >> 2));
 		offset += 8;
 	}
-
-	if(bitMap != NULL)
-		delete bitMap;
-	bitMap = new MyBitMap(PAGE_SIZE << 2, b + (PAGE_INT_NUM >> 1));
 }
 
 void Index::SaveHeader() const {
@@ -112,8 +108,7 @@ void Index::SaveHeader() const {
 		it->SaveType(b + (offset >> 2));
 		offset += 8;
 	}
-
-	bitMap->save(b + (PAGE_INT_NUM >> 1));
+	
 	MarkDirty();
 }
 
@@ -132,7 +127,7 @@ void Index::Insert(vector<Data> keys, int value) {
 	BplusInnerNodePage* _page = dynamic_cast<BplusInnerNodePage*>(GetAvailablePage(PageBase::BPLUS_INNER_NODE_PAGE));
 	_page->SetValue(0, rootPage << 8);
 	_page->InsertKeyAndValue(0, addedKey, addedValue);
-	bitMap->setBit(_page->pageNumber, 0);
+	SetBit(_page->pageNumber, 0);
 
 	rootPage = _page->pageNumber;
 	SaveHeader();

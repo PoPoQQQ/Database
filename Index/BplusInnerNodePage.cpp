@@ -97,7 +97,7 @@ void BplusInnerNodePage::Insert(vector<Data> keys, int value,
 	int leftCount = BPLUS_TREE_RANK >> 1;
 	int rightCount = keyCount - leftCount - 1;
 	BplusInnerNodePage* _page = dynamic_cast<BplusInnerNodePage*>(context->GetAvailablePage(PageBase::BPLUS_INNER_NODE_PAGE));
-	context->bitMap->setBit(_page->pageNumber, 0);
+	context->SetBit(_page->pageNumber, 0);
 	added = true;
 	addedKey = GetKey(leftCount);
 	addedValue = _page->pageNumber << 8;

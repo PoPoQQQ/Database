@@ -8,13 +8,19 @@ public:
 	int numberOfPage;
 	string fileDirectory;
 	int pageIndex;
-	MyBitMap *bitMap;
+	int bitMapPage;
+
 	FileBase(string fileDirectory, bool createFile);
 	~FileBase();
+
 	PageBase* GetAvailablePage(int pageType);
 	PageBase* LoadPage(int pageNumber);
 	PageBase* CreatePage(int pageType);
 	void FreePage(int pageNumber);
+
+	void SetBit(int index, int bit);
+	int FindLeftOne();
+
 protected:
 	virtual void LoadHeader() = 0;
 	virtual void SaveHeader() const = 0;

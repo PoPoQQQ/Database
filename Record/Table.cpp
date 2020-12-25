@@ -58,10 +58,6 @@ void Table::LoadHeader() {
 	offset += 4;
 	
 	fieldList.LoadFields(b + (offset >> 2));
-
-	if(bitMap != NULL)
-		delete bitMap;
-	bitMap = new MyBitMap(PAGE_SIZE << 2, b + (PAGE_INT_NUM >> 1));
 }
 
 void Table::SaveHeader() const {
@@ -88,7 +84,6 @@ void Table::SaveHeader() const {
 
 	fieldList.SaveFields(b + (offset >> 2));
 
-	bitMap->save(b + (PAGE_INT_NUM >> 1));
 	MarkDirty();
 }
 
@@ -105,7 +100,7 @@ void Table::AddRecord(Record record) {
 
 	bool full = dynamic_cast<RecordPage*>(page)->AddRecord(record);
 	if(full)
-		bitMap->setBit(page->pageNumber, 0);
+		SetBit(page->pageNumber, 0);
 	// 更新 Header 数据，比如说 recordCount
 	SaveHeader();
 	delete page;

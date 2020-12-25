@@ -35,7 +35,7 @@ void BplusLeafNodePage::Insert(vector<Data> keys, int value,
 	int leftCount = keyCount >> 1;
 	int rightCount = keyCount - leftCount;
 	BplusLeafNodePage* _page = dynamic_cast<BplusLeafNodePage*>(context->GetAvailablePage(PageBase::BPLUS_LEAF_NODE_PAGE));
-	context->bitMap->setBit(_page->pageNumber, 0);
+	context->SetBit(_page->pageNumber, 0);
 	added = true;
 	addedKey = GetKey(leftCount);
 	addedValue = _page->pageNumber << 8;
