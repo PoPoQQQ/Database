@@ -11,7 +11,6 @@ CREATE TABLE restaurant (
   rate FLOAT,
   PRIMARY KEY (id)
 );
-
 CREATE TABLE customer(
 	id INT(10) NOT NULL,
 	name VARCHAR(25) NOT NULL,

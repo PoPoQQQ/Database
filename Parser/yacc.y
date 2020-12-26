@@ -210,7 +210,7 @@ field  	: 	colName type
 			}
 		|	PRIMARY KEY '(' columnList ')'
 			{
-				$$.type = FieldDesc::FieldType::PRIMARY;
+				$$.type = FieldDesc::PRIMARY;
 				$$.columnList = $4;
 			}
 		| 	FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
@@ -220,7 +220,7 @@ field  	: 	colName type
 				if($4.size() != $9.size()) {
 					throw "Error: Foreign key lists have different length.";
 				}
-				$$.type = FieldDesc::FieldType::FOREIGN;
+				$$.type = FieldDesc::FOREIGN;
 				$$.columnList = $4;
 				$$.tbName = $7;
 				$$.ref_columnList = $9;
@@ -291,24 +291,24 @@ value	:	VALUE_INT
 
 whereClause : 	col op expr
 				{
-					$$.type = WhereCondition::CondType::EXPR;
+					$$.type = WhereCondition::EXPR;
 					$$.col = $1;
 					$$.op = $2;
 					$$.expr = $3;
 				}
 			| 	col	IS NULLTOKEN
 				{
-					$$.type = WhereCondition::CondType::IS_NULL;
+					$$.type = WhereCondition::IS_NULL;
 					$$.col = $1;
 				}
             | 	col IS NOT NULLTOKEN
 				{
-					$$.type = WhereCondition::CondType::IS_NOT_NULL;
+					$$.type = WhereCondition::IS_NOT_NULL;
 					$$.col = $1;
 				}
             | 	whereClause	AND	whereClause
 				{
-					$$.type = WhereCondition::CondType::COMBINDED;
+					$$.type = WhereCondition::COMBINDED;
 					$$.condition1 = new WhereCondition($1);
 					$$.condition2 = new WhereCondition($3);
 				}
@@ -372,7 +372,7 @@ setClause  	: colName '=' value
 						snprintf(buf, 256, "Error: set clause has duplicate colName: %s", $1.c_str());
 						throw string(buf);
 					} else {
-						$$.setClauseMap.insert({$1, $3});
+						$$.setClauseMap.insert(make_pair($1, $3));
 					}
 				}
 			| setClause ',' colName '=' value
@@ -383,7 +383,7 @@ setClause  	: colName '=' value
 						snprintf(buf, 256, "Error: set clause has duplicate colName: %s", $3.c_str());
 						throw string(buf);
 					} else {
-						$$.setClauseMap.insert({$3, $5});
+						$$.setClauseMap.insert(make_pair($3, $5));
 					}
 				}
 			;

@@ -4,7 +4,7 @@
 class BplusLeafNodePage: public BplusNodePage {
 public:
 	int nextPage;
-	BplusLeafNodePage(void* context, int pageNumber, int pageIndex, BufType b);
+	BplusLeafNodePage(FileBase* context, int pageNumber, int pageIndex, BufType b);
 	
 	void LoadPageHeader();
 	void SavePageHeader();

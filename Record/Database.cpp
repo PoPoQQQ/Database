@@ -262,7 +262,7 @@ void Database::ShowTables() {
 
 	int maxLength = 10 + strlen(currentDatabase->databaseName);
 	for(map<string, Table*>::iterator it = currentDatabase->tables.begin(); it != currentDatabase->tables.end(); it++)
-		maxLength = max(maxLength, (int)strlen(it->second->tableName));
+		maxLength = max(maxLength, (signed)it->second->tableName.length());
 
 	cout << "+-";
 	for(int i = 0; i < maxLength; i++)
@@ -281,7 +281,7 @@ void Database::ShowTables() {
 
 	for(map<string, Table*>::iterator it = currentDatabase->tables.begin(); it != currentDatabase->tables.end(); it++) {
 		cout << "| " << it->second->tableName;
-		for(int i = maxLength - strlen(it->second->tableName); i > 0 ; i--)
+		for(int i = maxLength - it->second->tableName.length(); i > 0 ; i--)
 			cout << " ";
 		cout << " |" << endl;
 	}
@@ -311,7 +311,7 @@ Table* Database::GetTable(const char *tableName) {
 		throw "Table not found!";
 	return currentDatabase->tables[tableName];
 }
-void Database::Insert(const char *tableName, const vector<vector<Data>>& dataLists) {
+void Database::Insert(const char *tableName, const vector<vector<Data> >& dataLists) {
 	vector<Record> recordList;
 	Table* table = GetTable(tableName);
 	for(vector<vector<Data> >::const_iterator it = dataLists.begin(); it != dataLists.end(); it++) {

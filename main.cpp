@@ -71,31 +71,31 @@ int main(int argc, const char* argv[]) {
 			}
 			
 			table->PrintTable();
+			
+			//Database::CreateDatabase("MyDatabase");
+			//Database::OpenDatabase("MyDatabase");
+
+			vector<Data> keys;
+			keys.push_back(Data(Data::INT));
+			Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
+			for(int i = 1; i <= 21; i++) {
+				keys[0].SetData((unsigned)i);
+				index->Insert(keys, i * 10);
+				cout << "=============================" << i << endl;
+				index->Print();
+			}
+			for(int i = 1; i <= 21; i++) {
+				keys[0].SetData((unsigned)i);
+				index->Remove(keys);
+				cout << "=============================" << i << endl;
+				index->Print();
+			}
 		}
     	catch (const char* err) {
 			cout << "error: " << endl;
 			cout << err << endl;
 		}
     }
-    
-
-    /*
-	vector<Data> keys;
-	keys.push_back(Data(Data::INT));
-	Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
-	for(int i = 1; i <= 21; i++) {
-		keys[0].SetData(i);
-		index->Insert(keys, i * 10);
-		cout << "=============================" << i << endl;
-		index->Print();
-	}
-	for(int i = 1; i <= 21; i++) {
-		keys[0].SetData(i);
-		index->Remove(keys);
-		cout << "=============================" << i << endl;
-		index->Print();
-	}*/
-	
 
 	Global::getInstance()->bpm->close();
 	return 0;

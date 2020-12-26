@@ -3,7 +3,7 @@
 #include <iostream>
 #include "Index.h"
 #include "../Record/Data.h"
-#include "../Record/PageBase.h"
+#include "../Pages/PageBase.h"
 #define PAGE_OFFSET 64
 #define INDEX_SIZE 36
 using namespace std;
@@ -11,7 +11,7 @@ class BplusNodePage: public PageBase {
 public:
 	Index* context;
 	int keyCount;
-	BplusNodePage(void* context, int pageNumber, int pageIndex, BufType b);
+	BplusNodePage(FileBase* context, int pageNumber, int pageIndex, BufType b);
 
 	void LoadPageHeader();
 	void SavePageHeader();

@@ -7,7 +7,7 @@ using namespace std;
 bool ColObj::isInTable(const Table& table) const {
     // 如果有 tbName 且 tbName 与当前的 table 不同，则不正确
     if(tbName.size() > 0) {
-        if(strcmp(tbName.c_str(), table.tableName) != 0) {
+        if(strcmp(tbName.c_str(), table.tableName.c_str()) != 0) {
             return false;
         }
     }
@@ -23,7 +23,7 @@ bool ColObj::isInTable(const Table& table) const {
 Field* ColObj::getFieldOrNull(Table& table) {
     // 如果有 tbName 且 tbName 与当前的 table 不同，则不正确
     if(tbName.size() > 0) {
-        if(strcmp(tbName.c_str(), table.tableName) != 0) {
+        if(strcmp(tbName.c_str(), table.tableName.c_str()) != 0) {
             return nullptr;
         }
     }

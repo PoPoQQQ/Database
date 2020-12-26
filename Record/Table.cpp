@@ -1,69 +1,51 @@
 #include <cstring>
+#include <iostream>
 #include <algorithm>
 #include "Field.h"
 #include "Table.h"
 #include "Record.h"
 #include "RecordPage.h"
-#include "PageFactory.h"
 #include "../Utils/Global.h"
+#include "../Pages/PageFactory.h"
 #include "../FileIO/FileManager.h"
 #include "../BufManager/BufPageManager.h"
 using namespace std;
 
-Table::Table(const char *databaseName, const char *tableName) {
-	bitMap = NULL;
-
-	static char dir[1000];
-	sprintf(dir, "Database/%s/%s", databaseName, tableName);
-	Global::getInstance()->getInstance()->fm->openFile(dir, fileID);
-
+Table::Table(string databaseName, string tableName): 
+	FileBase("Database/" + databaseName + "/" + tableName, false),
+	databaseName(databaseName), tableName(tableName) {
 	LoadHeader();
 }
 
-Table::Table(const char *databaseName, const char *tableName, const FieldList& fieldList): fieldList(fieldList) {
-	if(strlen(databaseName) > MAX_IDENTIFIER_LEN)
+Table::Table(string databaseName, string tableName, FieldList fieldList):
+	FileBase("Database/" + databaseName + "/" + tableName, true),
+	databaseName(databaseName), tableName(tableName),
+	ridTimestamp(0), recordCount(0), fieldList(fieldList) {
+	if(databaseName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
-	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
+	if(tableName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	if(fieldList.FieldCount() >= MAX_COL_NUM)
 		throw "Too many fields!";
-
-	memset(this->databaseName, 0, MAX_IDENTIFIER_LEN + 1);
-	memset(this->tableName, 0, MAX_IDENTIFIER_LEN + 1);
-	strcpy(this->databaseName, databaseName);
-	strcpy(this->tableName, tableName);
-	numberOfPage = 1;
-	ridTimestamp = 0;
-	recordCount = 0;
-
-	bitMap = new MyBitMap(PAGE_SIZE << 2, 1);
-	bitMap->setBit(0, 0);
-
-	static char dir[1000];
-	sprintf(dir, "Database/%s/%s", databaseName, tableName);
-	Global::getInstance()->fm->createFile(dir);
-	Global::getInstance()->fm->openFile(dir, fileID);
-
 	SaveHeader();
-}
-
-Table::~Table() {
-	Global::getInstance()->fm->closeFile(fileID);
-	delete bitMap;
 }
 
 void Table::LoadHeader() {
 	int pageIndex;
-	BufType b = Global::getInstance()->bpm->getPage(fileID, 0, pageIndex);
+	BufType b = GetHeaderBufType();
 
 	int offset = 0;
 	
-	memset(databaseName, 0, sizeof databaseName);
-	memcpy(databaseName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	char _databaseName[MAX_IDENTIFIER_LEN + 1];
+	memcpy(_databaseName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	_databaseName[MAX_IDENTIFIER_LEN] = 0;
+	databaseName = string(_databaseName);
 	offset += MAX_IDENTIFIER_LEN;
 	
-	memset(tableName, 0, sizeof databaseName);
-	memcpy(tableName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	char _tableName[MAX_IDENTIFIER_LEN + 1];
+	memcpy(_tableName, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+	_tableName[MAX_IDENTIFIER_LEN] = 0;
+	tableName = string(_tableName);
 	offset += MAX_IDENTIFIER_LEN;
 
 	numberOfPage = b[offset >> 2];
@@ -76,22 +58,18 @@ void Table::LoadHeader() {
 	offset += 4;
 	
 	fieldList.LoadFields(b + (offset >> 2));
-
-	if(bitMap != NULL)
-		delete bitMap;
-	bitMap = new MyBitMap(PAGE_SIZE << 2, b + (PAGE_INT_NUM >> 1));
 }
 
 void Table::SaveHeader() const {
 	int pageIndex;
-	BufType b = Global::getInstance()->bpm->getPage(fileID, 0, pageIndex);
+	BufType b = GetHeaderBufType();
 	
 	int offset = 0;
 	
-	memcpy(b + (offset >> 2), databaseName, MAX_IDENTIFIER_LEN);
+	memcpy(b + (offset >> 2), databaseName.c_str(), min((unsigned long)MAX_IDENTIFIER_LEN, databaseName.length() + 1));
 	offset += MAX_IDENTIFIER_LEN;
 	
-	memcpy(b + (offset >> 2), tableName, MAX_IDENTIFIER_LEN);
+	memcpy(b + (offset >> 2), tableName.c_str(), min((unsigned long)MAX_IDENTIFIER_LEN, tableName.length() + 1));
 	offset += MAX_IDENTIFIER_LEN;
 
 	b[offset >> 2] = numberOfPage;
@@ -106,9 +84,7 @@ void Table::SaveHeader() const {
 
 	fieldList.SaveFields(b + (offset >> 2));
 
-	bitMap->save(b + (PAGE_INT_NUM >> 1));
-
-	Global::getInstance()->bpm->markDirty(pageIndex);
+	MarkDirty();
 }
 
 Record Table::EmptyRecord() {
@@ -116,31 +92,7 @@ Record Table::EmptyRecord() {
 }
 
 void Table::AddRecord(Record record) {
-	// 查看是否还有表是否还有空间
-	int pageNumber = bitMap->findLeftOne();
-	if(pageNumber == -1) {
-		cerr << "File volume not enough!" << endl;
-		exit(-1);
-	}
-	if(pageNumber == 0 || pageNumber > numberOfPage) {
-		cerr << "Bit map error in class \"Table\"!" << endl;
-		exit(-1);
-	}
-	// 获得（或创建）用于储存 Record 的页面
-	// 此时获得的页面必然有空间储存 Record
-	PageBase *page;
-
-	if(pageNumber < numberOfPage)
-		page = PageFactory::LoadPage(this, fileID, pageNumber);
-	else {
-		numberOfPage++;
-		page = PageFactory::CreatePage(this, fileID, pageNumber, PageBase::RECORD_PAGE);
-	}
-
-	if(page == NULL || page->pageType != PageBase::RECORD_PAGE) {
-		cerr << "Illegal Page Type!" << endl;
-		exit(-1);
-	}
+	PageBase *page = GetAvailablePage(PageBase::RECORD_PAGE);
 
 	record.enabled = 1;
 	record.rid = ++ridTimestamp;
@@ -148,7 +100,7 @@ void Table::AddRecord(Record record) {
 
 	bool full = dynamic_cast<RecordPage*>(page)->AddRecord(record);
 	if(full)
-		bitMap->setBit(pageNumber, 0);
+		SetBit(page->pageNumber, 0);
 	// 更新 Header 数据，比如说 recordCount
 	SaveHeader();
 	delete page;
@@ -158,7 +110,7 @@ void Table::PrintTable() {
 	fieldList.PrintFields();
 
 	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
-		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);
+		PageBase *page = LoadPage(pageNumber);
 		if(page == NULL)
 			continue;
 		if(page->pageType == PageBase::RECORD_PAGE)
@@ -190,7 +142,7 @@ void Table::DescTable() const {
 		max_field_length = max(max_field_length, (int) strlen(it->columnName));
 		char buf[256];
 		switch(it->data.dataType & 0xff) {
-			case Data::DataType::INT:
+			case Data::INT:
 				snprintf(buf, 256, "INT(%d)", it->data.dataType >> 8);
 				max_type_length = max(max_type_length, (int) strlen(buf));
 				if(it->constraints & Field::DEFAULT) {
@@ -198,21 +150,21 @@ void Table::DescTable() const {
 					max_default_length = max(max_default_length, min((int) strlen(buf), MAX_IDENTIFIER_LEN));
 				}
 				break;
-			case Data::DataType::VARCHAR:
+			case Data::VARCHAR:
 				snprintf(buf, 256, "VARCHAR(%d)", it->data.dataSize);
 				max_type_length = max(max_type_length, (int) strlen(buf));
 				if(it->constraints & Field::DEFAULT) {
 					max_default_length = max(max_default_length, min((int) strlen(it->data.stringData), MAX_IDENTIFIER_LEN));
 				}
 				break;
-			case Data::DataType::DATE:
+			case Data::DATE:
 				// data == type : 4 == 4
 				if(it->constraints & Field::DEFAULT) {
 					snprintf(buf, sizeof(buf), "%d", it->data.intData);
 					max_default_length = max(max_default_length, min((int) strlen(buf), MAX_IDENTIFIER_LEN));
 				}
 				break;
-			case Data::DataType::FLOAT:
+			case Data::FLOAT:
 				max_type_length = max(max_type_length, 5);
 				if(it->constraints & Field::DEFAULT) {
 					snprintf(buf, sizeof(buf), "%f", it->data.floatData);
@@ -292,24 +244,24 @@ void Table::DescTable() const {
 		cout << "| ";
 		char buf[256];
 		switch(it->data.dataType & 0xff) {
-			case Data::DataType::INT:
+			case Data::INT:
 				snprintf(buf, 256, "INT(%d)", it->data.dataType >> 8);
 				cout << buf;
 				for(int i = 0; i < max_type_length + 2 - (int) strlen(buf) - 1; i++)
 					cout << " ";
 				break;
-			case Data::DataType::VARCHAR:
+			case Data::VARCHAR:
 				snprintf(buf, 256, "VARCHAR(%d)", it->data.dataSize);
 				cout << buf;
 				for(int i = 0; i < max_type_length + 2 - (int) strlen(buf) - 1; i++)
 					cout << " ";
 				break;
-			case Data::DataType::DATE:
+			case Data::DATE:
 				cout << "DATE";
 				for(int i = 0; i < max_type_length + 2 - 4 - 1; i++)
 					cout << " ";
 				break;
-			case Data::DataType::FLOAT:
+			case Data::FLOAT:
 				cout << "FLOAT";
 				for(int i = 0; i < max_type_length + 2 - 5 - 1; i++)
 					cout << " ";

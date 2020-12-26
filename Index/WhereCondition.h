@@ -17,7 +17,7 @@ public:
     } type;
 
     ColObj col;
-    OpEnum op;
+    int op;
     ExprObj expr;
 
     WhereCondition* condition1;

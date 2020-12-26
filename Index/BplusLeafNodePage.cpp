@@ -1,6 +1,6 @@
 #include "BplusLeafNodePage.h"
 
-BplusLeafNodePage::BplusLeafNodePage(void* context, int pageNumber, int pageIndex, BufType b):
+BplusLeafNodePage::BplusLeafNodePage(FileBase* context, int pageNumber, int pageIndex, BufType b):
 	BplusNodePage(context, pageNumber, pageIndex, b) {
 		pageType = PageBase::BPLUS_LEAF_NODE_PAGE;
 		nextPage = 0;
@@ -34,7 +34,8 @@ void BplusLeafNodePage::Insert(vector<Data> keys, int value,
 		return;
 	int leftCount = keyCount >> 1;
 	int rightCount = keyCount - leftCount;
-	BplusLeafNodePage* _page = dynamic_cast<BplusLeafNodePage*>(context->CreatePage(PageBase::BPLUS_LEAF_NODE_PAGE));
+	BplusLeafNodePage* _page = dynamic_cast<BplusLeafNodePage*>(context->GetAvailablePage(PageBase::BPLUS_LEAF_NODE_PAGE));
+	context->SetBit(_page->pageNumber, 0);
 	added = true;
 	addedKey = GetKey(leftCount);
 	addedValue = _page->pageNumber << 8;

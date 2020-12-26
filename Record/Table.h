@@ -1,26 +1,25 @@
 #pragma once
+#include <string>
 #include <vector>
 #include "Record.h"
 #include "FieldList.h"
-#include "../Utils/MyBitMap.h"
+#include "../Pages/FileBase.h"
 using namespace std;
 /*
 管理一个表的信息
 */
-class Table {
+class Table: public FileBase {
 public:
-	int fileID;
-	char databaseName[MAX_IDENTIFIER_LEN + 1];
-	char tableName[MAX_IDENTIFIER_LEN + 1];
-	int numberOfPage;
+	string databaseName;
+	string tableName;
 	unsigned long long ridTimestamp;
 	int recordCount;
 	FieldList fieldList;
-	MyBitMap *bitMap;
 
-	Table(const char *databaseName, const char *tableName); // 仅用于读取表格。从给定的数据库和表中读取信息到内存中
-	Table(const char *databaseName, const char *tableName, const FieldList& fieldList); // 创建表格数据结构并进行创建对应的文件进行保存
-	~Table();
+	// 仅用于读取表格。从给定的数据库和表中读取信息到内存中
+	Table(string databaseName, string tableName);
+	// 创建表格数据结构并进行创建对应的文件进行保存
+	Table(string databaseName, string tableName, FieldList fieldList);
 
 	Record EmptyRecord();
 	void AddRecord(Record record);

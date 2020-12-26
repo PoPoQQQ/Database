@@ -7,8 +7,8 @@ public:
 		UNDEFINED = 0,
 		RECORD_PAGE = 1,
 		BPLUS_LEAF_NODE_PAGE = 2,
-		BPLUS_INNER_NODE_PAGE = 3
-
+		BPLUS_INNER_NODE_PAGE = 3,
+		BITMAP_PAGE = 4
 	};
 	
 	int pageType;

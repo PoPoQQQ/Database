@@ -61,7 +61,7 @@ public:
 	 * @return Table* 指向该表的指针
 	 * */
 	static Table* GetTable(const char *tableName);
-	static void Insert(const char *tableName, const vector<vector<Data>>& dataLists);
+	static void Insert(const char *tableName, const vector<vector<Data> >& dataLists);
 };
 
 

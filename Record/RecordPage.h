@@ -1,15 +1,15 @@
 #pragma once
 #include "Table.h"
 #include "Record.h"
-#include "PageBase.h"
+#include "../Pages/PageBase.h"
 #define PAGE_OFFSET 64
 class RecordPage: public PageBase {
 public:
 	Table* context;
 	unsigned int bitMaps[4];
-	RecordPage(void* context, int pageNumber, int pageIndex, BufType b): 
+	RecordPage(FileBase* context, int pageNumber, int pageIndex, BufType b): 
 		PageBase(pageNumber, pageIndex, b) {
-		this->context = (Table*)context;
+		this->context = dynamic_cast<Table*>(context);
 		pageType = RECORD_PAGE;
 		for(int i = 0; i < 4; i++)
 			bitMaps[i] = 0xffffffffu;
@@ -71,9 +71,8 @@ public:
 		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
 		for(int index = 0; index < recordVolume; index++)
-			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
+			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0)
 				record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
 				// 逐个对 record 进行处理
-			}
 	}
 };

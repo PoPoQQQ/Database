@@ -35,14 +35,14 @@ struct Type//通常这里面每个成员，每次只会使用其中一个，一�
 	ColObj m_col;
 	SetClauseObj m_set_clause;
 	ExprObj m_expr;
-	OpEnum m_op;
+	int m_op;
 	WhereCondition m_whereClause;
 
 	vector<FieldDesc> m_field_desc_list;
 	FieldList m_fieldList;
 	vector<Data> m_valueList;
 	vector<string> m_stringList;
-	vector<vector<Data>> m_valueLists;
+	vector<vector<Data> > m_valueLists;
 	vector<ColObj> m_colList;
 };
 

@@ -4,8 +4,8 @@
 using namespace std;
 WhereCondition::WhereCondition(CondType type) 
     : type(UNDEFINED), op(OpEnum::NONE){
-    condition1 = nullptr;
-    condition2 = nullptr;
+    condition1 = NULL;
+    condition2 = NULL;
 }
 
 WhereCondition::WhereCondition(const WhereCondition& other) {
@@ -24,9 +24,9 @@ WhereCondition::WhereCondition(const WhereCondition& other) {
 
 WhereCondition::~WhereCondition() {
     if(this->type == COMBINDED) {
-        if(this->condition1 == nullptr)
+        if(this->condition1 == NULL)
             delete this->condition1;
-        if(this->condition2 == nullptr)
+        if(this->condition2 == NULL)
             delete this->condition2;
     }
 }
@@ -67,7 +67,7 @@ bool WhereCondition::check() {
 bool WhereCondition::validateUpdate(Table& table) {
     bool result = false;
     const FieldList& fieldList = table.fieldList;
-    const char* tableName = this->col.tbName.size() > 0 ? this->col.tbName.c_str() : table.tableName;
+    const char* tableName = this->col.tbName.size() > 0 ? this->col.tbName.c_str() : table.tableName.c_str();
     switch(this->type) {
         case EXPR:
         {
