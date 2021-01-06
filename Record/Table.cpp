@@ -119,13 +119,13 @@ void Table::PrintTable() {
 	}
 }
 
-void Table::IterTable() {
+void Table::IterTable(function<void(Record&)> iterFunc) {
 	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
 		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);
 		if(page == NULL)
 			continue;
 		if(page->pageType == PageBase::RECORD_PAGE)
-			dynamic_cast<RecordPage*>(page)->IterPage();
+			dynamic_cast<RecordPage*>(page)->IterPage(iterFunc);
 		delete page;
 	}
 }

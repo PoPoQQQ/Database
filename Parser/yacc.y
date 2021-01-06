@@ -139,8 +139,8 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 				$4.validate(table->fieldList);
 				// 检查 whereClause
 				$6.validateUpdate(*table);
-				// $6.print();
 				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
+				// table->IterTable()
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{

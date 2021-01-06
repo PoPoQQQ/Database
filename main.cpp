@@ -1,6 +1,7 @@
 #include <vector>
 #include <cstring>
 #include <stdio.h>
+#include <functional>
 #include <iostream>
 #include "Index/Index.h"
 #include "Record/Table.h"
@@ -10,6 +11,8 @@
 #include "Utils/Constraints.h"
 #include "FileIO/FileManager.h"
 #include "BufManager/BufPageManager.h"
+#include "Index/WhereCondition.h"
+#include "Parser/OpEnum.h"
 using namespace std;
 
 extern FILE *yyin;
@@ -70,26 +73,38 @@ int main(int argc, const char* argv[]) {
 				table->AddRecord(record);
 			}
 			
-			table->PrintTable();
+			// table->PrintTable();
+			WhereCondition where;
+			where.type = WhereCondition::EXPR;
 			
+			where.col.colName = "a";
+			where.op = OpEnum::LEQUAL;
+			where.expr.isCol = false;
+			where.expr.value = Data(Data::INT).SetData((unsigned) 100);
+			
+			function<void(Record&)> it = [&where](Record& record) {
+				static int count = 0;
+				printf("Record(%d): %d\n", count++, where.check(record.fieldList));
+			};
+			table->IterTable(it);
 			//Database::CreateDatabase("MyDatabase");
 			//Database::OpenDatabase("MyDatabase");
 
-			vector<Data> keys;
-			keys.push_back(Data(Data::INT));
-			Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
-			for(int i = 1; i <= 21; i++) {
-				keys[0].SetData((unsigned)i);
-				index->Insert(keys, i * 10);
-				cout << "=============================" << i << endl;
-				index->Print();
-			}
-			for(int i = 1; i <= 21; i++) {
-				keys[0].SetData((unsigned)i);
-				index->Remove(keys);
-				cout << "=============================" << i << endl;
-				index->Print();
-			}
+			// vector<Data> keys;
+			// keys.push_back(Data(Data::INT));
+			// Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
+			// for(int i = 1; i <= 21; i++) {
+			// 	keys[0].SetData((unsigned)i);
+			// 	index->Insert(keys, i * 10);
+			// 	cout << "=============================" << i << endl;
+			// 	index->Print();
+			// }
+			// for(int i = 1; i <= 21; i++) {
+			// 	keys[0].SetData((unsigned)i);
+			// 	index->Remove(keys);
+			// 	cout << "=============================" << i << endl;
+			// 	index->Print();
+			// }
 		}
     	catch (const char* err) {
 			cout << "error: " << endl;
