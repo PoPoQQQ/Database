@@ -69,7 +69,7 @@ bool WhereCondition::validateUpdate(Table& table) {
     const FieldList& fieldList = table.fieldList;
     const char* tableName = this->col.tbName.size() > 0 ? this->col.tbName.c_str() : table.tableName.c_str();
     switch(this->type) {
-        case EXPR:
+        case CondType::EXPR:
         {
             // 检查列名
             const Field* tgt_field = this->col.getFieldOrNullGlobal(&table);
@@ -127,7 +127,7 @@ bool WhereCondition::validateUpdate(Table& table) {
 
             break;
         }
-        case IS_NULL:
+        case CondType::IS_NULL:
             // 检查列名
             if(!this->col.isInTable(table)) {
                 char buf[256];
@@ -137,7 +137,7 @@ bool WhereCondition::validateUpdate(Table& table) {
             // 即使是 IS_NOT_NULL 的限制也不会报错
             return true;
             break;
-        case IS_NOT_NULL:
+        case CondType::IS_NOT_NULL:
             // 检查列名
             if(!this->col.isInTable(table)) {
                 char buf[256];
@@ -146,7 +146,7 @@ bool WhereCondition::validateUpdate(Table& table) {
             }
             return true;
             break;
-        case COMBINDED:
+        case CondType::COMBINDED:
             result = this->condition1->validateUpdate(table) && 
                      this->condition2->validateUpdate(table);
             break;
