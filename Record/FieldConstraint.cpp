@@ -22,7 +22,7 @@ BufType FieldConstraint::SaveBasic(BufType b) const {
     memcpy(b, this->name, MAX_IDENTIFIER_LEN);
 	b += MAX_IDENTIFIER_LEN >> 2;
 
-    b[0] = this->type;
+    b[0] = (unsigned int)this->type;
     b += 1;
 
     return b;
@@ -32,7 +32,7 @@ BufType FieldConstraint::LoadBasic(BufType b) {
     memcpy(this->name, b, MAX_IDENTIFIER_LEN);
 	b += MAX_IDENTIFIER_LEN >> 2;
 
-    this->type = b[0];
+    this->type = (ConstraintType)b[0];
     b += 1;
 
     return b;

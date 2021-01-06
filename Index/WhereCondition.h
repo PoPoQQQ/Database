@@ -7,7 +7,7 @@
 #include "../Parser/ExprObj.h"
 class WhereCondition {
 public:
-    enum CondType {
+    enum class CondType {
         UNDEFINED = 0, // 初始类型，也是一个错误的类型
         EXPR, // col op expr
         IS_NULL, // col IS NULL
@@ -16,13 +16,13 @@ public:
     } type;
 
     ColObj col;
-    int op;
+    OpEnum op;
     ExprObj expr;
 
     WhereCondition* condition1;
     WhereCondition* condition2;
 
-    WhereCondition(CondType type=UNDEFINED);
+    WhereCondition(CondType type = CondType::UNDEFINED);
     WhereCondition(const WhereCondition&);
     ~WhereCondition();
 
