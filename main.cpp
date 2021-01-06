@@ -13,6 +13,7 @@
 #include "BufManager/BufPageManager.h"
 #include "Index/WhereCondition.h"
 #include "Parser/OpEnum.h"
+#include "Parser/SetClauseObj.h"
 using namespace std;
 
 extern FILE *yyin;
@@ -81,12 +82,25 @@ int main(int argc, const char* argv[]) {
 			where.op = OpEnum::LEQUAL;
 			where.expr.isCol = false;
 			where.expr.value = Data(Data::INT).SetData((unsigned) 100);
+			where.expr.isInited = true;
+
+			SetClauseObj setClause;
+			setClause.setClauseMap.insert(make_pair(string("a"), Data(Data::INT).SetData((unsigned) 666)));
+			setClause.setClauseMap.insert(make_pair("c", Data(Data::FLOAT).SetData((float) 7451.76)));
 			
-			function<void(Record&)> it = [&where](Record& record) {
+			cout << setClause.validate(table->fieldList) << endl;
+			cout << where.validateUpdate(*table) << endl;
+
+			function<void(Record&, BufType)> it = [&where, &setClause](Record& record, BufType b) {
 				static int count = 0;
-				printf("Record(%d): %d\n", count++, where.check(record.fieldList));
+				printf("Record(%d): %d\n", count++, where.check(record));
+				if(where.check(record)) {
+					setClause.apply(record);
+					record.Save(b);
+				}
 			};
 			table->IterTable(it);
+			table->PrintTable();
 			//Database::CreateDatabase("MyDatabase");
 			//Database::OpenDatabase("MyDatabase");
 

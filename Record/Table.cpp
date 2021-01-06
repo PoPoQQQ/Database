@@ -119,7 +119,7 @@ void Table::PrintTable() {
 	}
 }
 
-void Table::IterTable(function<void(Record&)> iterFunc) {
+void Table::IterTable(function<void(Record&, BufType)> iterFunc) {
 	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
 		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);
 		if(page == NULL)

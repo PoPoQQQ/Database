@@ -27,7 +27,7 @@ public:
 	void PrintTable();
 	// 根据给定的函数对表中的每一个 Record 进行迭代
 	// 类似于 forEach 函数
-	void IterTable(function<void(Record&)> iterFunc);
+	void IterTable(function<void(Record&, BufType)> iterFunc);
 	// 对应 mysql 的 desc table 命令
 	// 将表头信息以及约束按照一定的规则进行打印
 	void DescTable() const;

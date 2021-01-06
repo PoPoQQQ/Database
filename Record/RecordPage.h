@@ -67,7 +67,7 @@ public:
 				record.PrintRecord();
 			}
 	}
-	void IterPage(function<void(Record&)> iterFunc) {
+	void IterPage(function<void(Record&, BufType)> iterFunc) {
 		Record record = context->EmptyRecord();
 		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
@@ -75,7 +75,7 @@ public:
 			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
 				record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
 				// 逐个对 record 进行处理
-				iterFunc(record);
+				iterFunc(record, b + (PAGE_OFFSET + index * recordSize) / 4);
 			}
 	}
 };

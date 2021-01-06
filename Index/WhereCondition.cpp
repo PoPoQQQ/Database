@@ -153,10 +153,11 @@ bool WhereCondition::validateUpdate(Table& table) {
 	return result;
 }
 
-bool WhereCondition::check(FieldList& fieldList) {
+bool WhereCondition::check(Record& record) {
+	FieldList& fieldList = record.fieldList;
 	switch(this->type) {
 		case WhereCondition::COMBINDED:
-			return this->condition1->check(fieldList) && this->condition2->check(fieldList);
+			return this->condition1->check(record) && this->condition2->check(record);
 		case WhereCondition::IS_NULL: {
 			const int cIndex = fieldList.GetColumnIndex(this->col.colName.c_str());
 			if (cIndex >= 0) {
@@ -189,6 +190,7 @@ bool WhereCondition::check(FieldList& fieldList) {
 				const Field& cField = fieldList.GetColumn(cIndex);
 				// 这里所有的比较都是和值进行的
 				if(this->expr.isCol) {
+					// TODO: 想办法比较列
 					throw "WhereCondition::check(FieldList&) can only check value expr";
 				} else if(this->expr.value.dataType == Data::UNDEFINED) {
 					// TODO: 特殊化处理 NULL 的比较

@@ -132,15 +132,23 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	UPDATE tbName SET setClause WHERE whereClause
 			{
-				cout << "TODO: UPDATE " << $2 << endl;
 				// 检查并读取表格
 				Table *table = Database::GetTable($2.c_str()); 
 				// 检查 setClause
 				$4.validate(table->fieldList);
 				// 检查 whereClause
 				$6.validateUpdate(*table);
+				WhereCondition& whereClause = $6;
+				SetClauseObj& setClause = $4;
 				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
-				// table->IterTable()
+				function<void(Record&, BufType)> it = [&whereClause, &setClause](Record& record, BufType b) {
+					if((whereClause).check(record)) {
+						(setClause).apply(record);
+						record.Save(b);
+					}
+				};
+				table->IterTable(it);
+				table->PrintTable();
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{

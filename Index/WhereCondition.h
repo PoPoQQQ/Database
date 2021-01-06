@@ -6,7 +6,7 @@
 #include "../Parser/OpEnum.h"
 #include "../Parser/ExprObj.h"
 class Table;
-class FieldList;
+class Record;
 class WhereCondition {
 public:
     enum CondType {
@@ -34,6 +34,9 @@ public:
     //* @throws: const char * err/ std::string err
     bool validateUpdate(Table&);
     // 判断给定的数据条目是否满足给定的条件
-    bool check(FieldList&); //TODO
+    // 使用的时候不会检查 Record 是否存在于 col 对应的 Table 中，需要使用 validate 函数进行判断
+    // 默认传入的 Record 就是 whereClause 对应的当前 Table 下的 Record 的数据
+    //* @throws: const char* err
+    bool check(Record&);
 };
 #endif // __WHERE_CONDITION_H__

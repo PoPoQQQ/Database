@@ -132,6 +132,11 @@ Field& FieldList::GetColumn(int index) {
 		throw "Invalid index!";
 	return fields[index];
 }
+const Field& FieldList::GetColumn(int index) const {
+	if(index < 0 || index >= FieldCount())
+		throw "Invalid index!";
+	return fields[index];
+}
 int FieldList::GetColumnIndex(const char* columnName) const {
 	for(int i = 0; i < (signed)fields.size(); i++)
 		if(strcmp(fields[i].columnName, columnName) == 0)

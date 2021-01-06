@@ -38,14 +38,14 @@ CREATE TABLE orders(
 	FOREIGN KEY (food_id) REFERENCES food(id)
 );
 
-SHOW TABLES;
-DESC restaurant;
-desc customer;
-DESC food;
-desc orders;
+-- SHOW TABLES;
+-- DESC restaurant;
+-- desc customer;
+-- DESC food;
+-- desc orders;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
-select id, name, orders.customer_ids from customer where id IS NOT NULL;
+-- select id, name, orders.customer_ids from customer where id IS NOT NULL;
 update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
-select id from customer where id IS NOT NULL and name > '1234';
+-- select id from customer where id IS NOT NULL and name > '1234';

@@ -29,6 +29,7 @@ public:
 	int FieldCount() const;
 	int RoundedDataSize() const;
 	Field& GetColumn(int index);
+	const Field& GetColumn(int index) const;
 	int GetColumnIndex(const char* columnName) const;
 
 	FieldList(){};
