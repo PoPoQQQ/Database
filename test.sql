@@ -46,7 +46,7 @@ CREATE TABLE orders(
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
--- select id, name from customer where id IS NOT NULL;
+select id, name from customer where id = 300001;
 select name from customer;
 update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
 select * from customer;
