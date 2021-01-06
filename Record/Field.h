@@ -28,7 +28,7 @@ public:
 	Field(const char *columnName);
 
 	Data GetData();
-	void SetData(Data data);
+	void SetData(const Data& data);
 	Field SetDataType(Data data);
 	Field SetNotNull();
 	Field SetDefault(Data data);
@@ -44,6 +44,10 @@ public:
 	void SaveData(unsigned char* b) const;
 
 	string toString() const;
+	// 检查传入的 Data 结构是否符合当前 Field 的数据要求
+	// 如果不满足要求则会直接抛出错误
+	//* @throws string 错误原因
+	bool validateData(const Data& data) const;
 	// Field(const Field& other): data(other.data) {
 	// 	memset(this->fieldName, 0, sizeof this->fieldName);
 	// 	strcpy(this->fieldName, other.fieldName);
