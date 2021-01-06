@@ -14,6 +14,7 @@
 #include "Index/WhereCondition.h"
 #include "Parser/OpEnum.h"
 #include "Parser/SetClauseObj.h"
+#include "Parser/ColObj.h"
 using namespace std;
 
 extern FILE *yyin;
@@ -62,6 +63,7 @@ int main(int argc, const char* argv[]) {
 			fieldList.AddField(Field("b").SetDataType(Data(Data::DATE)));
 			fieldList.AddField(Field("c").SetDataType(Data(Data::FLOAT)));
 			fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
+			fieldList.AddField(Field("e").SetDataType(Data(Data::INT)));
 			Table *table = Database::CreateTable("TestTable", fieldList);
 
 			Record record = table->EmptyRecord();
@@ -71,37 +73,52 @@ int main(int argc, const char* argv[]) {
 				record.FillData("b", Data(Data::DATE).SetData("1998/04/02"));
 				record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
 				record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
+				record.FillData("e", Data());
 				table->AddRecord(record);
 			}
 			
-			// table->PrintTable();
-			WhereCondition where;
-			where.type = WhereCondition::EXPR;
+			vector<ColObj> selector;
 			
-			where.col.colName = "a";
-			where.op = OpEnum::GEQUAL;
-			where.expr.isCol = false;
-			where.expr.value = Data(Data::INT).SetData((unsigned) 100);
-			where.expr.isInited = true;
+			ColObj col1, col2, col3;
+			col1.colName = "a";
+			col2.tbName = "TestTable";
+			col2.colName = "d";
+			col3.colName = "e";
+			selector.push_back(col1);
+			selector.push_back(col2);
+			selector.push_back(col3);
 
-			SetClauseObj setClause;
-			setClause.setClauseMap.insert(make_pair(string("a"), Data(Data::INT).SetData((unsigned) 666)));
-			setClause.setClauseMap.insert(make_pair("c", Data(Data::FLOAT).SetData((float) 7451.76)));
-			
-			cout << setClause.validate(table->fieldList) << endl;
-			cout << where.validateUpdate(*table) << endl;
-
-			function<void(Record&, BufType)> it = [&where, &setClause](Record& record, BufType b) {
-				static int count = 0;
-				printf("Record(%d): %d\n", count++, where.check(record));
-				if(where.check(record)) {
-					setClause.apply(record);
-					record.Save(b);
+			for(int i = 0;i < selector.size(); ++i) {
+				// 检查 selector
+				if(!selector[i].isInTable(*table)) {
+					char buf[256];
+					snprintf(buf, 256, "Error: Selector (%s.%s) doesn't exist in table %s", selector[i].tbName.c_str(), selector[i].colName.c_str(), table->tableName.c_str());
+					throw string(buf);
 				}
-			};
-			table->IterTable(it);
-			table->PrintTable();
+			}
 
+			if(selector.size() > 0) {
+				FieldList tFieldList;
+				for(int i = 0;i < selector.size(); ++i) {
+					tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+				}
+				tFieldList.PrintFields();
+				function<void(Record&, BufType)> it = [&tFieldList](Record& record, BufType b) {
+					unsigned int bitmap = 0;
+					int index = -1;
+					for(int i = 0;i < tFieldList.fields.size(); ++i) {
+						index = record.fieldList.GetColumnIndex(tFieldList.fields[i].columnName);
+						tFieldList.fields[i] = record.fieldList.GetColumn(index);
+						bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
+					}
+					tFieldList.PrintDatas(bitmap);
+				};
+				table->IterTable(it);
+			} else {
+				// 代表要选择所有的列
+				// 可以偷懒直接把表打印出来
+				table->PrintTable();
+			}
 			//Database::CreateDatabase("MyDatabase");
 			//Database::OpenDatabase("MyDatabase");
 
@@ -123,6 +140,9 @@ int main(int argc, const char* argv[]) {
 		}
     	catch (const char* err) {
 			cout << "error: " << endl;
+			cout << err << endl;
+		}
+		catch (string err) {
 			cout << err << endl;
 		}
     }

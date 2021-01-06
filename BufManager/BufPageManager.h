@@ -15,6 +15,7 @@ class BufPageManager {
 public:
 	int last;
 	FileManager* fileManager;
+	// 所有的指针对应的数组或对象都在堆上
 	MyHashMap* hash;
 	FindReplace* replace;
 	//MyLinkList* bpl;
@@ -23,6 +24,10 @@ public:
 	 * 缓存页面数组
 	 */
 	BufType* addr;
+	/**
+	 * 在内存中分配一个页大小的空间
+	 * 返回这段空间对应的起始地址。
+	 */
 	BufType allocMem() {
 		BufType b = new unsigned int[PAGE_SIZE >> 2];
 		memset(b, 0, PAGE_SIZE);

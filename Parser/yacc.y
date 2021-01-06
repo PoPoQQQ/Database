@@ -148,7 +148,48 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 					}
 				};
 				table->IterTable(it);
-				table->PrintTable();
+				cout << "Update finished" << endl;
+			}
+		|	SELECT selector FROM tableList
+			{
+				if ($4.size() == 1) {
+					// 查询单个 db
+					Table* table = Database::GetTable($4[0].c_str());
+					if($2.size() == 0) {
+						// 如果是 * , 则可以偷懒直接打印
+						table->PrintTable();
+					} else {
+						// 验证每一个 col 是否合法
+						for(int i = 0;i < $2.size(); ++i) {
+							// 检查 selector
+							if(!$2[i].isInTable(*table)) {
+								char buf[256];
+								snprintf(buf, 256, "Error: Selector (%s.%s) doesn't exist in table %s", $2[i].tbName.c_str(), $2[i].colName.c_str(), table->tableName.c_str());
+								throw string(buf);
+							}
+						}
+
+						FieldList tFieldList;
+						const vector<ColObj>& selector = $2;
+						for(int i = 0;i < selector.size(); ++i) {
+							tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+						}
+						tFieldList.PrintFields();
+						function<void(Record&, BufType)> it = [&tFieldList](Record& record, BufType b) {
+							unsigned int bitmap = 0;
+							int index = -1;
+							for(int i = 0;i < tFieldList.fields.size(); ++i) {
+								index = record.fieldList.GetColumnIndex(tFieldList.fields[i].columnName);
+								tFieldList.fields[i] = record.fieldList.GetColumn(index);
+								bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
+							}
+							tFieldList.PrintDatas(bitmap);
+						};
+						table->IterTable(it);
+					}
+				} else {
+					// 笛卡尔积
+				}
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{

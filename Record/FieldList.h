@@ -24,6 +24,7 @@ public:
 	void AddField(const Field& field);
 	void AddFieldDescVec(const char* tbName, const vector<FieldDesc>& field_desc_vec);
 	void PrintFields();
+	void DescFields() const;
 	void PrintDatas(unsigned int bitMap);
 
 	int FieldCount() const;
