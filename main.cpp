@@ -79,7 +79,7 @@ int main(int argc, const char* argv[]) {
 			where.type = WhereCondition::EXPR;
 			
 			where.col.colName = "a";
-			where.op = OpEnum::LEQUAL;
+			where.op = OpEnum::GEQUAL;
 			where.expr.isCol = false;
 			where.expr.value = Data(Data::INT).SetData((unsigned) 100);
 			where.expr.isInited = true;
@@ -101,6 +101,7 @@ int main(int argc, const char* argv[]) {
 			};
 			table->IterTable(it);
 			table->PrintTable();
+
 			//Database::CreateDatabase("MyDatabase");
 			//Database::OpenDatabase("MyDatabase");
 

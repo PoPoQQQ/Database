@@ -205,16 +205,16 @@ bool WhereCondition::check(Record& record) {
 						return !(this->expr.value == cField.data);
 					}
 					case OpEnum::LEQUAL: {
-						return this->expr.value < cField.data || this->expr.value == cField.data;
-					}
-					case OpEnum::GEQUAL: {
 						return !(this->expr.value < cField.data);
 					}
+					case OpEnum::GEQUAL: {
+						return !(cField.data < this->expr.value);
+					}
 					case OpEnum::LESS: {
-						return this->expr.value < cField.data;
+						return cField.data < this->expr.value;
 					}
 					case OpEnum::GREATER: {
-						return !(this->expr.value < cField.data) && !(this->expr.value == cField.data);
+						return this->expr.value < cField.data;
 					}
 					case OpEnum::NONE:
 						throw "Error: WhereCondition has NONE op in check";

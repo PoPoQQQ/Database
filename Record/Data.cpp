@@ -272,20 +272,20 @@ ostream& operator << (ostream& os, const Data &data) {
 	}
 }
 
-bool operator < (const Data &right, const Data &left) {
-	if(right.dataType != left.dataType) {
+bool operator < (const Data &data1, const Data &data2) {
+	if(data1.dataType != data2.dataType) {
 		cerr << "Data type distincts!" << endl;
 		exit(-1);
 	}
-	switch(left.dataType & 0xff) {
+	switch(data1.dataType & 0xff) {
 		case Data::INT:
-			return left.intData < right.intData;
+			return data1.intData < data2.intData;
 		case Data::VARCHAR:
-			return strcmp(left.stringData, right.stringData) < 0;
+			return strcmp(data1.stringData, data2.stringData) < 0;
 		case Data::DATE:
-			return left.intData < right.intData;
+			return data1.intData < data2.intData;
 		case Data::FLOAT:
-			return left.floatData < right.floatData;
+			return data1.floatData < data2.floatData;
 		default:
 			cerr << "Data type error!" << endl;
 			exit(-1);
