@@ -191,6 +191,9 @@ Data Data::SetData(const Data &data) {
 		else
 			throw "Invalid data type!";
 	}
+	else
+		throw "Invalid data type!";
+	return *this;
 }
 
 void Data::LoadType(unsigned int* b) {

@@ -14,7 +14,7 @@ public:
     char tbName[MAX_IDENTIFIER_LEN + 1]; // 外键关联的表的名称
     vector<string> ref_colList; // 外键关联的列名（或联合列名）
 
-    ForeignKeyCstrnt(const char* name, FieldConstraint::ConstraintType type=FieldConstraint::FOREIGN_KEY);
+    ForeignKeyCstrnt(const char* name, FieldConstraint::ConstraintType type = FieldConstraint::ConstraintType::FOREIGN_KEY);
     ForeignKeyCstrnt(const ForeignKeyCstrnt& other);
 
     string toString() const;

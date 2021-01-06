@@ -1,7 +1,7 @@
 LEX := flex
 YACC := bison
 CC := g++
-CFLAGS := -g
+CFLAGS := -g -std=c++11 -O2
 TARGET := main.exe
 SRCS := $(wildcard *.cpp Utils/*.cpp Index/*.cpp Record/*.cpp FieldConstraint/*.cpp Parser/*.cpp Pages/*.cpp)
 INCLUDE_PATH := Utils/

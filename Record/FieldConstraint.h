@@ -7,14 +7,14 @@
 using namespace std;
 class FieldConstraint {
 public:
-    enum ConstraintType {
+    enum class ConstraintType {
         NONE = 0,
         NOT_NULL = 1,
 		DEFAULT = 2,
 		PRIMARY_KEY = 4,
 		FOREIGN_KEY = 8
     };
-    int type;
+    ConstraintType type;
     char name[MAX_IDENTIFIER_LEN + 1]; // 约束名，一般出现在 ADD CONSTRAINT <name> 语句处
     
     // 从页中读取信息恢复约束数据
@@ -25,7 +25,7 @@ public:
     BufType SaveConstraint(BufType b) const;
     string toString() const;
 
-    FieldConstraint(const char* name="", ConstraintType type=NONE);
+    FieldConstraint(const char* name="", ConstraintType type = ConstraintType::NONE);
     FieldConstraint(const FieldConstraint&);
 protected:
     // 储存约束名和类型的信息

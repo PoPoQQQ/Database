@@ -4,17 +4,17 @@
 #include <iostream>
 using namespace std;
 WhereCondition::WhereCondition(CondType type) 
-	: type(UNDEFINED), op(OpEnum::NONE){
+	: type(CondType::UNDEFINED), op(OpEnum::NONE){
 	condition1 = NULL;
 	condition2 = NULL;
 }
 
 WhereCondition::WhereCondition(const WhereCondition& other) {
 	this->type = other.type;
-	if(other.type == COMBINDED) {
+	if(other.type == CondType::COMBINDED) {
 		this->condition1 = new WhereCondition(*(other.condition1));
 		this->condition2 = new WhereCondition(*(other.condition2));
-	} else if(other.type == EXPR) {
+	} else if(other.type == CondType::EXPR) {
 		this->col = other.col;
 		this->op = other.op;
 		this->expr = other.expr;
@@ -24,7 +24,7 @@ WhereCondition::WhereCondition(const WhereCondition& other) {
 }
 
 WhereCondition::~WhereCondition() {
-	if(this->type == COMBINDED) {
+	if(this->type == CondType::COMBINDED) {
 		if(this->condition1 == NULL)
 			delete this->condition1;
 		if(this->condition2 == NULL)
@@ -35,22 +35,22 @@ WhereCondition::~WhereCondition() {
 void WhereCondition::print() {
 	cout << "whereClause: ----" << endl;
 	switch(type) {
-		case COMBINDED:
+		case CondType::COMBINDED:
 			cout << "type: COMBINDED" << endl;
 			condition1->print();
 			condition2->print();
 			break;
-		case EXPR:
+		case CondType::EXPR:
 			cout << "type: EXPR" << endl;
 			col.print();
-			cout << "op = " << op << endl;
+			cout << "op = " << (int) op << endl;
 			expr.print();
 			break;
-		case IS_NULL:
+		case CondType::IS_NULL:
 			cout << "type: IS_NULL" << endl;
 			col.print();
 			break;
-		case IS_NOT_NULL:
+		case CondType::IS_NOT_NULL:
 			cout << "type: IS_NOT_NULL" << endl;
 			col.print();
 			break;
@@ -66,7 +66,7 @@ bool WhereCondition::validateUpdate(Table& table) {
 	const FieldList& fieldList = table.fieldList;
 	const char* tableName = this->col.tbName.size() > 0 ? this->col.tbName.c_str() : table.tableName.c_str();
 	switch(this->type) {
-		case EXPR:
+		case CondType::EXPR:
 		{
 			// 检查列名
 			const Field* tgt_field = this->col.getFieldOrNullGlobal(&table);
@@ -82,7 +82,6 @@ bool WhereCondition::validateUpdate(Table& table) {
 			}
 			// 如果是 col op col 类型的 expr，则检查另一个域是否存在
 			if(this->expr.isCol) {
-
 				const Field* src_field = this->expr.col.getFieldOrNullGlobal(&table);
 				
 				if(src_field == nullptr) {
@@ -121,10 +120,9 @@ bool WhereCondition::validateUpdate(Table& table) {
 				// 除此之外的错误在更新的过程中检查
 				return true;
 			}
-
 			break;
 		}
-		case IS_NULL:
+		case CondType::IS_NULL:
 			// 检查列名
 			if(!this->col.isInTable(table)) {
 				char buf[256];
@@ -134,7 +132,7 @@ bool WhereCondition::validateUpdate(Table& table) {
 			// 即使是 IS_NOT_NULL 的限制也不会报错
 			return true;
 			break;
-		case IS_NOT_NULL:
+		case CondType::IS_NOT_NULL:
 			// 检查列名
 			if(!this->col.isInTable(table)) {
 				char buf[256];
@@ -143,7 +141,7 @@ bool WhereCondition::validateUpdate(Table& table) {
 			}
 			return true;
 			break;
-		case COMBINDED:
+		case CondType::COMBINDED:
 			result = this->condition1->validateUpdate(table) && 
 					 this->condition2->validateUpdate(table);
 			break;
@@ -156,9 +154,9 @@ bool WhereCondition::validateUpdate(Table& table) {
 bool WhereCondition::check(Record& record) {
 	FieldList& fieldList = record.fieldList;
 	switch(this->type) {
-		case WhereCondition::COMBINDED:
+		case CondType::COMBINDED:
 			return this->condition1->check(record) && this->condition2->check(record);
-		case WhereCondition::IS_NULL: {
+		case CondType::IS_NULL: {
 			const int cIndex = fieldList.GetColumnIndex(this->col.colName.c_str());
 			if (cIndex >= 0) {
 				const Field& cField = fieldList.GetColumn(cIndex);
@@ -171,7 +169,7 @@ bool WhereCondition::check(Record& record) {
 				throw "Error: col doesn't exist in fieldList in WhereCondition::check";
 			}
 		}
-		case WhereCondition::IS_NOT_NULL: {
+		case CondType::IS_NOT_NULL: {
 			const int cIndex = fieldList.GetColumnIndex(this->col.colName.c_str());
 			if (cIndex >= 0) {
 				const Field& cField = fieldList.GetColumn(cIndex);
@@ -184,7 +182,7 @@ bool WhereCondition::check(Record& record) {
 				throw "Error: col doesn't exist in fieldList in WhereCondition::check";
 			}
 		}
-		case WhereCondition::EXPR: {
+		case CondType::EXPR: {
 			const int cIndex = fieldList.GetColumnIndex(this->col.colName.c_str());
 			if (cIndex >= 0) {
 				const Field& cField = fieldList.GetColumn(cIndex);

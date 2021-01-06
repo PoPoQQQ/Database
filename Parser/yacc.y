@@ -299,7 +299,7 @@ field  	: 	colName type
 			}
 		|	PRIMARY KEY '(' columnList ')'
 			{
-				$$.type = FieldDesc::PRIMARY;
+				$$.type = FieldDesc::FieldType::PRIMARY;
 				$$.columnList = $4;
 			}
 		| 	FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
@@ -309,7 +309,7 @@ field  	: 	colName type
 				if($4.size() != $9.size()) {
 					throw "Error: Foreign key lists have different length.";
 				}
-				$$.type = FieldDesc::FOREIGN;
+				$$.type = FieldDesc::FieldType::FOREIGN;
 				$$.columnList = $4;
 				$$.tbName = $7;
 				$$.ref_columnList = $9;
@@ -380,24 +380,24 @@ value	:	VALUE_INT
 
 whereClause : 	col op expr
 				{
-					$$.type = WhereCondition::EXPR;
+					$$.type = WhereCondition::CondType::EXPR;
 					$$.col = $1;
 					$$.op = $2;
 					$$.expr = $3;
 				}
 			| 	col	IS NULLTOKEN
 				{
-					$$.type = WhereCondition::IS_NULL;
+					$$.type = WhereCondition::CondType::IS_NULL;
 					$$.col = $1;
 				}
             | 	col IS NOT NULLTOKEN
 				{
-					$$.type = WhereCondition::IS_NOT_NULL;
+					$$.type = WhereCondition::CondType::IS_NOT_NULL;
 					$$.col = $1;
 				}
             | 	whereClause	AND	whereClause
 				{
-					$$.type = WhereCondition::COMBINDED;
+					$$.type = WhereCondition::CondType::COMBINDED;
 					$$.condition1 = new WhereCondition($1);
 					$$.condition2 = new WhereCondition($3);
 				}

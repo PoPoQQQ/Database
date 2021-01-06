@@ -1,7 +1,7 @@
 #include "FieldListDesc.h"
 
 void FieldListDesc::addFieldDesc(const FieldDesc& fielddesc){
-    if(fielddesc.type == FieldDesc::PRIMARY) {
+    if(fielddesc.type == FieldDesc::FieldType::PRIMARY) {
         if(this->columnList.size() > 0) {
             // 重复定义 primary key
             // 在解析的时候直接报错
@@ -13,7 +13,7 @@ void FieldListDesc::addFieldDesc(const FieldDesc& fielddesc){
             this->columnList = fielddesc.columnList;
         }
     }
-    else if(fielddesc.type == FieldDesc::FOREIGN) {
+    else if(fielddesc.type == FieldDesc::FieldType::FOREIGN) {
         if(this->ref_columnList.size() > 0) {
 
         }

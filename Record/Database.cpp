@@ -311,10 +311,10 @@ Table* Database::GetTable(const char *tableName) {
 		throw "Table not found!";
 	return currentDatabase->tables[tableName];
 }
-void Database::Insert(const char *tableName, const vector<vector<Data> >& dataLists) {
+void Database::Insert(const char *tableName, const vector<vector<Data>>& dataLists) {
 	vector<Record> recordList;
 	Table* table = GetTable(tableName);
-	for(vector<vector<Data> >::const_iterator it = dataLists.begin(); it != dataLists.end(); it++) {
+	for(vector<vector<Data>>::const_iterator it = dataLists.begin(); it != dataLists.end(); it++) {
 		Record record = table->EmptyRecord();
 		vector<Data> dataList = *it;
 		if(dataList.size() != record.fieldList.FieldCount())
