@@ -132,9 +132,9 @@ Field& FieldList::GetColumn(int index) {
 		throw "Invalid index!";
 	return fields[index];
 }
-int FieldList::GetColumnIndex(const char* columnName) const {
+int FieldList::GetColumnIndex(string columnName) const {
 	for(int i = 0; i < (signed)fields.size(); i++)
-		if(strcmp(fields[i].columnName, columnName) == 0)
+		if(string(fields[i].columnName) == columnName)
 			return i;
 	return -1;
 }

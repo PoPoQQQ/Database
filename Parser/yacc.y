@@ -112,11 +112,11 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
 				FieldList fieldList;
 				fieldList.AddFieldDescVec($3.c_str(), $5);
-				Database::CreateTable(($3).c_str(), fieldList);
+				Database::CreateTable($3, fieldList);
 			}
         |	DROP TABLE tbName
 			{
-				cout << "TODO: DROP TABLE: " << $3 << endl;
+				Database::DropTable($3);
 			}
         |	DESC tbName
 			{
@@ -158,9 +158,21 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
 		;
 idxStmt		:	CREATE INDEX idxName ON tbName '(' columnList ')'
+				{
+					Database::CreateIndex($5, $3, $7);
+				}
 			|	DROP INDEX idxName
+				{
+					Database::DropIndex("", $3);
+				}
 			|	ALTER TABLE tbName ADD INDEX idxName '(' columnList ')'
+				{
+					Database::CreateIndex($3, $6, $8);
+				}
 			|	ALTER TABLE tbName DROP INDEX idxName
+				{
+					Database::DropIndex($3, $6);
+				}
 			;
 			
 alterStmt	:	ALTER TABLE tbName ADD field

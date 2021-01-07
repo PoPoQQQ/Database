@@ -91,19 +91,87 @@ Record Table::EmptyRecord() {
 	return Record(fieldList);
 }
 
-void Table::AddRecord(Record record) {
+vector<int> Table::GetColumnIndexes(const vector<string>& columnList) {
+	vector<int> columnIndexes;
+	for(vector<string>::const_iterator it = columnList.begin(); it != columnList.end(); it++) {
+		int columnIndex = fieldList.GetColumnIndex(*it);
+		if(columnIndex == -1)
+			throw "Column does not exist!";
+		columnIndexes.push_back(columnIndex);
+	}
+	return columnIndexes;
+}
+
+vector<Data> Table::GetKeyTypes(const vector<string>& columnList) {
+	vector<Data> keyTypes;
+	for(vector<string>::const_iterator it = columnList.begin(); it != columnList.end(); it++) {
+		int columnIndex = fieldList.GetColumnIndex(*it);
+		if(columnIndex == -1)
+			throw "Column does not exist!";
+		Data data = fieldList.GetColumn(columnIndex).GetData();
+		if((data.dataType & 0xff) == Data::VARCHAR)
+			data = Data(Data::INT);
+		keyTypes.push_back(data);
+	}
+	return keyTypes;
+}
+
+void Table::InsertAllIntoIndex(Index* index) {
+	vector<int> columnIndexes = GetColumnIndexes(index->colNames);
+	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
+		PageBase *page = LoadPage(pageNumber);
+		if(page == NULL)
+			continue;
+		if(page->pageType == PageBase::RECORD_PAGE)
+			dynamic_cast<RecordPage*>(page)->InsertPageIntoIndex(index, columnIndexes);
+		delete page;
+	}
+}
+
+void Table::InsertRecordIntoIndex(Index* index, const vector<int>& columnIndexes, 
+	Record record, unsigned int recordPosition) {
+	vector<Data> datas;
+	for(vector<int>::const_iterator it = columnIndexes.begin(); it != columnIndexes.end(); it++) {
+		if((record.bitMap & (1 << *it)) == 0)
+			return;
+		Data data = record.fieldList.GetColumn(*it).GetData();
+		if((data.dataType & 0xff) != Data::VARCHAR)
+			datas.push_back(data);
+		else
+			datas.push_back(HashData(data));
+	}
+	index->Insert(datas, recordPosition);
+}
+
+void Table::AddRecord(Record &record, unsigned int& recordPosition) {
 	PageBase *page = GetAvailablePage(PageBase::RECORD_PAGE);
 
 	record.enabled = 1;
 	record.rid = ++ridTimestamp;
 	++recordCount;
 
-	bool full = dynamic_cast<RecordPage*>(page)->AddRecord(record);
+	unsigned int recordIndex;
+	bool full = dynamic_cast<RecordPage*>(page)->AddRecord(record, recordIndex);
+	recordPosition = page->pageNumber << 8 | recordIndex;
 	if(full)
 		SetBit(page->pageNumber, 0);
 	// 更新 Header 数据，比如说 recordCount
 	SaveHeader();
 	delete page;
+}
+
+void Table::AddRecords(vector<Record>& records, const vector<Index*>& idxes) {
+	vector<unsigned int> recordPositions;
+	for(vector<Record>::iterator it = records.begin(); it != records.end(); it++) {
+		unsigned int recordPosition;
+		AddRecord(*it, recordPosition);
+		recordPositions.push_back(recordPosition);
+	}
+	for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++) {
+		vector<int> columnIndexes = GetColumnIndexes((*it)->colNames);
+		for(int i = 0; i < (signed)records.size(); i++)
+			InsertRecordIntoIndex(*it, columnIndexes, records[i], recordPositions[i]);
+	}
 }
 
 void Table::PrintTable() {

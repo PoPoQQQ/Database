@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <vector>
 #include "Field.h"
 #include "../BufManager/BufPageManager.h"
@@ -29,7 +30,7 @@ public:
 	int FieldCount() const;
 	int RoundedDataSize() const;
 	Field& GetColumn(int index);
-	int GetColumnIndex(const char* columnName) const;
+	int GetColumnIndex(string columnName) const;
 
 	FieldList(){};
 	FieldList(const FieldList&);

@@ -1,6 +1,7 @@
 #pragma once
 #include "Table.h"
 #include "Record.h"
+#include "../Index/Index.h"
 #include "../Pages/PageBase.h"
 #define PAGE_OFFSET 64
 class RecordPage: public PageBase {
@@ -39,7 +40,7 @@ public:
 		}
 		return index;
 	}
-	bool AddRecord(const Record& record) {
+	bool AddRecord(const Record& record, unsigned int& recordIndex) {
 		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
 		
@@ -48,6 +49,7 @@ public:
 			cerr << "Page volume not enough!" << endl;
 			exit(-1);
 		}
+		recordIndex = index;
 		bitMaps[index >> 5] ^= 1u << (index & 31);
 		SavePageHeader();
 		record.Save(b + (PAGE_OFFSET + index * recordSize) / 4);
@@ -55,6 +57,16 @@ public:
 
 		index = FindLeftOne();
 		return index == recordVolume;
+	}
+	void InsertPageIntoIndex(Index* index, const vector<int>& columnIndexes) {
+		Record record = context->EmptyRecord();
+		int recordSize = record.RecordSize();
+		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
+		for(int _index = 0; _index < recordVolume; _index++)
+			if((bitMaps[_index >> 5] & (1u << (_index & 31))) == 0) {
+				record.Load(b + (PAGE_OFFSET + _index * recordSize) / 4);
+				context->InsertRecordIntoIndex(index, columnIndexes, record, pageNumber << 8 | _index);
+			}
 	}
 	void PrintPage() {
 		Record record = context->EmptyRecord();

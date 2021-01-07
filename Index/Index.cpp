@@ -14,10 +14,11 @@ Index::Index(string databaseName, string tableName, string indexName):
 	LoadHeader();
 }
 
-Index::Index(string databaseName, string tableName, string indexName, vector<Data> keys): 
+Index::Index(string databaseName, string tableName, string indexName, 
+	const vector<string> colNames, const vector<Data>& keyTypes): 
 	FileBase("Database/" + databaseName + "/" + tableName + "-" + indexName, true),
 	databaseName(databaseName), tableName(tableName), indexName(indexName),
-	rootPage(0), keys(keys) {
+	rootPage(0), colNames(colNames), keyTypes(keyTypes) {
 	if(databaseName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	if(tableName.length() > MAX_IDENTIFIER_LEN)
@@ -25,10 +26,10 @@ Index::Index(string databaseName, string tableName, string indexName, vector<Dat
 	if(indexName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	
-	if(keys.empty())
-		throw "No keys!";
-	if(keys.size() >= INDEX_MAX_KEYS)
-		throw "Too many keys!";
+	if(colNames.empty())
+		throw "No column!";
+	if(colNames.size() >= INDEX_MAX_KEYS)
+		throw "Too many columns!";
 
 	SaveHeader();
 
@@ -73,8 +74,17 @@ void Index::LoadHeader() {
 	unsigned int size = b[offset >> 2];
 	offset += 4;
 
-	keys.resize(size);
-	for(vector<Data>::iterator it = keys.begin(); it != keys.end(); it++) {
+	colNames.resize(size);
+	for(vector<string>::iterator it = colNames.begin(); it != colNames.end(); it++) {
+		char buffer[MAX_IDENTIFIER_LEN + 1];
+		memcpy(buffer, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+		buffer[MAX_IDENTIFIER_LEN] = 0;
+		*it = string(buffer);
+		offset += MAX_IDENTIFIER_LEN;
+	}
+
+	keyTypes.resize(size);
+	for(vector<Data>::iterator it = keyTypes.begin(); it != keyTypes.end(); it++) {
 		it->LoadType(b + (offset >> 2));
 		offset += 8;
 	}
@@ -101,10 +111,17 @@ void Index::SaveHeader() const {
 	b[offset >> 2] = rootPage;
 	offset += 4;
 	
-	b[offset >> 2] = keys.size();
+	b[offset >> 2] = colNames.size();
 	offset += 4;
 
-	for(vector<Data>::const_iterator it = keys.begin(); it != keys.end(); it++) {
+	for(vector<string>::const_iterator it = colNames.begin(); it != colNames.end(); it++) {
+		char buffer[MAX_IDENTIFIER_LEN + 1];
+		strcpy(buffer, it->c_str());
+		memcpy(b + (offset >> 2), buffer, MAX_IDENTIFIER_LEN);
+		offset += MAX_IDENTIFIER_LEN;
+	}
+
+	for(vector<Data>::const_iterator it = keyTypes.begin(); it != keyTypes.end(); it++) {
 		it->SaveType(b + (offset >> 2));
 		offset += 8;
 	}
@@ -149,6 +166,6 @@ void Index::Remove(vector<Data> keys) {
 
 void Index::Print() {
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
-	page->Print(keys, 1);
+	page->Print(keyTypes, 1);
 	delete page;
 }

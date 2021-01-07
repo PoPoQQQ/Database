@@ -3,6 +3,7 @@
 #include <vector>
 #include "Record.h"
 #include "FieldList.h"
+#include "../Index/Index.h"
 #include "../Pages/FileBase.h"
 using namespace std;
 /*
@@ -22,7 +23,13 @@ public:
 	Table(string databaseName, string tableName, FieldList fieldList);
 
 	Record EmptyRecord();
-	void AddRecord(Record record);
+	vector<int> GetColumnIndexes(const vector<string>& columnList);
+	vector<Data> GetKeyTypes(const vector<string>& columnList);
+	void InsertAllIntoIndex(Index* index);
+	void InsertRecordIntoIndex(Index* index, const vector<int>& columnIndexes, 
+		Record record, unsigned int recordPosition);
+	void AddRecord(Record& record, unsigned int& recordPosition);
+	void AddRecords(vector<Record>& records, const vector<Index*>& idxes);
 	void PrintTable();
 	void IterTable();
 	// 对应 mysql 的 desc table 命令

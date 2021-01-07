@@ -60,24 +60,25 @@ int main(int argc, const char* argv[]) {
 			fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
 			Table *table = Database::CreateTable("TestTable", fieldList);
 
-			Record record = table->EmptyRecord();
+			vector<vector<Data>> dataLists;
 			for(int i = 0; i < 128; i++) {
-				record.CleanData();
-				record.FillData("a", Data(Data::INT).SetData((unsigned)i));
-				record.FillData("b", Data(Data::DATE).SetData("1998/04/02"));
-				record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
-				record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
-				table->AddRecord(record);
+				vector<Data> dataList;
+				dataList.push_back(Data(Data::INT).SetData((unsigned)i));
+				dataList.push_back(Data(Data::DATE).SetData("1998/04/02"));
+				dataList.push_back(Data(Data::FLOAT).SetData(233.33f));
+				dataList.push_back(Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
+				dataLists.push_back(dataList);
 			}
-			
-			table->PrintTable();
+			Database::Insert("TestTable", dataLists);
 			
 			//Database::CreateDatabase("MyDatabase");
 			//Database::OpenDatabase("MyDatabase");
 
+			vector<string> columns;
 			vector<Data> keys;
+			columns.push_back("Column");
 			keys.push_back(Data(Data::INT));
-			Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
+			Index* index = new Index("MyDatabase", "MyTable", "MyIndex", columns, keys);
 			for(int i = 1; i <= 21; i++) {
 				keys[0].SetData((unsigned)i);
 				index->Insert(keys, i * 10);
