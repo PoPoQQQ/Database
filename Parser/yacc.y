@@ -191,6 +191,56 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 					}
 				} else {
 					// 笛卡尔积
+					const vector<string>& tbList = $4;
+					const vector<ColObj>& selector = $2;
+					// 1. 检查 tableList 中的名称是否存在且唯一
+					// 检查 tbList 中的内容是否存在且唯一
+					map<string, Table*> tbMap;
+					Table* tTable = nullptr;
+					for(int i = 0;i < tbList.size(); ++i) {
+						tTable = Database::GetTable(tbList[i].c_str());
+						if(tbMap.find(tbList[i]) != tbMap.end()) {
+							// 如果存在相同的表名则报错
+							throw "Error: table name in selector should be unique";
+						} else {
+							tbMap[tbList[i]] = tTable;
+						}
+					}
+					// 2. 根据 selector 进行不同的操作
+					if($2.size() == 0) {
+						// 如果是 * ，则将所有的 FieldList 连接起来
+						SelectFieldList tFieldList;
+						for(int i = 0;i < tbList.size(); ++i) {
+							FieldList& fieldList = tbMap.find(tbList[i])->second->fieldList;
+							for(int j = 0; j < fieldList.fields.size(); ++j) {
+								tFieldList.AddSelectField(fieldList.fields[j]);
+							}
+						}
+						int depth = 0;
+						unsigned int bitmap = 0;
+						unsigned int bitmapPos = 0;
+						function<void(Record&, BufType)> it = [&tFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+							depth++;
+							for(int i = 0;i < record.fieldList.fields.size(); ++i) {
+								tFieldList.fields[bitmapPos] = record.fieldList.fields[i];
+								bitmap |= (record.bitMap & (1u << i)) ? (1u << bitmapPos) : 0u;
+								bitmapPos++;
+							}
+							if(depth == tbList.size()) {
+								tFieldList.PrintDatas(bitmap);
+							} else {
+								tbMap.find(tbList[depth])->second->IterTable(it);
+							}
+							depth--;
+							bitmap &= (0xffffffffu ^ ((1u << bitmapPos)-(1 << (bitmapPos - record.fieldList.fields.size()))));
+							bitmapPos -= record.fieldList.fields.size();
+						};
+						// 进行递归打印笛卡尔积
+						tFieldList.PrintFields();
+						tbMap.find(tbList[0])->second->IterTable(it);
+					} else {
+						//TODO:
+					}
 				}
 				cout << "SELECT finished!" << endl;
 			}
@@ -246,6 +296,10 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 					}
 				} else {
 					// 笛卡尔积
+					// 1. 确认 tableList 中的内容不是重复的，创建一个 map
+					if($2.size() == 0) {
+
+					}
 				}
 				cout << "SELECT finished!" << endl;
 			}

@@ -1,4 +1,5 @@
 #include <vector>
+#include <map>
 #include <cstring>
 #include <stdio.h>
 #include <functional>
@@ -15,6 +16,7 @@
 #include "Parser/OpEnum.h"
 #include "Parser/SetClauseObj.h"
 #include "Parser/ColObj.h"
+#include "Record/SelectFieldList.h"
 using namespace std;
 
 extern FILE *yyin;
@@ -65,6 +67,7 @@ int main(int argc, const char* argv[]) {
 			fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
 			fieldList.AddField(Field("e").SetDataType(Data(Data::INT)));
 			Table *table = Database::CreateTable("TestTable", fieldList);
+			Table *table2 = Database::CreateTable("TestTable2", fieldList);
 
 			Record record = table->EmptyRecord();
 			for(int i = 0; i < 128; i++) {
@@ -75,6 +78,12 @@ int main(int argc, const char* argv[]) {
 				record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
 				record.FillData("e", Data());
 				table->AddRecord(record);
+				record.FillData("a", Data(Data::INT).SetData((unsigned)i+100));
+				record.FillData("b", Data(Data::DATE).SetData("2020/04/02"));
+				record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
+				record.FillData("d", Data(Data::VARCHAR, 255).SetData("*****************."));
+				record.FillData("e", Data());
+				table2->AddRecord(record);
 			}
 			
 			vector<ColObj> selector;
@@ -84,40 +93,82 @@ int main(int argc, const char* argv[]) {
 			col2.tbName = "TestTable";
 			col2.colName = "d";
 			col3.colName = "e";
-			selector.push_back(col1);
-			selector.push_back(col2);
-			selector.push_back(col3);
-
+			// selector.push_back(col1);
+			// selector.push_back(col2);
+			// selector.push_back(col3);
+			
+			vector<string> tbList;
+			tbList.push_back("TestTable");
+			tbList.push_back("TestTable2");
+			// 检查 tbList 中的内容是否存在且唯一
+			map<string, Table*> tbMap;
+			Table* tTable = nullptr;
+			for(int i = 0;i < tbList.size(); ++i) {
+				tTable = Database::GetTable(tbList[i].c_str());
+				if(tbMap.find(tbList[i]) != tbMap.end()) {
+					// 如果存在相同的表名则报错
+					throw "Error: table name in selector should be unique";
+				} else {
+					tbMap[tbList[i]] = tTable;
+				}
+			}
+			// 检查 selector 是否都在其中
 			for(int i = 0;i < selector.size(); ++i) {
-				// 检查 selector
-				if(!selector[i].isInTable(*table)) {
-					char buf[256];
-					snprintf(buf, 256, "Error: Selector (%s.%s) doesn't exist in table %s", selector[i].tbName.c_str(), selector[i].colName.c_str(), table->tableName.c_str());
+				if(!selector[i].isInTbMap(tbMap)) {
+					char buf[128];
+					snprintf(buf, 128, "selector (%s.%s) doesn't exist in table list", selector[i].tbName.c_str(), selector[i].colName.c_str());
 					throw string(buf);
 				}
 			}
 
 			if(selector.size() > 0) {
-				FieldList tFieldList;
-				for(int i = 0;i < selector.size(); ++i) {
-					tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
-				}
-				tFieldList.PrintFields();
-				function<void(Record&, BufType)> it = [&tFieldList](Record& record, BufType b) {
-					unsigned int bitmap = 0;
-					int index = -1;
-					for(int i = 0;i < tFieldList.fields.size(); ++i) {
-						index = record.fieldList.GetColumnIndex(tFieldList.fields[i].columnName);
-						tFieldList.fields[i] = record.fieldList.GetColumn(index);
-						bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
-					}
-					tFieldList.PrintDatas(bitmap);
-				};
-				table->IterTable(it);
+				// FieldList tFieldList;
+				// for(int i = 0;i < selector.size(); ++i) {
+				// 	tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+				// }
+				// tFieldList.PrintFields();
+				// function<void(Record&, BufType)> it = [&tFieldList](Record& record, BufType b) {
+				// 	unsigned int bitmap = 0;
+				// 	int index = -1;
+				// 	for(int i = 0;i < tFieldList.fields.size(); ++i) {
+				// 		index = record.fieldList.GetColumnIndex(tFieldList.fields[i].columnName);
+				// 		tFieldList.fields[i] = record.fieldList.GetColumn(index);
+				// 		bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
+				// 	}
+				// 	tFieldList.PrintDatas(bitmap);
+				// };
+				// table->IterTable(it);
 			} else {
-				// 代表要选择所有的列
-				// 可以偷懒直接把表打印出来
-				table->PrintTable();
+				// 如果是 * ，则将所有的 FieldList 连接起来
+				SelectFieldList tFieldList;
+				for(int i = 0;i < tbList.size(); ++i) {
+					FieldList& fieldList = tbMap.find(tbList[i])->second->fieldList;
+					for(int j = 0; j < fieldList.fields.size(); ++j) {
+						tFieldList.AddSelectField(fieldList.fields[j]);
+					}
+				}
+				int depth = 0;
+				unsigned int bitmap = 0;
+				unsigned int bitmapPos = 0;
+				function<void(Record&, BufType)> it = [&tFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+					depth++;
+					for(int i = 0;i < record.fieldList.fields.size(); ++i) {
+						tFieldList.fields[bitmapPos] = record.fieldList.fields[i];
+						bitmap |= (record.bitMap & (1u << i)) ? (1u << bitmapPos) : 0u;
+						bitmapPos++;
+					}
+					if(depth == tbList.size()) {
+						tFieldList.PrintDatas(bitmap);
+					} else {
+						tbMap.find(tbList[depth])->second->IterTable(it);
+					}
+					depth--;
+					bitmap &= (0xffffffffu ^ ((1u << bitmapPos)-(1 << (bitmapPos - record.fieldList.fields.size()))));
+					bitmapPos -= record.fieldList.fields.size();
+				};
+				// 进行递归打印笛卡尔积
+				tFieldList.PrintFields();
+				tbMap.find(tbList[0])->second->IterTable(it);
 			}
 			//Database::CreateDatabase("MyDatabase");
 			//Database::OpenDatabase("MyDatabase");
