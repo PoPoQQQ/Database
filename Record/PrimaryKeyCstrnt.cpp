@@ -23,7 +23,7 @@ BufType PrimaryKeyCstrnt::LoadConstraint(BufType b) {
 
 string PrimaryKeyCstrnt::toString() const {
     char buf[200];
-    snprintf(buf, sizeof(buf),"PrimaryKeyCstrnt{ name: %s, type: %d, pksize: %lu}", name, type, pkList.size());
+    snprintf(buf, sizeof(buf),"PrimaryKeyCstrnt{ name: %s, type: %d, pksize: %lu}", name, (int) type, pkList.size());
     return string(buf);
 }
 

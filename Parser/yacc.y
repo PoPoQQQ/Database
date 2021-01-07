@@ -132,29 +132,217 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	UPDATE tbName SET setClause WHERE whereClause
 			{
-				cout << "TODO: UPDATE " << $2 << endl;
 				// 检查并读取表格
 				Table *table = Database::GetTable($2.c_str()); 
 				// 检查 setClause
 				$4.validate(table->fieldList);
 				// 检查 whereClause
-				$6.validateUpdate(*table);
-				// $6.print();
+				if(!$6.validate(table)){
+					throw "whereClause Error";
+				}
+				WhereCondition& whereClause = $6;
+				SetClauseObj& setClause = $4;
 				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
+				function<void(Record&, BufType)> it = [&whereClause, &setClause](Record& record, BufType b) {
+					if((whereClause).check(record)) {
+						(setClause).apply(record);
+						record.Save(b);
+					}
+				};
+				table->IterTable(it);
+				cout << "Update finished!" << endl;
+			}
+		|	SELECT selector FROM tableList
+			{
+				if ($4.size() == 1) {
+					// 查询单个 db
+					Table* table = Database::GetTable($4[0].c_str());
+					if($2.size() == 0) {
+						// 如果是 * , 则可以偷懒直接打印
+						table->PrintTable();
+					} else {
+						// 验证每一个 col 是否合法
+						for(int i = 0;i < $2.size(); ++i) {
+							// 检查 selector
+							if(!$2[i].isInTable(*table)) {
+								char buf[256];
+								snprintf(buf, 256, "Error: Selector (%s.%s) doesn't exist in table %s", $2[i].tbName.c_str(), $2[i].colName.c_str(), table->tableName.c_str());
+								throw string(buf);
+							}
+						}
+
+						FieldList tFieldList;
+						const vector<ColObj>& selector = $2;
+						for(int i = 0;i < selector.size(); ++i) {
+							tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+						}
+						tFieldList.PrintFields();
+						function<void(Record&, BufType)> it = [&tFieldList](Record& record, BufType b) {
+							unsigned int bitmap = 0;
+							int index = -1;
+							for(int i = 0;i < tFieldList.fields.size(); ++i) {
+								index = record.fieldList.GetColumnIndex(tFieldList.fields[i].columnName);
+								tFieldList.fields[i] = record.fieldList.GetColumn(index);
+								bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
+							}
+							tFieldList.PrintDatas(bitmap);
+						};
+						table->IterTable(it);
+					}
+				} else {
+					// 笛卡尔积
+					vector<string>& tbList = $4;
+					vector<ColObj>& selector = $2;
+					// 1. 检查 tableList 中的名称是否存在且唯一
+					// 检查 tbList 中的内容是否存在且唯一
+					map<string, Table*> tbMap;
+					Table* tTable = nullptr;
+					for(int i = 0;i < tbList.size(); ++i) {
+						tTable = Database::GetTable(tbList[i].c_str());
+						if(tbMap.find(tbList[i]) != tbMap.end()) {
+							// 如果存在相同的表名则报错
+							throw "Error: table name in selector should be unique";
+						} else {
+							tbMap[tbList[i]] = tTable;
+						}
+					}
+					// 2. 根据 selector 进行不同的操作
+					if($2.size() == 0) {
+						// 如果是 * ，则将所有的 FieldList 连接起来
+						SelectFieldList tFieldList;
+						for(int i = 0;i < tbList.size(); ++i) {
+							FieldList& fieldList = tbMap.find(tbList[i])->second->fieldList;
+							for(int j = 0; j < fieldList.fields.size(); ++j) {
+								tFieldList.AddSelectField(fieldList.fields[j]);
+							}
+						}
+						int depth = 0;
+						unsigned int bitmap = 0;
+						unsigned int bitmapPos = 0;
+						function<void(Record&, BufType)> it = [&tFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+							depth++;
+							for(int i = 0;i < record.fieldList.fields.size(); ++i) {
+								tFieldList.fields[bitmapPos] = record.fieldList.fields[i];
+								bitmap |= (record.bitMap & (1u << i)) ? (1u << bitmapPos) : 0u;
+								bitmapPos++;
+							}
+							if(depth == tbList.size()) {
+								tFieldList.PrintDatas(bitmap);
+							} else {
+								tbMap.find(tbList[depth])->second->IterTable(it);
+							}
+							depth--;
+							bitmap &= (0xffffffffu ^ ((1u << bitmapPos)-(1 << (bitmapPos - record.fieldList.fields.size()))));
+							bitmapPos -= record.fieldList.fields.size();
+						};
+						// 进行递归打印笛卡尔积
+						tFieldList.PrintFields();
+						tbMap.find(tbList[0])->second->IterTable(it);
+					} else {
+						// 检查 selector 是否都在其中
+						for(int i = 0;i < selector.size(); ++i) {
+							if(!selector[i].isInTbMap(tbMap)) {
+								char buf[128];
+								snprintf(buf, 128, "selector (%s.%s) doesn't exist in table list", selector[i].tbName.c_str(), selector[i].colName.c_str());
+								throw string(buf);
+							}
+						}
+
+						SelectFieldList tFieldList;
+						Table* tTable = nullptr;
+						for(int i = 0;i < selector.size(); ++i) {
+							tTable = Database::GetTable(selector[i].tbName.c_str());
+							tFieldList.AddSelectField(tTable->fieldList.GetColumn(tTable->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+						}
+
+						int depth = 0;
+						unsigned int bitmap = 0;
+						unsigned int bitmapPos = 0;
+						function<void(Record&, BufType)> it = [&tFieldList, &depth, &selector, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+							// selector 对应的列（目前已经在表中）
+							const int cIndex = record.fieldList.GetColumnIndex(selector[depth].colName.c_str());
+							const Field& field = record.fieldList.GetColumn(cIndex);
+							tFieldList.fields[bitmapPos] = field;
+							bitmap |= (record.bitMap & (1u << cIndex)) ? (1u << bitmapPos) : 0u;
+							bitmapPos++;
+							// 进入下一次递归
+							depth++;
+							if(depth == selector.size()) {
+								tFieldList.PrintDatas(bitmap);
+							} else {
+								tbMap.find(selector[depth].tbName)->second->IterTable(it);
+							}
+							// 回退
+							depth--;
+							bitmapPos--;
+							bitmap &= (0xffffffffu ^ (1 << bitmapPos));
+						};
+						
+						// 进行递归打印笛卡尔积
+						tFieldList.PrintFields();
+						tbMap.find(tbList[0])->second->IterTable(it);
+					}
+				}
+				cout << "SELECT finished!" << endl;
 			}
         |	SELECT selector FROM tableList WHERE whereClause
 			{
-				//TODO
-				// if($2.size() == 0) { // 说明是 *
-				// 	for(int i = 0;i < $4.size(); ++i) {
-				// 		$4[i].fieldList;
-				// 	}
-				// }
-				cout << "TODO: SELECT ----" << endl;
-				for(int i = 0;i < $2.size(); ++i) {
-					$2[i].print();
+				if ($4.size() == 1) {
+					// 查询单个 db
+					Table* table = Database::GetTable($4[0].c_str());
+					if(!$6.validate(table)){
+						throw "whereClause Error";
+					}
+					if($2.size() == 0) {
+						// 如果是 * ，则类似于 UPDATE
+						// 根据 whereClause 中的条件进行搜索，如果满足条件则打印
+						WhereCondition& whereClause = $6;
+						table->fieldList.PrintFields();
+						function<void(Record&, BufType)> it = [&whereClause](Record& record, BufType b) {
+							if((whereClause).check(record)) {
+								record.fieldList.PrintDatas(record.bitMap);
+							}
+						};
+					} else {
+						// 验证每一个 col 是否合法
+						const vector<ColObj>& selector = $2;
+						for(int i = 0;i < selector.size(); ++i) {
+							// 检查 selector
+							if(!selector[i].isInTable(*table)) {
+								char buf[256];
+								snprintf(buf, 256, "Error: Selector (%s.%s) doesn't exist in table %s", selector[i].tbName.c_str(), selector[i].colName.c_str(), table->tableName.c_str());
+								throw string(buf);
+							}
+						}
+
+						FieldList tFieldList;
+						for(int i = 0;i < selector.size(); ++i) {
+							tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+						}
+						tFieldList.PrintFields();
+						WhereCondition& whereClause = $6;
+						function<void(Record&, BufType)> it = [&tFieldList, &whereClause](Record& record, BufType b) {
+							if(whereClause.check(record)) {
+								unsigned int bitmap = 0;
+								int index = -1;
+								for(int i = 0;i < tFieldList.fields.size(); ++i) {
+									index = record.fieldList.GetColumnIndex(tFieldList.fields[i].columnName);
+									tFieldList.fields[i] = record.fieldList.GetColumn(index);
+									bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
+								}
+								tFieldList.PrintDatas(bitmap);
+							}
+						};
+						table->IterTable(it);
+					}
+				} else {
+					// 笛卡尔积
+					// 1. 确认 tableList 中的内容不是重复的，创建一个 map
+					if($2.size() == 0) {
+
+					}
 				}
-				$6.print();
+				cout << "SELECT finished!" << endl;
 			}
 		;
 idxStmt		:	CREATE INDEX idxName ON tbName '(' columnList ')'

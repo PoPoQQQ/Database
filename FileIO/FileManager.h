@@ -84,8 +84,7 @@ public:
 		if (fseek(f, offset, SEEK_SET) != 0)
 			return -1;
 		BufType b = buf + off;
-		fread((void*)b, 1, PAGE_SIZE, f);
-		return 0;
+		return fread((void*)b, 1, PAGE_SIZE, f);
 	}
 	/*
 	 * @函数名closeFile

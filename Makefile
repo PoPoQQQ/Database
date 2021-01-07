@@ -27,3 +27,9 @@ rmps:
 	rm ./Parser/yacc.tab.c Parser/yacc.tab.h Parser/lex.yy.c $(TARGET)
 rmdb:
 	rm -rf Database
+
+test: rmdb all
+	./main.exe
+
+sqltest: rmps rmdb all
+	./main.exe test.sql

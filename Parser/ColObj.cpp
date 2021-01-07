@@ -87,3 +87,44 @@ Field* ColObj::getFieldOrNullGlobal(Table* table) {
         }
     }
 }
+
+bool ColObj::isInTbMap(const map<string, Table*> tbMap) {
+    if(this->tbName.size() == 0) {
+        // 在列表中搜索每一个 table
+        Table* table = nullptr;
+        for(map<string, Table*>::const_iterator it = tbMap.begin(); it != tbMap.end(); ++it) {
+            if(it->second->fieldList.GetColumnIndex(this->colName.c_str()) != -1) {
+                if(table != nullptr) {
+                    // 如果此时已经找到了一个表，则说明这个键重名
+                    // 抛出异常，此时无法继续工作
+                    char buf[128];
+                    snprintf(buf, 128, "Error: ambigious colName (%s)", this->colName.c_str());
+                    throw string(buf);
+                } else {
+                    table = it->second;
+                    this->tbName = it->first;
+                }
+            }
+        }
+        return true;
+    } else {
+        const map<string, Table*>::const_iterator it = tbMap.find(this->tbName);
+        if(it == tbMap.end()) {
+            // 如果表名不存在则返回 false
+            return false;
+        } else {
+            return it->second->fieldList.GetColumnIndex(this->colName.c_str()) != -1;
+        }
+    }
+}
+
+Field* ColObj::getFieldFromList(FieldList& fieldList) {
+    // 检查 colName 是否存在于 fieldList 中
+    const int columnIndex = fieldList.GetColumnIndex(colName.c_str());
+    if(columnIndex == -1) {
+        return nullptr;
+    } else {
+        // 存在则返回
+        return &(fieldList.GetColumn(columnIndex));
+    }
+}

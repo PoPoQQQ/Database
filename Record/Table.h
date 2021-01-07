@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include <vector>
+#include <functional>
 #include "Record.h"
 #include "FieldList.h"
 #include "../Index/Index.h"
@@ -31,7 +32,9 @@ public:
 	void AddRecord(Record& record, unsigned int& recordPosition);
 	void AddRecords(vector<Record>& records, const vector<Index*>& idxes);
 	void PrintTable();
-	void IterTable();
+	// 根据给定的函数对表中的每一个 Record 进行迭代
+	// 类似于 forEach 函数
+	void IterTable(function<void(Record&, BufType)> iterFunc);
 	// 对应 mysql 的 desc table 命令
 	// 将表头信息以及约束按照一定的规则进行打印
 	void DescTable() const;

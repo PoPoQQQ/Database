@@ -48,6 +48,6 @@ BufType FieldConstraint::LoadConstraint(BufType b) {
 
 string FieldConstraint::toString() const {
     char buf[200];
-    snprintf(buf, sizeof(buf),"FieldConstraint{ name: %s, type: %d }", name, type);
+    snprintf(buf, sizeof(buf),"FieldConstraint{ name: %s, type: %d }", name, (int) type);
     return string(buf);
 }

@@ -38,16 +38,21 @@ CREATE TABLE orders(
 	FOREIGN KEY (food_id) REFERENCES food(id)
 );
 
-SHOW TABLES;
-DESC restaurant;
-desc customer;
-DESC food;
-desc orders;
+-- SHOW TABLES;
+-- DESC restaurant;
+-- desc customer;
+-- DESC food;
+-- desc orders;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
 CREATE INDEX idx ON customer(id);
-INSERT INTO customer VALUES (300003,'CHAD CABELLO II','M'),(300004,'FAUSTO VANNORMAN II','M');
+INSERT INTO customer VALUES (300005,'CHAD CABELLO II','M'),(300006,'FAUSTO VANNORMAN II','M');
+INSERT INTO restaurant VALUES (1, 'main', 'dalian', NULL, NULL), (2, 'sub', 'beijing', '74513', NULL);
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
---select id, name, orders.customer_ids from customer where id IS NOT NULL;
---update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
---select id from customer where id IS NOT NULL and name > '1234';
+select id, name from customer where id = 300001;
+select name from customer;
+update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
+select * from customer;
+select restaurant.id, customer.id, gender, address from customer, restaurant;
+-- select id from customer where id IS NOT NULL and name > '1234';
+

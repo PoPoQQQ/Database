@@ -96,13 +96,13 @@ void Index::SaveHeader() const {
 	
 	int offset = 0;
 	
-	memcpy(b + (offset >> 2), databaseName.c_str(), min((unsigned)MAX_IDENTIFIER_LEN, databaseName.length() + 1));
+	memcpy(b + (offset >> 2), databaseName.c_str(), min((unsigned)MAX_IDENTIFIER_LEN, (unsigned)databaseName.length() + 1));
 	offset += MAX_IDENTIFIER_LEN;
 	
-	memcpy(b + (offset >> 2), tableName.c_str(), min((unsigned)MAX_IDENTIFIER_LEN, tableName.length() + 1));
+	memcpy(b + (offset >> 2), tableName.c_str(), min((unsigned)MAX_IDENTIFIER_LEN, (unsigned)tableName.length() + 1));
 	offset += MAX_IDENTIFIER_LEN;
 
-	memcpy(b + (offset >> 2), indexName.c_str(), min((unsigned)MAX_IDENTIFIER_LEN, indexName.length() + 1));
+	memcpy(b + (offset >> 2), indexName.c_str(), min((unsigned)MAX_IDENTIFIER_LEN, (unsigned)indexName.length() + 1));
 	offset += MAX_IDENTIFIER_LEN;
 
 	b[offset >> 2] = numberOfPage;

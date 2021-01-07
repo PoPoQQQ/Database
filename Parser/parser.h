@@ -15,6 +15,7 @@
 #include "./ExprObj.h"
 #include "./OpEnum.h"
 #include "../Index/WhereCondition.h"
+#include "../Record/SelectFieldList.h"
 
 using namespace std;
 
