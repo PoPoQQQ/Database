@@ -65,37 +65,40 @@ int main(int argc, const char* argv[]) {
 			fieldList.AddField(Field("b").SetDataType(Data(Data::DATE)));
 			fieldList.AddField(Field("c").SetDataType(Data(Data::FLOAT)));
 			fieldList.AddField(Field("d").SetDataType(Data(Data::VARCHAR, 255)));
-			fieldList.AddField(Field("e").SetDataType(Data(Data::INT)));
 			Table *table = Database::CreateTable("TestTable", fieldList);
+			fieldList.AddField(Field("e").SetDataType(Data(Data::INT)));
 			Table *table2 = Database::CreateTable("TestTable2", fieldList);
 
 			Record record = table->EmptyRecord();
+			Record record2 = table2->EmptyRecord();
 			for(int i = 0; i < 128; i++) {
 				record.CleanData();
 				record.FillData("a", Data(Data::INT).SetData((unsigned)i));
 				record.FillData("b", Data(Data::DATE).SetData("1998/04/02"));
 				record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
 				record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
-				record.FillData("e", Data());
 				table->AddRecord(record);
-				record.FillData("a", Data(Data::INT).SetData((unsigned)i+100));
-				record.FillData("b", Data(Data::DATE).SetData("2020/04/02"));
-				record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
-				record.FillData("d", Data(Data::VARCHAR, 255).SetData("*****************."));
-				record.FillData("e", Data());
-				table2->AddRecord(record);
+				record2.CleanData();
+				record2.FillData("a", Data(Data::INT).SetData((unsigned)i+100));
+				record2.FillData("b", Data(Data::DATE).SetData("2020/04/02"));
+				record2.FillData("c", Data(Data::FLOAT).SetData(233.33f));
+				record2.FillData("d", Data(Data::VARCHAR, 255).SetData("*****************."));
+				record2.FillData("e", Data());
+				table2->AddRecord(record2);
 			}
-			
+			table2->PrintTable();
 			vector<ColObj> selector;
 			
 			ColObj col1, col2, col3;
 			col1.colName = "a";
-			col2.tbName = "TestTable";
+			col1.tbName = "TestTable";
+			col2.tbName = "TestTable2";
 			col2.colName = "d";
-			col3.colName = "e";
-			// selector.push_back(col1);
-			// selector.push_back(col2);
-			// selector.push_back(col3);
+			col3.colName = "a";
+			col3.tbName = "TestTable2";
+			selector.push_back(col1);
+			selector.push_back(col2);
+			selector.push_back(col3);
 			
 			vector<string> tbList;
 			tbList.push_back("TestTable");
@@ -122,22 +125,39 @@ int main(int argc, const char* argv[]) {
 			}
 
 			if(selector.size() > 0) {
-				// FieldList tFieldList;
-				// for(int i = 0;i < selector.size(); ++i) {
-				// 	tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
-				// }
-				// tFieldList.PrintFields();
-				// function<void(Record&, BufType)> it = [&tFieldList](Record& record, BufType b) {
-				// 	unsigned int bitmap = 0;
-				// 	int index = -1;
-				// 	for(int i = 0;i < tFieldList.fields.size(); ++i) {
-				// 		index = record.fieldList.GetColumnIndex(tFieldList.fields[i].columnName);
-				// 		tFieldList.fields[i] = record.fieldList.GetColumn(index);
-				// 		bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
-				// 	}
-				// 	tFieldList.PrintDatas(bitmap);
-				// };
-				// table->IterTable(it);
+				SelectFieldList tFieldList;
+				Table* tTable = nullptr;
+				for(int i = 0;i < selector.size(); ++i) {
+					tTable = Database::GetTable(selector[i].tbName.c_str());
+					tFieldList.AddSelectField(tTable->fieldList.GetColumn(tTable->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+				}
+
+				int depth = 0;
+				unsigned int bitmap = 0;
+				unsigned int bitmapPos = 0;
+				function<void(Record&, BufType)> it = [&tFieldList, &depth, &selector, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+					// selector 对应的列（目前已经在表中）
+					const int cIndex = record.fieldList.GetColumnIndex(selector[depth].colName.c_str());
+					const Field& field = record.fieldList.GetColumn(cIndex);
+					tFieldList.fields[bitmapPos] = field;
+					bitmap |= (record.bitMap & (1u << cIndex)) ? (1u << bitmapPos) : 0u;
+					bitmapPos++;
+					// 进入下一次递归
+					depth++;
+					if(depth == selector.size()) {
+						tFieldList.PrintDatas(bitmap);
+					} else {
+						tbMap.find(selector[depth].tbName)->second->IterTable(it);
+					}
+					// 回退
+					depth--;
+					bitmapPos--;
+					bitmap &= (0xffffffffu ^ (1 << bitmapPos));
+				};
+				
+				// 进行递归打印笛卡尔积
+				tFieldList.PrintFields();
+				tbMap.find(tbList[0])->second->IterTable(it);
 			} else {
 				// 如果是 * ，则将所有的 FieldList 连接起来
 				SelectFieldList tFieldList;

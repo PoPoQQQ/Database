@@ -51,5 +51,5 @@ select id, name from customer where id = 300001;
 select name from customer;
 update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
 select * from customer;
-select * from customer, restaurant;
+select restaurant.id, customer.id, gender, address from customer, restaurant;
 -- select id from customer where id IS NOT NULL and name > '1234';

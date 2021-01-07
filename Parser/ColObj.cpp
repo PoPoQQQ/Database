@@ -106,6 +106,7 @@ bool ColObj::isInTbMap(const map<string, Table*> tbMap) {
                 }
             }
         }
+        return true;
     } else {
         const map<string, Table*>::const_iterator it = tbMap.find(this->tbName);
         if(it == tbMap.end()) {

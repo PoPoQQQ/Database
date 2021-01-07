@@ -191,8 +191,8 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 					}
 				} else {
 					// 笛卡尔积
-					const vector<string>& tbList = $4;
-					const vector<ColObj>& selector = $2;
+					vector<string>& tbList = $4;
+					vector<ColObj>& selector = $2;
 					// 1. 检查 tableList 中的名称是否存在且唯一
 					// 检查 tbList 中的内容是否存在且唯一
 					map<string, Table*> tbMap;
@@ -239,7 +239,48 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 						tFieldList.PrintFields();
 						tbMap.find(tbList[0])->second->IterTable(it);
 					} else {
-						//TODO:
+						// 检查 selector 是否都在其中
+						for(int i = 0;i < selector.size(); ++i) {
+							if(!selector[i].isInTbMap(tbMap)) {
+								char buf[128];
+								snprintf(buf, 128, "selector (%s.%s) doesn't exist in table list", selector[i].tbName.c_str(), selector[i].colName.c_str());
+								throw string(buf);
+							}
+						}
+
+						SelectFieldList tFieldList;
+						Table* tTable = nullptr;
+						for(int i = 0;i < selector.size(); ++i) {
+							tTable = Database::GetTable(selector[i].tbName.c_str());
+							tFieldList.AddSelectField(tTable->fieldList.GetColumn(tTable->fieldList.GetColumnIndex(selector[i].colName.c_str())));
+						}
+
+						int depth = 0;
+						unsigned int bitmap = 0;
+						unsigned int bitmapPos = 0;
+						function<void(Record&, BufType)> it = [&tFieldList, &depth, &selector, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+							// selector 对应的列（目前已经在表中）
+							const int cIndex = record.fieldList.GetColumnIndex(selector[depth].colName.c_str());
+							const Field& field = record.fieldList.GetColumn(cIndex);
+							tFieldList.fields[bitmapPos] = field;
+							bitmap |= (record.bitMap & (1u << cIndex)) ? (1u << bitmapPos) : 0u;
+							bitmapPos++;
+							// 进入下一次递归
+							depth++;
+							if(depth == selector.size()) {
+								tFieldList.PrintDatas(bitmap);
+							} else {
+								tbMap.find(selector[depth].tbName)->second->IterTable(it);
+							}
+							// 回退
+							depth--;
+							bitmapPos--;
+							bitmap &= (0xffffffffu ^ (1 << bitmapPos));
+						};
+						
+						// 进行递归打印笛卡尔积
+						tFieldList.PrintFields();
+						tbMap.find(tbList[0])->second->IterTable(it);
 					}
 				}
 				cout << "SELECT finished!" << endl;
