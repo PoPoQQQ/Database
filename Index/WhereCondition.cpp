@@ -1,6 +1,7 @@
 #include "WhereCondition.h"
 #include "../Record/Table.h"
 #include "../Parser/OpEnum.h"
+#include "../Record/Database.h"
 #include <iostream>
 using namespace std;
 WhereCondition::WhereCondition(CondType type) 
@@ -151,6 +152,116 @@ bool WhereCondition::validateUpdate(Table& table) {
 	return result;
 }
 
+bool WhereCondition::validate(Table* table) {
+	// //1. tbName 对应 table 是否存在
+	// Table* table = Database::GetTable(tbName.c_str()); // 如果获取失败会直接抛出异常，这里不进行捕捉
+	//2. 根据限制条件类型来判断
+	switch(this->type) {
+		case CondType::IS_NULL:
+			// 检查列名
+			if(!this->col.isInTable(*table)) {
+				char buf[256];
+				snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->col.tbName.c_str(), this->col.colName.c_str());
+				throw string(buf);
+			}
+			// 即使是 IS_NOT_NULL 的限制也不会报错
+			// 该函数只会判断列名是否正确，但是不判断列的内容是否正确
+			return true;
+		case CondType::IS_NOT_NULL:
+			// 检查列名
+			if(!this->col.isInTable(*table)) {
+				char buf[256];
+				snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->col.tbName.c_str(), this->col.colName.c_str());
+				throw string(buf);
+			}
+			return true;
+		case CondType::COMBINDED:
+			return  this->condition1->validate(table) && 
+					this->condition2->validate(table);
+		case CondType::EXPR:{
+			// 检查列名是否在 table 中
+			if(!this->col.isInTable(*table)) {
+				char buf[256];
+				snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->col.tbName.c_str(), this->col.colName.c_str());
+				throw string(buf);
+			}
+			// 如果没有初始化，说明有解析错误
+			if(!(this->expr.isInited)) {
+				throw "Error: expr is not initialized";
+			}
+			// 如果是两个列，则把另一个列名也进行判断
+			if(this->expr.isCol) {
+				if(!this->expr.col.isInTable(*table)) {
+					char buf[256];
+					snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->expr.col.tbName.c_str(), this->expr.col.colName.c_str());
+					throw string(buf);
+				}
+			}
+			// 除此之外不做判断，让比较程序来判断列之间的类型
+			return true;
+		}
+		default:
+			throw "Error: Validating undefined WhereCondition";
+	}
+	
+}
+
+bool WhereCondition::validate(const map<string, Table*>& tbMap) {
+	if(tbMap.size() == 0) {
+		throw "Error: No table to check";
+	} else if (tbMap.size() == 1) {
+		return this->validate(tbMap.begin()->second);
+	} else {
+		switch(this->type) {
+			case CondType::IS_NULL:
+				// 检查列名
+				if(!this->col.isInTbMap(tbMap)) {
+					char buf[256];
+					snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->col.tbName.c_str(), this->col.colName.c_str());
+					throw string(buf);
+				}
+				// 即使是 IS_NOT_NULL 的限制也不会报错
+				// 该函数只会判断列名是否正确，但是不判断列的内容是否正确
+				return true;
+			case CondType::IS_NOT_NULL:
+				// 检查列名
+				if(!this->col.isInTbMap(tbMap)) {
+					char buf[256];
+					snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->col.tbName.c_str(), this->col.colName.c_str());
+					throw string(buf);
+				}
+				return true;
+			case CondType::COMBINDED:
+				return  this->condition1->validate(tbMap) && 
+						this->condition2->validate(tbMap);
+			case CondType::EXPR:{
+				// 检查列名是否在 table 中
+				if(!this->col.isInTbMap(tbMap)) {
+					char buf[256];
+					snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->col.tbName.c_str(), this->col.colName.c_str());
+					throw string(buf);
+				}
+				// 如果没有初始化，说明有解析错误
+				if(!(this->expr.isInited)) {
+					throw "Error: expr is not initialized";
+				}
+				// 如果是两个列，则把另一个列名也进行判断
+				if(this->expr.isCol) {
+					if(!this->expr.col.isInTbMap(tbMap)) {
+						char buf[256];
+						snprintf(buf, 256, "Error: col (%s.%s) doesn't exist", this->expr.col.tbName.c_str(), this->expr.col.colName.c_str());
+						throw string(buf);
+					}
+				}
+				// 除此之外不做判断，让比较程序来判断列之间的类型
+				return true;
+			}
+			default:
+				throw "Error: Validating undefined WhereCondition";
+		}
+	}
+}
+
 bool WhereCondition::check(Record& record) {
 	FieldList& fieldList = record.fieldList;
 	switch(this->type) {
@@ -188,42 +299,56 @@ bool WhereCondition::check(Record& record) {
 				const Field& cField = fieldList.GetColumn(cIndex);
 				// 这里所有的比较都是和值进行的
 				if(this->expr.isCol) {
-					// TODO: 想办法比较列
-					throw "WhereCondition::check(FieldList&) can only check value expr";
-				} else if(this->expr.value.dataType == Data::UNDEFINED) {
-					// TODO: 特殊化处理 NULL 的比较
-					// 这里先默认所有的 NULL 按 true 返回
-					return true;
+					// 对于当前的函数，所有的列都在同一个表中，进行查找便可
+					const Field* const rField = this->expr.col.getFieldFromList(fieldList);
+					if(rField == nullptr) {
+						throw "Error: col doesn't exist in fieldList in WhereCondition::check";
+					} else {
+						return this->evaluate(cField.data, rField->data);
+					}
 				}
-				switch(this->op) {
-					case OpEnum::EQUAL:{
-						return this->expr.value == cField.data;
-					}
-					case OpEnum::NOTEQUAL: {
-						return !(this->expr.value == cField.data);
-					}
-					case OpEnum::LEQUAL: {
-						return !(this->expr.value < cField.data);
-					}
-					case OpEnum::GEQUAL: {
-						return !(cField.data < this->expr.value);
-					}
-					case OpEnum::LESS: {
-						return cField.data < this->expr.value;
-					}
-					case OpEnum::GREATER: {
-						return this->expr.value < cField.data;
-					}
-					case OpEnum::NONE:
-						throw "Error: WhereCondition has NONE op in check";
-					default:
-						throw "Error: undefined op type in WhereCondition::check";
-				}
+				return this->evaluate(cField.data, this->expr.value);
 			} else {
 				throw "Error: col doesn't exist in fieldList in WhereCondition::check";
 			}
 		}
 		default:
 			throw "Error: UNDEFINED condition is checking";
+	}
+}
+
+bool WhereCondition::evaluate(const Data& lData, const Data& rData) {
+	// 不同类型默认返回 NULL
+	// 另外，NULL 类型有关的所有操作默认返回 false
+	if(lData.dataType & 0xff != rData.dataType & 0xff) {
+		if(!evaluateAlert) {
+			cerr << "Comparing different data subtypes in WhereCondition::evaluate, return 'false' at default" << endl;
+			evaluateAlert = true;
+		}
+		return false;
+	}
+	switch(this->op) {
+		case OpEnum::EQUAL:{
+			return lData == rData;
+		}
+		case OpEnum::NOTEQUAL: {
+			return !(lData == rData);
+		}
+		case OpEnum::LEQUAL: {
+			return !(rData < lData);
+		}
+		case OpEnum::GEQUAL: {
+			return !(lData < rData);
+		}
+		case OpEnum::LESS: {
+			return lData < rData;
+		}
+		case OpEnum::GREATER: {
+			return rData < lData;
+		}
+		case OpEnum::NONE:
+			throw "Error: WhereCondition has NONE op in check";
+		default:
+			throw "Error: undefined op type in WhereCondition::check";
 	}
 }

@@ -137,7 +137,9 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 				// 检查 setClause
 				$4.validate(table->fieldList);
 				// 检查 whereClause
-				$6.validateUpdate(*table);
+				if(!$6.validate(table)){
+					throw "whereClause Error";
+				}
 				WhereCondition& whereClause = $6;
 				SetClauseObj& setClause = $4;
 				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
@@ -148,7 +150,7 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 					}
 				};
 				table->IterTable(it);
-				cout << "Update finished" << endl;
+				cout << "Update finished!" << endl;
 			}
 		|	SELECT selector FROM tableList
 			{
@@ -197,7 +199,9 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 				if ($4.size() == 1) {
 					// 查询单个 db
 					Table* table = Database::GetTable($4[0].c_str());
-					$6.validateUpdate(*table);
+					if(!$6.validate(table)){
+						throw "whereClause Error";
+					}
 					if($2.size() == 0) {
 						// 如果是 * ，则类似于 UPDATE
 						// 根据 whereClause 中的条件进行搜索，如果满足条件则打印
