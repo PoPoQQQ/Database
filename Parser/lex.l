@@ -77,6 +77,11 @@ FOREIGN		(?i:FOREIGN)
 ON  		(?i:ON)
 TO  		(?i:TO)
 
+NOTEQUAL	(<>)
+GEQUAL		(>=)
+LEQUAL		(<=)
+
+
 /* pattern */
 NEWLINE			(\r|\n|\r\n)
 IDENTIFIER		([A-Za-z][_0-9A-Za-z]*)
@@ -143,6 +148,10 @@ MULTILINE_COMMENT_END (\*\/)
 {FOREIGN}				{ return FOREIGN;	}
 {ON}					{ return ON;		}
 {TO}					{ return TO; 		}
+
+{NOTEQUAL}				{ return NOTEQUAL;	}
+{GEQUAL}				{ return GEQUAL;	}
+{LEQUAL}				{ return LEQUAL;	}
 
 {VALUE_INT}		{							//匹配整数串
 	yylval.m_nInt = atoi(yytext);//把识别出的整数串，转换为整型值，存储到yylval的整型成员里，到了yacc里用$n方式引用

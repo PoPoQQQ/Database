@@ -51,6 +51,6 @@ INSERT INTO restaurant VALUES (1, 'main', 'dalian', NULL, NULL), (2, 'sub', 'bei
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
 select id, name from customer where id = 300001;
 select name from customer;
-update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
+update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id <= 300001;
 select * from customer;
-select restaurant.id, customer.id, gender, address from customer, restaurant where restaurant.phone is null;
+select * from customer, restaurant;
