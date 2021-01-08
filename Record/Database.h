@@ -4,6 +4,8 @@
 #include <vector>
 #include "Table.h"
 #include "../Index/Index.h"
+#include "../Parser/SetClauseObj.h"
+#include "../Index/WhereCondition.h"
 using namespace std;
 
 int RemoveDirectory(const char* dir);
@@ -64,7 +66,10 @@ public:
 	 * @return Table* 指向该表的指针
 	 * */
 	static Table* GetTable(string tableName);
+	static vector<unsigned int> GetRecordList(string tableName, WhereCondition& whereCondition);
 	static void Insert(string tableName, const vector<vector<Data>>& dataLists);
+	static void Delete(string tableName, const vector<unsigned int>& recordList);
+	static void Update(string tableName, const vector<unsigned int>& recordList, SetClauseObj& setClause);
 	static void CreateIndex(string tableName, string indexName, const vector<string>& columnList);
 	static void DropIndex(string tableName, string indexName);
 };

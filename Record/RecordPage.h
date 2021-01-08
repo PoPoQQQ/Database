@@ -4,6 +4,7 @@
 #include "Record.h"
 #include "../Index/Index.h"
 #include "../Pages/PageBase.h"
+#include "../Index/WhereCondition.h"
 #define PAGE_OFFSET 64
 class RecordPage: public PageBase {
 public:
@@ -41,32 +42,72 @@ public:
 		}
 		return index;
 	}
-	bool AddRecord(const Record& record, unsigned int& recordIndex) {
+	bool AddRecord(Record& record, unsigned int& index) {
 		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
 		
-		int index = FindLeftOne();
-		if(index >= recordVolume) {
-			cerr << "Page volume not enough!" << endl;
-			exit(-1);
-		}
-		recordIndex = index;
+		index = FindLeftOne();
+		if(index >= recordVolume)
+			throw "Page volume not enough!";
 		bitMaps[index >> 5] ^= 1u << (index & 31);
 		SavePageHeader();
+		record.enabled = 1;
 		record.Save(b + (PAGE_OFFSET + index * recordSize) / 4);
 		MarkDirty();
 
-		index = FindLeftOne();
-		return index == recordVolume;
+		return FindLeftOne() == recordVolume;
 	}
-	void InsertPageIntoIndex(Index* index, const vector<int>& columnIndexes) {
+	Record GetRecord(unsigned int index) {
+		Record record = context->EmptyRecord();
+		int recordSize = record.RecordSize();
+		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
+
+		if(index >= recordVolume)
+			throw "Page volume not enough!";
+		if(bitMaps[index >> 5] & (1u << (index & 31)))
+			throw "Record does not exist!";
+		record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
+		return record;
+	}
+	bool DeleteRecord(Record& record, unsigned int index) {
+		int recordSize = record.RecordSize();
+		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
+
+		if(index >= recordVolume)
+			throw "Page volume not enough!";
+		if(bitMaps[index >> 5] & (1u << (index & 31)))
+			throw "Record does not exist!";
+		record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
+		record.enabled = 0;
+		record.Save(b + (PAGE_OFFSET + index * recordSize) / 4);
+		MarkDirty();
+
+		bool ret = (FindLeftOne() == recordVolume);
+		bitMaps[index >> 5] |= (1u << (index & 31));
+		SavePageHeader();
+		return ret;
+	}
+	vector<unsigned int> GetRecordList(WhereCondition& whereCondition) {
+		vector<unsigned int> recordList;
+		Record record = context->EmptyRecord();
+		int recordSize = record.RecordSize();
+		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
+		for(int index = 0; index < recordVolume; index++)
+			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
+				record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
+				if(whereCondition.check(record))
+					recordList.push_back(pageNumber << 8 | index);
+			}
+		return recordList;
+	}
+	void InsertPageIntoIndex(Index* index) {
 		Record record = context->EmptyRecord();
 		int recordSize = record.RecordSize();
 		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
 		for(int _index = 0; _index < recordVolume; _index++)
 			if((bitMaps[_index >> 5] & (1u << (_index & 31))) == 0) {
 				record.Load(b + (PAGE_OFFSET + _index * recordSize) / 4);
-				context->InsertRecordIntoIndex(index, columnIndexes, record, pageNumber << 8 | _index);
+				context->InsertRecordIntoIndex(index, record, pageNumber << 8 | _index);
 			}
 	}
 	void PrintPage() {

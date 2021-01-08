@@ -344,6 +344,14 @@ Table* Database::GetTable(string tableName) {
 		throw "Table not found!";
 	return currentDatabase->tables[tableName];
 }
+vector<unsigned int> Database::GetRecordList(string tableName, WhereCondition& whereCondition) {
+	Table *table = GetTable(tableName);
+	if(!whereCondition.validate(table))
+		throw "whereClause Error";
+	//Index!
+
+	return table->GetRecordList(whereCondition);
+}
 void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 	vector<Record> recordList;
 	Table* table = GetTable(tableName);
@@ -363,6 +371,31 @@ void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 		if(it->second->tableName == tableName)
 			idxes.push_back(it->second);
 	table->AddRecords(recordList, idxes);
+	cout << "Insertion succeeded!" << endl;
+	table->PrintTable();
+	for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
+		(*it)->Print();
+}
+void Database::Delete(string tableName, const vector<unsigned int>& recordList) {
+	Table* table = GetTable(tableName);
+	vector<Index*> idxes;
+	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
+		if(it->second->tableName == tableName)
+			idxes.push_back(it->second);
+	table->DeleteRecords(recordList, idxes);
+	cout << "Deletion succeeded!" << endl;
+	table->PrintTable();
+	for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
+		(*it)->Print();
+}
+void Database::Update(string tableName, const vector<unsigned int>& recordList, SetClauseObj& setClause) {
+	Table* table = GetTable(tableName);
+	vector<Index*> idxes;
+	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
+		if(it->second->tableName == tableName)
+			idxes.push_back(it->second);
+	table->UpdateRecords(recordList, idxes, setClause);
+	cout << "Updation succeeded!" << endl;
 	table->PrintTable();
 	for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
 		(*it)->Print();

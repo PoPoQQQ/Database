@@ -117,20 +117,19 @@ vector<Data> Table::GetKeyTypes(const vector<string>& columnList) {
 }
 
 void Table::InsertAllIntoIndex(Index* index) {
-	vector<int> columnIndexes = GetColumnIndexes(index->colNames);
 	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
 		PageBase *page = LoadPage(pageNumber);
 		if(page == NULL)
 			continue;
 		if(page->pageType == PageBase::RECORD_PAGE)
-			dynamic_cast<RecordPage*>(page)->InsertPageIntoIndex(index, columnIndexes);
+			dynamic_cast<RecordPage*>(page)->InsertPageIntoIndex(index);
 		delete page;
 	}
 }
 
-void Table::InsertRecordIntoIndex(Index* index, const vector<int>& columnIndexes, 
-	Record record, unsigned int recordPosition) {
+void Table::InsertRecordIntoIndex(Index* index, Record record, unsigned int recordPosition) {
 	vector<Data> datas;
+	vector<int> columnIndexes = GetColumnIndexes(index->colNames);
 	for(vector<int>::const_iterator it = columnIndexes.begin(); it != columnIndexes.end(); it++) {
 		if((record.bitMap & (1 << *it)) == 0)
 			return;
@@ -143,10 +142,24 @@ void Table::InsertRecordIntoIndex(Index* index, const vector<int>& columnIndexes
 	index->Insert(datas, recordPosition);
 }
 
+void Table::RemoveRecordFromIndex(Index* index, Record record, unsigned int recordPosition) {
+	vector<Data> datas;
+	vector<int> columnIndexes = GetColumnIndexes(index->colNames);
+	for(vector<int>::const_iterator it = columnIndexes.begin(); it != columnIndexes.end(); it++) {
+		if((record.bitMap & (1 << *it)) == 0)
+			return;
+		Data data = record.fieldList.GetColumn(*it).GetData();
+		if((data.dataType & 0xff) != Data::VARCHAR)
+			datas.push_back(data);
+		else
+			datas.push_back(HashData(data));
+	}
+	index->Remove(datas/*, recordPosition*/);
+}
+
 void Table::AddRecord(Record &record, unsigned int& recordPosition) {
 	PageBase *page = GetAvailablePage(PageBase::RECORD_PAGE);
 
-	record.enabled = 1;
 	record.rid = ++ridTimestamp;
 	++recordCount;
 
@@ -161,17 +174,65 @@ void Table::AddRecord(Record &record, unsigned int& recordPosition) {
 }
 
 void Table::AddRecords(vector<Record>& records, const vector<Index*>& idxes) {
-	vector<unsigned int> recordPositions;
-	for(vector<Record>::iterator it = records.begin(); it != records.end(); it++) {
+	for(int i = 0; i < (signed)records.size(); i++) {
 		unsigned int recordPosition;
-		AddRecord(*it, recordPosition);
-		recordPositions.push_back(recordPosition);
+		AddRecord(records[i], recordPosition);
+		for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++)
+			InsertRecordIntoIndex(*it, records[i], recordPosition);
 	}
-	for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++) {
-		vector<int> columnIndexes = GetColumnIndexes((*it)->colNames);
-		for(int i = 0; i < (signed)records.size(); i++)
-			InsertRecordIntoIndex(*it, columnIndexes, records[i], recordPositions[i]);
+}
+
+void Table::DeleteRecord(Record &record, unsigned int recordPosition) {
+	PageBase *page = LoadPage(recordPosition >> 8);
+	if(!page || page->pageType != PageBase::RECORD_PAGE)
+		throw "Deletion error!";
+
+	--recordCount;
+	bool full = dynamic_cast<RecordPage*>(page)->DeleteRecord(record, recordPosition & 0xff);
+	if(full)
+		SetBit(page->pageNumber, 1);
+	SaveHeader();
+	delete page;
+}
+
+void Table::DeleteRecords(const vector<unsigned int>& records, const vector<Index*>& idxes) {
+	for(int i = 0; i < (signed)records.size(); i++) {
+		Record record = EmptyRecord();
+		DeleteRecord(record, records[i]);
+		for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++)
+			RemoveRecordFromIndex(*it, record, records[i]);
 	}
+}
+
+void Table::UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause) {
+	for(int i = 0; i < (signed)records.size(); i++) {
+		Record record = EmptyRecord();
+		DeleteRecord(record, records[i]);
+		for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++)
+			RemoveRecordFromIndex(*it, record, records[i]);
+
+		setClause.apply(record);
+
+		unsigned int recordPosition;
+		AddRecord(record, recordPosition);
+		for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++)
+			InsertRecordIntoIndex(*it, record, recordPosition);
+	}
+}
+
+vector<unsigned int> Table::GetRecordList(WhereCondition& whereCondition) {
+	vector<unsigned int> recordList;
+	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
+		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);
+		if(page == NULL)
+			continue;
+		if(page->pageType == PageBase::RECORD_PAGE) {
+			vector<unsigned int> _recordList = dynamic_cast<RecordPage*>(page)->GetRecordList(whereCondition);
+			recordList.insert(recordList.end(), _recordList.begin(), _recordList.end());
+		}
+		delete page;
+	}
+	return recordList;
 }
 
 void Table::PrintTable() {

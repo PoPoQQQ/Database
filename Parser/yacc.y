@@ -120,23 +120,28 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	DESC tbName
 			{
-				Database::GetTable($2.c_str())->DescTable();
+				Database::GetTable($2)->DescTable();
 			}
         |	INSERT INTO tbName VALUES valueLists
 			{
-				Database::Insert($3.c_str(), $5);
+				Database::Insert($3, $5);
 			}
         |	DELETE FROM tbName WHERE whereClause
 			{
-
+				vector<unsigned int> recordList = Database::GetRecordList($3, $5);
+				Database::Delete($3, recordList);
 			}
         |	UPDATE tbName SET setClause WHERE whereClause
 			{
+				vector<unsigned int> recordList = Database::GetRecordList($2, $6);
+				Database::Update($2, recordList, $4);
+				/*
 				// 检查并读取表格
 				Table *table = Database::GetTable($2.c_str()); 
 				// 检查 setClause
 				$4.validate(table->fieldList);
 				// 检查 whereClause
+
 				if(!$6.validate(table)){
 					throw "whereClause Error";
 				}
@@ -144,13 +149,18 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 				SetClauseObj& setClause = $4;
 				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
 				function<void(Record&, BufType)> it = [&whereClause, &setClause](Record& record, BufType b) {
+					cout << "I'm here!" << endl;
 					if((whereClause).check(record)) {
+						cout << "I'm here!!" << endl;
 						(setClause).apply(record);
+						cout << "I'm here!!!" << endl;
 						record.Save(b);
+						cout << "I'm here!!!!" << endl;
 					}
 				};
 				table->IterTable(it);
 				cout << "Update finished!" << endl;
+				*/
 			}
 		|	SELECT selector FROM tableList
 			{

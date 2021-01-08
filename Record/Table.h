@@ -6,6 +6,8 @@
 #include "FieldList.h"
 #include "../Index/Index.h"
 #include "../Pages/FileBase.h"
+#include "../Parser/SetClauseObj.h"
+#include "../Index/WhereCondition.h"
 using namespace std;
 /*
 管理一个表的信息
@@ -27,10 +29,14 @@ public:
 	vector<int> GetColumnIndexes(const vector<string>& columnList);
 	vector<Data> GetKeyTypes(const vector<string>& columnList);
 	void InsertAllIntoIndex(Index* index);
-	void InsertRecordIntoIndex(Index* index, const vector<int>& columnIndexes, 
-		Record record, unsigned int recordPosition);
+	void InsertRecordIntoIndex(Index* index, Record record, unsigned int recordPosition);
+	void RemoveRecordFromIndex(Index* index, Record record, unsigned int recordPosition);
 	void AddRecord(Record& record, unsigned int& recordPosition);
 	void AddRecords(vector<Record>& records, const vector<Index*>& idxes);
+	void DeleteRecord(Record& record, unsigned int recordPosition);
+	void DeleteRecords(const vector<unsigned int>& records, const vector<Index*>& idxes);
+	void UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause);
+	vector<unsigned int> GetRecordList(WhereCondition& whereCondition);
 	void PrintTable();
 	// 根据给定的函数对表中的每一个 Record 进行迭代
 	// 类似于 forEach 函数

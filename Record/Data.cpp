@@ -276,7 +276,7 @@ ostream& operator << (ostream& os, const Data &data) {
 }
 
 bool operator < (const Data &data1, const Data &data2) {
-	if(data1.dataType != data2.dataType) {
+	if((data1.dataType & 0xff) != (data2.dataType & 0xff)) {
 		cerr << "Data type distincts!" << endl;
 		exit(-1);
 	}
@@ -298,7 +298,7 @@ bool operator < (const Data &data1, const Data &data2) {
 }
 
 bool operator == (const Data &data1, const Data &data2) {
-	if(data1.dataType != data2.dataType) {
+	if((data1.dataType & 0xff) != (data2.dataType & 0xff)) {
 		cerr << "Data type distincts!" << endl;
 		exit(-1);
 	}
