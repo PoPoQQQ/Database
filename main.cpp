@@ -69,25 +69,28 @@ int main(int argc, const char* argv[]) {
 			fieldList.AddField(Field("e").SetDataType(Data(Data::INT)));
 			Table *table2 = Database::CreateTable("TestTable2", fieldList);
 
-			Record record = table->EmptyRecord();
-			Record record2 = table2->EmptyRecord();
-			for(int i = 0; i < 10; i++) {
-				record.CleanData();
-				record.FillData("a", Data(Data::INT).SetData((unsigned)i));
-				record.FillData("b", Data(Data::DATE).SetData("1998/04/02"));
-				record.FillData("c", Data(Data::FLOAT).SetData(233.33f));
-				record.FillData("d", Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
-				table->AddRecord(record);
-				record2.CleanData();
-				record2.FillData("a", Data(Data::INT).SetData((unsigned)i+100));
-				record2.FillData("b", Data(Data::DATE).SetData("2020/04/02"));
-				record2.FillData("c", Data(Data::FLOAT).SetData(233.33f));
-				record2.FillData("d", Data(Data::VARCHAR, 255).SetData("*****************."));
-				record2.FillData("e", Data());
-				table2->AddRecord(record2);
-			}
+			vector<vector<Data>> dataLists;
+			vector<vector<Data>> dataLists2;
+			for(int i = 0; i < 128; i++) {
+				vector<Data> dataList;
+				dataList.push_back(Data(Data::INT).SetData((unsigned)i));
+				dataList.push_back(Data(Data::DATE).SetData("1998/04/02"));
+				dataList.push_back(Data(Data::FLOAT).SetData(233.33f));
+				dataList.push_back(Data(Data::VARCHAR, 255).SetData("A quick brown fox jump over the lazy dog."));
+				dataLists.push_back(dataList);
 
-			// select TestTable.a, TestTable2.d, TestTable2.a
+				vector<Data> dataList2;
+				dataList2.push_back(Data(Data::INT).SetData((unsigned)i+100));
+				dataList2.push_back(Data(Data::DATE).SetData("2020/04/02"));
+				dataList2.push_back(Data(Data::FLOAT).SetData(233.33f));
+				dataList2.push_back(Data(Data::VARCHAR, 255).SetData("*****************."));
+				dataList2.push_back(Data());
+				dataLists2.push_back(dataList2);
+			}
+			Database::Insert("TestTable", dataLists);
+			Database::Insert("TestTable2", dataLists2);
+
+			table2->PrintTable();
 			vector<ColObj> selector;
 			ColObj col1, col2, col3;
 			col1.colName = "a";
@@ -230,24 +233,26 @@ int main(int argc, const char* argv[]) {
 				tFieldList.PrintFields();
 				tbMap.find(tbList[0])->second->IterTable(it);
 			}
-			//Database::CreateDatabase("MyDatabase");
-			//Database::OpenDatabase("MyDatabase");
 
-			// vector<Data> keys;
-			// keys.push_back(Data(Data::INT));
-			// Index* index = new Index("MyDatabase", "MyTable", "MyIndex", keys);
-			// for(int i = 1; i <= 21; i++) {
-			// 	keys[0].SetData((unsigned)i);
-			// 	index->Insert(keys, i * 10);
-			// 	cout << "=============================" << i << endl;
-			// 	index->Print();
-			// }
-			// for(int i = 1; i <= 21; i++) {
-			// 	keys[0].SetData((unsigned)i);
-			// 	index->Remove(keys);
-			// 	cout << "=============================" << i << endl;
-			// 	index->Print();
-			// }
+			/*
+			vector<string> columns;
+			vector<Data> keys;
+			columns.push_back("Column");
+			keys.push_back(Data(Data::INT));
+			Index* index = new Index("MyDatabase", "MyTable", "MyIndex", columns, keys);
+			for(int i = 1; i <= 21; i++) {
+				keys[0].SetData((unsigned)i);
+				index->Insert(keys, i * 10);
+				cout << "=============================" << i << endl;
+				index->Print();
+			}
+			for(int i = 1; i <= 21; i++) {
+				keys[0].SetData((unsigned)i);
+				index->Remove(keys);
+				cout << "=============================" << i << endl;
+				index->Print();
+			}*/
+
 		}
     	catch (const char* err) {
 			cout << "error: " << endl;

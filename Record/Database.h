@@ -3,6 +3,7 @@
 #include <set>
 #include <vector>
 #include "Table.h"
+#include "../Index/Index.h"
 using namespace std;
 
 int RemoveDirectory(const char* dir);
@@ -13,6 +14,7 @@ public:
 	static Database *currentDatabase; // 当前打开的数据库
 	char databaseName[MAX_IDENTIFIER_LEN + 1];
 	map<string, Table*> tables;
+	map<string, Index*> indexes;
 	/**
 	 * 打印所有的数据库名称
 	 */
@@ -53,15 +55,18 @@ public:
 	 * @param tableName 表名
 	 * @param fieldList 域列表
 	 * */
-	static Table* CreateTable(const char *tableName, const FieldList& fieldList);
+	static Table* CreateTable(string tableName, const FieldList& fieldList);
+	static void DropTable(string tableName);
 	/**
 	 * 从当前打开的数据库中获得某个 table 对象指针
 	 * 如果当前数据库不存在或者表名不存在则会直接报错退出
 	 * @param tableName 表名
 	 * @return Table* 指向该表的指针
 	 * */
-	static Table* GetTable(const char *tableName);
-	static void Insert(const char *tableName, const vector<vector<Data>>& dataLists);
+	static Table* GetTable(string tableName);
+	static void Insert(string tableName, const vector<vector<Data>>& dataLists);
+	static void CreateIndex(string tableName, string indexName, const vector<string>& columnList);
+	static void DropIndex(string tableName, string indexName);
 };
 
 

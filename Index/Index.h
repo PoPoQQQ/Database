@@ -16,10 +16,12 @@ public:
 	string tableName;
 	string indexName;
 	int rootPage;
-	vector<Data> keys;
+	vector<string> colNames;
+	vector<Data> keyTypes;
 
 	Index(string databaseName, string tableName, string indexName);
-	Index(string databaseName, string tableName, string indexName, vector<Data> keys);
+	Index(string databaseName, string tableName, string indexName, 
+		const vector<string> colNames, const vector<Data>& keyTypes);
 
 	void Insert(vector<Data> keys, int value);
 	void Remove(vector<Data> keys);

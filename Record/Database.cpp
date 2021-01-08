@@ -223,9 +223,21 @@ void Database::OpenDatabase(const char *databaseName) {
 	if(hFile != -1)
 	{
 		do {
-			if((fileinfo.attrib & _A_SUBDIR) == 0 && !strstr(fileinfo.name, "-"))  
+			if((fileinfo.attrib & _A_SUBDIR) == 0)
 			{
-				currentDatabase->tables[fileinfo.name] = new Table(currentDatabase->databaseName, fileinfo.name);
+				if(!strstr(fileinfo.name, "-"))
+				{
+					currentDatabase->tables[fileinfo.name] = new Table(currentDatabase->databaseName, fileinfo.name);
+				}
+				else
+				{
+					static char ___dir[1000];
+					strcpy(___dir, fileinfo.name);
+					char* p = strstr(fileinfo.name, "-");
+					*p = '\0';
+					string tableName(___dir), indexName(p + 1);
+					currentDatabase->indexes[indexName] = new Index(currentDatabase->databaseName, tableName, indexName);
+				}
 			}
 		} while(_findnext(hFile, &fileinfo) == 0);  
 		_findclose(hFile);
@@ -240,8 +252,12 @@ void Database::OpenDatabase(const char *databaseName) {
 		throw "Can't open Database base directory!";
 	
 	while((fileinfo = readdir(dir)) != NULL){
-		if(fileinfo->d_type != DT_DIR && !strstr(fileinfo->d_name, "-")){
-			currentDatabase->tables[fileinfo->d_name] = new Table(currentDatabase->databaseName, fileinfo->d_name);
+		if(fileinfo->d_type != DT_DIR){
+			if(!strstr(fileinfo->d_name, "-")){
+				currentDatabase->tables[fileinfo->d_name] = new Table(currentDatabase->databaseName, fileinfo->d_name);
+			}
+			else
+				;//TODO
 		}
 	}
 	closedir(dir);
@@ -252,6 +268,8 @@ void Database::CloseDatabase() {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
 	for(map<string, Table*>::iterator it = currentDatabase->tables.begin(); it != currentDatabase->tables.end(); it++)
+		delete it->second;
+	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
 		delete it->second;
 	delete currentDatabase;
 	currentDatabase = NULL;
@@ -291,10 +309,10 @@ void Database::ShowTables() {
 		cout << "-";
 	cout << "-+" << endl;
 }
-Table* Database::CreateTable(const char *tableName, const FieldList& fieldList) {
+Table* Database::CreateTable(string tableName, const FieldList& fieldList) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
-	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
+	if(tableName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	if(currentDatabase->tables.find(tableName) != currentDatabase->tables.end())
 		throw "Table already exsists!";
@@ -302,16 +320,31 @@ Table* Database::CreateTable(const char *tableName, const FieldList& fieldList) 
 	cout << "Table " << tableName << " successfully created." << endl;
 	return currentDatabase->tables[tableName];
 }
-Table* Database::GetTable(const char *tableName) {
+void Database::DropTable(string tableName) {
+	Table* table = GetTable(tableName);
+	delete table;
+	currentDatabase->tables.erase(currentDatabase->tables.find(tableName));
+	char dir[1000];
+	sprintf(dir, "Database/%s/%s", currentDatabase->databaseName, tableName.c_str());
+	remove(dir);
+	vector<string> idxes;
+	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
+		if(it->second->tableName == tableName)
+			idxes.push_back(it->first);
+	for(vector<string>::iterator it = idxes.begin(); it != idxes.end(); it++)
+		DropIndex(tableName, *it);
+	cout << "Drop table: " << tableName << " succeed." << endl;
+}
+Table* Database::GetTable(string tableName) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
-	if(strlen(tableName) > MAX_IDENTIFIER_LEN)
+	if(tableName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	if(currentDatabase->tables.find(tableName) == currentDatabase->tables.end())
 		throw "Table not found!";
 	return currentDatabase->tables[tableName];
 }
-void Database::Insert(const char *tableName, const vector<vector<Data>>& dataLists) {
+void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 	vector<Record> recordList;
 	Table* table = GetTable(tableName);
 	for(vector<vector<Data>>::const_iterator it = dataLists.begin(); it != dataLists.end(); it++) {
@@ -324,7 +357,41 @@ void Database::Insert(const char *tableName, const vector<vector<Data>>& dataLis
 		record.NullCheck();
 		recordList.push_back(record);
 	}
-	for(vector<Record>::iterator it = recordList.begin(); it != recordList.end(); it++)
-		table->AddRecord(*it);
+
+	vector<Index*> idxes;
+	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
+		if(it->second->tableName == tableName)
+			idxes.push_back(it->second);
+	table->AddRecords(recordList, idxes);
 	table->PrintTable();
+	for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
+		(*it)->Print();
+}
+void Database::CreateIndex(string tableName, string indexName, const vector<string>& columnList) {
+	Table* table = GetTable(tableName);
+	if(indexName.length() > MAX_IDENTIFIER_LEN)
+		throw "Identifier is too long!";
+	if(currentDatabase->indexes.find(indexName) != currentDatabase->indexes.end())
+		throw "Index already exsists!";
+	vector<Data> keyTypes = table->GetKeyTypes(columnList);
+	Index* index = currentDatabase->indexes[indexName] = new Index(currentDatabase->databaseName, tableName, indexName, columnList, keyTypes);
+	table->InsertAllIntoIndex(index);
+	index->Print();
+}
+void Database::DropIndex(string tableName, string indexName) {
+	if(currentDatabase == NULL)
+		throw "No database selected!";
+	if(currentDatabase->indexes.find(indexName) == currentDatabase->indexes.end())
+		throw "Index does not exist!";
+	Index* index = currentDatabase->indexes[indexName];
+	if(tableName == "")
+		tableName = index->tableName;
+	if(tableName != index->tableName)
+		throw "Index does not exist!";
+	delete index;
+	currentDatabase->indexes.erase(currentDatabase->indexes.find(indexName));
+	char dir[1000];
+	sprintf(dir, "Database/%s/%s-%s", currentDatabase->databaseName, tableName.c_str(), indexName.c_str());
+	remove(dir);
+	cout << "Drop index: " << tableName << "-" << indexName << " succeed." << endl;
 }

@@ -318,3 +318,18 @@ bool operator == (const Data &data1, const Data &data2) {
 	}
 	return false;
 }
+
+Data HashData(const Data &data) {
+	if(data.dataType & 0xff != Data::VARCHAR)
+		throw "Hashed data must be string!";
+	unsigned int hash = 0;
+	const unsigned int base = 131;
+	int len = strlen(data.stringData);
+	for(int i = 0; i < len; i++) {
+		unsigned int v = (unsigned char)data.stringData[i];
+		hash = hash * base + len;
+	}
+	Data ret(Data::INT);
+	ret.SetData(hash);
+	return ret;
+}

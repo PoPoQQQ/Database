@@ -20,7 +20,7 @@ vector<Data> BplusNodePage::GetKey(int index) {
 		cerr << "Invalid index!" << endl;
 		exit(-1);
 	}
-	vector<Data> ret = context->keys;
+	vector<Data> ret = context->keyTypes;
 	BufType _b = b + (PAGE_OFFSET + INDEX_SIZE * index >> 2);
 	for(int i = 0; i < (signed)ret.size(); i++)
 		ret[i].LoadData((unsigned char*)(_b + 1 + i * 2));

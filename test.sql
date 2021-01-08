@@ -45,6 +45,8 @@ CREATE TABLE orders(
 -- desc orders;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
+CREATE INDEX idx ON customer(id);
+INSERT INTO customer VALUES (300005,'CHAD CABELLO II','M'),(300006,'FAUSTO VANNORMAN II','M');
 INSERT INTO restaurant VALUES (1, 'main', 'dalian', NULL, NULL), (2, 'sub', 'beijing', '74513', NULL);
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
 select id, name from customer where id = 300001;

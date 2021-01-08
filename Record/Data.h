@@ -37,10 +37,12 @@ public:
 
 	void LoadType(unsigned int* b);
 	void SaveType(unsigned int* b) const;
-	void LoadData(unsigned char*  b);
-	void SaveData(unsigned char*  b) const;
+	void LoadData(unsigned char* b);
+	void SaveData(unsigned char* b) const;
 
 	friend ostream& operator << (ostream& os, const Data &data);
 	friend bool operator < (const Data &data1, const Data &data2);
 	friend bool operator == (const Data &data1, const Data &data2);
+
+	friend Data HashData(const Data &data);
 };
