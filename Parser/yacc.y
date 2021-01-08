@@ -39,6 +39,7 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %token UPDATE SET SELECT IS INTTOKEN VARCHARTOKEN
 %token DEFAULT CONSTRAINT CHANGE ALTER ADD RENAME
 %token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN ON TO
+%token NOTEQUAL GEQUAL LEQUAL
 %token<m_sId> DATETOKEN TABLES
 
 %left AND
@@ -662,15 +663,15 @@ op  : '='
 		{
 			$$ = OpEnum::EQUAL;
 		}
-	| "<>" 
+	| NOTEQUAL 
 		{
 			$$ = OpEnum::NOTEQUAL;
 		}
-	| "<=" 
+	| LEQUAL  
 		{
 			$$ = OpEnum::LEQUAL;
 		}
-	| ">=" 
+	| GEQUAL 
 		{
 			$$ = OpEnum::GEQUAL;
 		}
