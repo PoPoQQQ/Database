@@ -7,6 +7,7 @@
 #include "../Parser/ExprObj.h"
 class Table;
 class Record;
+class SelectFieldList;
 class WhereCondition {
 public:
     enum class CondType {
@@ -51,6 +52,13 @@ public:
      * @throws: const char* err
      * */
     bool check(Record& record);
+    /** 
+     * 判断给定的数据条目是否满足给定的条件
+     * 默认 SelectFieldList 的 col 是不重复的，不进行检查
+     * 默认 whereClause 所需要判断的列都已经在 sFieldList 中
+     * @throws: const char* err
+     * */
+    bool check(SelectFieldList& sFieldList);
 private:
     /**
      * 根据表达式和给定的 Data 对象计算 expr 的结果

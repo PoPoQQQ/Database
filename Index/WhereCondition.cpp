@@ -2,6 +2,7 @@
 #include "../Record/Table.h"
 #include "../Parser/OpEnum.h"
 #include "../Record/Database.h"
+#include "../Record/SelectFieldList.h"
 #include <iostream>
 using namespace std;
 WhereCondition::WhereCondition(CondType type) 
@@ -317,12 +318,70 @@ bool WhereCondition::check(Record& record) {
 	}
 }
 
+bool WhereCondition::check(SelectFieldList& sFieldList) {
+	switch(this->type) {
+		case CondType::COMBINDED:
+			return this->condition1->check(sFieldList) && this->condition2->check(sFieldList);
+		case CondType::IS_NULL: {
+			const int cIndex = sFieldList.GetColumnIndex(this->col);
+			if (cIndex >= 0) {
+				const Field& cField = sFieldList.GetColumn(cIndex);
+				// TODO: 测试一下这里，可能有问题
+				if(cField.data.dataType == Data::UNDEFINED) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				throw "Error: col doesn't exist in fieldList in WhereCondition::check";
+			}
+		}
+		case CondType::IS_NOT_NULL: {
+			const int cIndex = sFieldList.GetColumnIndex(this->col);
+			if (cIndex >= 0) {
+				const Field& cField = sFieldList.GetColumn(cIndex);
+				if(cField.data.dataType == Data::UNDEFINED) {
+					return false;
+				} else {
+					return true;
+				}
+			} else {
+				throw "Error: col doesn't exist in fieldList in WhereCondition::check";
+			}
+		}
+		case CondType::EXPR: {
+			const int cIndex = sFieldList.GetColumnIndex(this->col);
+			if (cIndex >= 0) {
+				const Field& cField = sFieldList.GetColumn(cIndex);
+				// 这里所有的比较都是和值进行的
+				if(this->expr.isCol) {
+					// 我们默认所有需要的列已经在 FieldList 中
+					const int rIndex = sFieldList.GetColumnIndex(this->expr.col);
+					const Field& rField = sFieldList.GetColumn(rIndex);
+					if(rIndex == -1) {
+						throw "Error: col doesn't exist in fieldList in WhereCondition::check";
+					} else {
+						return this->evaluate(cField.data, rField.data);
+					}
+				}
+				return this->evaluate(cField.data, this->expr.value);
+			} else {
+				throw "Error: col doesn't exist in fieldList in WhereCondition::check";
+			}
+		}
+		default:
+			throw "Error: UNDEFINED condition is checking";
+	}
+}
+
 bool WhereCondition::evaluate(const Data& lData, const Data& rData) {
 	// 不同类型默认返回 NULL
 	// 另外，NULL 类型有关的所有操作默认返回 false
-	if(lData.dataType & 0xff != rData.dataType & 0xff) {
+	if((lData.dataType & 0xff) != (rData.dataType & 0xff)) {
 		if(!evaluateAlert) {
-			cerr << "Comparing different data subtypes in WhereCondition::evaluate, return 'false' at default" << endl;
+			char buf[128];
+			snprintf(buf, 128, "Comparing different data subtypes in WhereCondition::evaluate ( %d <-> %d ), return 'false' at default", (int) lData.dataType, (int) rData.dataType);
+			cerr << buf << endl;
 			evaluateAlert = true;
 		}
 		return false;

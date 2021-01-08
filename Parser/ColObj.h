@@ -12,6 +12,7 @@ struct ColObj {
     string tbName;
     string colName;
     ColObj(){}
+    ColObj(const string& tName, const string& cName): tbName(tName), colName(cName){}
     ColObj(const ColObj& other) {
         tbName = other.tbName;
         colName = other.colName;
@@ -20,6 +21,9 @@ struct ColObj {
         tbName = other.tbName;
         colName = other.colName;
         return *this;
+    }
+    bool operator == (const ColObj& other) const {
+        return this->tbName == other.tbName && this->colName == other.colName;
     }
     void print() {
         std::cout << "Col{tbName:" << tbName << ", colName: " << colName << " }" << std::endl;
