@@ -28,37 +28,33 @@ love:
 # LIB:=lib
 # MAIN:=main
 # ###
-# Target := target
+# # Target := target
 # SRCDIR = BufManager FileIO Index Pages Parser Record Utils
 # OBJDIR = obj
-# SRCPATH:= $(filter-out main.cpp,$(foreach dir,$(SRCDIR),$(wildcard $(addprefix ${dir}/*,.cpp))))
+# SRCPATH:= $(filter-out main.cpp,$(foreach dir,$(SRCDIR),$(wildcard $(addprefix ${dir}*,.cpp))))
 # INCLUDEPATH := $(SRCDIR)
-# OBJS:= $(addprefix $(OBJDIR)/, $(subst .cpp, .o, $(foreach dir,$(SRCDIR),$(wildcard *.cpp))))
+# OBJS:= $(wildcard $(OBJDIR)/*.o)
 
-# $(MAIN): main.cpp obj $(INCLUDEPATH) 
-# 	@test -d $(Target) | mkdir -p $(Target)
-# 	g++ $(OBJS) main.cpp -o $@ -I $(INCLUDEPATH) $(CFLAGS)
-# 	@mv $(MAIN) $(Target)/
+# $(MAIN): main.cpp obj YACC LEX $(INCLUDEPATH) 
+# 	# @test -d $(Target) | mkdir -p $(Target)
+# 	g++ $(OBJS) Parser/yacc.tab.c Parser/lex.yy.c main.cpp -o $@ $(foreach dir,$(INCLUDEPATH), $(addprefix -I , ${dir})) $(CFLAGS)
+# 	# @mv $(MAIN) $(Target)/
  
-# $(OBJS) :$(SRCPATH)
+# obj :$(SRCPATH)
 # 	@test -d $(OBJDIR) | mkdir -p $(OBJDIR)
-# 	g++ -c $< $(CFLAGS) -o $@
+# 	g++ -c $(SRCPATH) $(CFLAGS)
 # 	@mv *.o $(OBJDIR)/
- 
-# $(STATICLIB): obj
-# 	@test -d $(LIB) | mkdir -p $(LIB)
-# 	ar -q $@ $(OBJS)
-# 	@mv $@ $(LIB)/
 
-# $(SHARELIB):$(SRCPATH)
-# 	@test -d $(LIB) | mkdir -p $(LIB)
-# 	g++ $< -shared -fPIC  -o $@
-# 	@mv $(SHARELIB) $(LIB)/
+# YACC: Parser/yacc.y
+# 	$(YACC) -d Parser/yacc.y -b Parser/yacc
+
+# LEX: Parser/lex.l
+# 	$(LEX) -o Parser/lex.yy.c Parser/lex.l
 
 .PHONY: rmps rmdb test sqltest
 
 rmps:
-	rm ./Parser/yacc.tab.c Parser/yacc.tab.h Parser/lex.yy.c $(TARGET)
+	rm ./Parser/yacc.tab.c Parser/yacc.tab.h Parser/lex.yy.c
 rmdb:
 	rm -rf Database
 
@@ -68,7 +64,6 @@ test: rmdb all
 sqltest: rmps rmdb all
 	./main.exe test.sql
 
-# clean_cache:
-# 	rm $(OBJDIR) -rf
-# 	rm $(LIB) -rf
-# 	rm $(Target) -rf
+clean_cache:
+	rm $(OBJDIR) -rf
+	rm main
