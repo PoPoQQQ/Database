@@ -227,7 +227,7 @@ Data Data::SetPosInf() {
 		case VARCHAR:
 			throw "Invalid data type!";
 		case DATE:
-			intData = 0xffffffffu;
+			intData = 0x7fffffu;
 			break;
 		case FLOAT:
 			floatData = 1e20f;

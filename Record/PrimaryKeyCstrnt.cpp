@@ -1,26 +1,51 @@
-#include "PrimaryKeyCstrnt.h"
-#include "FieldList.h"
 #include <iostream>
-#include <sstream>
+#include <algorithm>
+#include "PrimaryKeyCstrnt.h"
 
-PrimaryKeyCstrnt::PrimaryKeyCstrnt(const char* name, FieldConstraint::ConstraintType type) 
-    :FieldConstraint(name, type) {
-        
+PrimaryKeyCstrnt::PrimaryKeyCstrnt() {}
+PrimaryKeyCstrnt::PrimaryKeyCstrnt(string pkName, const vector<string>& colNames):
+    pkName(pkName), colNames(colNames) {
+    if(pkName.length() > MAX_IDENTIFIER_LEN)
+        throw "Identifier is too long!";
+    for(vector<string>::const_iterator it = colNames.begin(); it != colNames.end(); it++)
+        if(it->length() > MAX_IDENTIFIER_LEN)
+            throw "Identifier is too long!";
 }
 
-PrimaryKeyCstrnt::PrimaryKeyCstrnt(const PrimaryKeyCstrnt& other)
-    :FieldConstraint(other.name, (FieldConstraint::ConstraintType) other.type) {
-    this->pkList = other.pkList;
+void PrimaryKeyCstrnt::LoadConstraint(BufType b) {
+    int offset = 0;
+    static char buffer[MAX_IDENTIFIER_LEN + 1];
+
+    memcpy(buffer, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+    buffer[MAX_IDENTIFIER_LEN] = 0;
+    pkName = string(buffer);
+    offset += MAX_IDENTIFIER_LEN;
+
+    for(vector<string>::iterator it = colNames.begin(); it != colNames.end(); it++) {
+        memcpy(buffer, b + (offset >> 2), MAX_IDENTIFIER_LEN);
+        buffer[MAX_IDENTIFIER_LEN] = 0;
+        *it = string(buffer);
+        offset += MAX_IDENTIFIER_LEN;
+    }
 }
 
-BufType PrimaryKeyCstrnt::SaveConstraint(BufType b) const {
-    return this->SaveBasic(b);
+void PrimaryKeyCstrnt::SaveConstraint(BufType b) const {
+    int offset = 0;
+
+    memcpy(b + (offset >> 2), pkName.c_str(), min((signed)pkName.length() + 1, MAX_IDENTIFIER_LEN));
+    offset += MAX_IDENTIFIER_LEN;
+
+    for(vector<string>::const_iterator it = colNames.begin(); it != colNames.end(); it++) {
+        memcpy(b + (offset >> 2), it->c_str(), min((signed)it->length() + 1, MAX_IDENTIFIER_LEN));
+        offset += MAX_IDENTIFIER_LEN;
+    }
 }
 
-BufType PrimaryKeyCstrnt::LoadConstraint(BufType b) {
-    return this->LoadBasic(b);
+int PrimaryKeyCstrnt::GetConstraintSize() const {
+    return MAX_IDENTIFIER_LEN * (colNames.size() + 1);
 }
 
+/*
 string PrimaryKeyCstrnt::toString() const {
     char buf[200];
     snprintf(buf, sizeof(buf),"PrimaryKeyCstrnt{ name: %s, type: %d, pksize: %lu}", name, (int) type, pkList.size());
@@ -40,3 +65,4 @@ void PrimaryKeyCstrnt::apply(FieldList& fieldList) {
         fieldList.GetColumn(fieldList.GetColumnIndex(it->c_str())).SetPrimaryKey(this->name);
     }
 }
+*/

@@ -9,8 +9,7 @@ FieldList::FieldList(const FieldList& other)
 
 }
 
-FieldList::~FieldList() {
-}
+FieldList::~FieldList() {}
 
 void FieldList::LoadFields(BufType b) {
 	unsigned int size = b[0];
@@ -21,6 +20,24 @@ void FieldList::LoadFields(BufType b) {
 		it->Load(b);
 		b += it->FieldSize() >> 2;
 	}
+
+	size = b[0];
+	b += 1;
+
+	pkConstraints.resize(size);
+	for(vector<PrimaryKeyCstrnt>::iterator it = pkConstraints.begin(); it != pkConstraints.end(); it++) {
+		it->LoadConstraint(b);
+		b += it->GetConstraintSize() >> 2;
+	}
+
+	size = b[0];
+	b += 1;
+
+	pkConstraints.resize(size);
+	for(vector<ForeignKeyCstrnt>::iterator it = fkConstraints.begin(); it != fkConstraints.end(); it++) {
+		it->LoadConstraint(b);
+		b += it->GetConstraintSize() >> 2;
+	}
 }
 void FieldList::SaveFields(BufType b) const {
 	b[0] = fields.size();
@@ -29,6 +46,22 @@ void FieldList::SaveFields(BufType b) const {
 	for(vector<Field>::const_iterator it = fields.begin(); it != fields.end(); it++) {
 		it->Save(b);
 		b += it->FieldSize() >> 2;
+	}
+
+	b[0] = pkConstraints.size();
+	b += 1;
+
+	for(vector<PrimaryKeyCstrnt>::const_iterator it = pkConstraints.begin(); it != pkConstraints.end(); it++) {
+		it->SaveConstraint(b);
+		b += it->GetConstraintSize() >> 2;
+	}
+
+	b[0] = fkConstraints.size();
+	b += 1;
+
+	for(vector<ForeignKeyCstrnt>::const_iterator it = fkConstraints.begin(); it != fkConstraints.end(); it++) {
+		it->SaveConstraint(b);
+		b += it->GetConstraintSize() >> 2;
 	}
 }
 void FieldList::LoadDatas(unsigned char* b) {
@@ -56,52 +89,50 @@ void FieldList::AddField(const Field& field) {
 	fields.push_back(field);
 }
 
-void FieldList::AddFieldDescVec(const char* tbName, const vector<FieldDesc>& field_desc_vec) {
-	for(vector<FieldDesc>::const_iterator it = field_desc_vec.begin(); it != field_desc_vec.end(); it++) {
+void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
+	for(vector<FieldDesc>::const_iterator it = vec.begin(); it != vec.end(); it++)
 		switch(it->type) {
 			case FieldDesc::FieldType::DEFAULT:
-				this->fields.push_back(it->field);
+				fields.push_back(it->field);
 				break;
-			case FieldDesc::FieldType::PRIMARY:
-				{
-					if(this->pkConstraints.size() > 0) {
-						// 在声明的时候只能定义一个主键，所以此时有语法错误
-						throw "Error: Multiple Primary keys defined";
-					} else {
-						// 否则记录下来所有的主键，最后进行检验
-						char shrink_name[10];
-						snprintf(shrink_name, sizeof(shrink_name), "%s", tbName);
-						char buf [MAX_IDENTIFIER_LEN + 1];
-						snprintf(buf, MAX_IDENTIFIER_LEN, "%s..._prk_0", shrink_name);
-						this->pkConstraints.push_back(PrimaryKeyCstrnt(buf));
-						this->pkConstraints.back().pkList = it->columnList;
-					}
-					break;
-				}
-			case FieldDesc::FieldType::FOREIGN:
-			{
-				char shrink_name[10];
-				snprintf(shrink_name, sizeof(shrink_name), "%s", tbName);
-				char buf [MAX_IDENTIFIER_LEN + 1];
-				snprintf(buf, MAX_IDENTIFIER_LEN, "%s..._prk_0", shrink_name);
-				this->fkConstraints.push_back(ForeignKeyCstrnt(buf));
-				this->fkConstraints.back().colList = it->columnList;
-				this->fkConstraints.back().ref_colList = it->ref_columnList;
-				strcpy(this->fkConstraints.back().tbName, it->tbName.c_str());
+			case FieldDesc::FieldType::PRIMARY: {
+				if(pkConstraints.size() > 0)
+					// 在声明的时候只能定义一个主键，所以此时有语法错误
+					throw "Error: Multiple Primary keys defined";
+				// 否则记录下来所有的主键，最后进行检验
+				pkConstraints.push_back(PrimaryKeyCstrnt("_pk_0", it->columnList));
+				break;
+			}
+			case FieldDesc::FieldType::FOREIGN: {
+				fkConstraints.push_back(ForeignKeyCstrnt("_fk_0", it->tbName, it->columnList, it->ref_columnList));
 				break;
 			}
 			default:
 				throw "Error in FieldList::AddFieldDescVec: error FieldType";
-				break;
+		}
+	for(vector<PrimaryKeyCstrnt>::iterator it = pkConstraints.begin(); it != pkConstraints.end(); it++) {
+		for(int i = 0; i < (signed)it->colNames.size(); i++) {
+			string colName = it->colNames[i];
+			int colIndex = GetColumnIndex(colName);
+			if(colIndex == -1)
+				throw "Error: Column does not exist";
+			Field& field = GetColumn(colIndex);
+			if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+				throw "Error: Multiple constraint is not supported!";
+			field.constraints |= Field::PRIMARY_KEY;
 		}
 	}
-
-	if(pkConstraints.size() > 0) {
-		pkConstraints[0].apply(*this);
-	}
-	
-	for(int i = 0;i < this->fkConstraints.size(); ++i) {
-		fkConstraints[i].apply(*this);
+	for(vector<ForeignKeyCstrnt>::iterator it = fkConstraints.begin(); it != fkConstraints.end(); it++) {
+		for(int i = 0; i < (signed)it->colNames.size(); i++) {
+			string colName = it->colNames[i];
+			int colIndex = GetColumnIndex(colName);
+			if(colIndex == -1)
+				throw "Error: Column does not exist";
+			Field& field = GetColumn(colIndex);
+			if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+				throw "Error: Multiple constraint is not supported!";
+			field.constraints |= Field::FOREIGN_KEY;
+		}
 	}
 }
 
@@ -155,7 +186,7 @@ void FieldList::DescFields() const {
 	int max_default_length = 7;
 	// max field length
 	for(vector<Field>::const_iterator it = fieldList.fields.begin(); it != fieldList.fields.end(); it++) {
-		max_field_length = max(max_field_length, (int) strlen(it->columnName));
+		max_field_length = max(max_field_length, (signed)it->columnName.length());
 		char buf[256];
 		switch(it->data.dataType & 0xff) {
 			case Data::INT:
@@ -254,7 +285,7 @@ void FieldList::DescFields() const {
 
 	for(vector<Field>::const_iterator it = fieldList.fields.begin(); it != fieldList.fields.end(); it++) {
 		cout << "| " << it->columnName;
-		for(int i = 0; i < max_field_length + 2 - (int) strlen(it->columnName) - 1; i++)
+		for(int i = 0; i < max_field_length + 2 - (signed)it->columnName.length() - 1; i++)
 			cout << " ";
 		
 		cout << "| ";

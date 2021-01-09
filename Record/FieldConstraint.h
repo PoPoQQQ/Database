@@ -25,7 +25,7 @@ public:
     BufType SaveConstraint(BufType b) const;
     string toString() const;
 
-    FieldConstraint(const char* name="", ConstraintType type = ConstraintType::NONE);
+    FieldConstraint(const char* name = "", ConstraintType type = ConstraintType::NONE);
     FieldConstraint(const FieldConstraint&);
 protected:
     // 储存约束名和类型的信息

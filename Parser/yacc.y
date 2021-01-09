@@ -112,7 +112,7 @@ dbStmt:		CREATE DATABASE dbName
 tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
 				FieldList fieldList;
-				fieldList.AddFieldDescVec($3.c_str(), $5);
+				fieldList.AddFieldDescVec($3, $5);
 				Database::CreateTable($3, fieldList);
 			}
         |	DROP TABLE tbName

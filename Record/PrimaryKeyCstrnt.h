@@ -1,24 +1,17 @@
-//! 
-#ifndef __PRIMARY_KEY_CSTRNT_H__
-#define __PRIMARY_KEY_CSTRNT_H__
-#include "FieldConstraint.h"
-#include <vector>
+#pragma once
 #include <string>
-#include "./Field.h"
+#include <vector>
+#include "Field.h"
 using namespace std;
-class FieldList;
-class PrimaryKeyCstrnt: public FieldConstraint {
+class PrimaryKeyCstrnt{
 public:
-    vector<string> pkList; // 用于储存所有主键列名的 vector（主键只有一个，长度代表是否有主键和主键是否是联合的）
+	string pkName;
+    vector<string> colNames; // 用于储存所有主键列名的 vector（主键只有一个，长度代表是否有主键和主键是否是联合的）
     
-    PrimaryKeyCstrnt(const char* name, FieldConstraint::ConstraintType type = FieldConstraint::ConstraintType::PRIMARY_KEY);
-    PrimaryKeyCstrnt(const PrimaryKeyCstrnt& other);
+    PrimaryKeyCstrnt();
+    PrimaryKeyCstrnt(string pkName, const vector<string>& colNames);
 
-    string toString() const;
-
-    BufType LoadConstraint(BufType b); // TODO
-    BufType SaveConstraint(BufType b) const; // TODO
-
-    void apply(FieldList&);
+    void LoadConstraint(BufType b); // TODO
+    void SaveConstraint(BufType b) const; // TODO
+    int GetConstraintSize() const;
 };
-#endif // __PRIMARY_KEY_CSTRNT_H__

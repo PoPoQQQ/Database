@@ -319,7 +319,8 @@ Table* Database::CreateTable(string tableName, const FieldList& fieldList) {
 		throw "Table already exsists!";
 	currentDatabase->tables[tableName] = new Table(currentDatabase->databaseName, tableName, fieldList);
 	cout << "Table " << tableName << " successfully created." << endl;
-	return currentDatabase->tables[tableName];
+	Table *table = currentDatabase->tables[tableName];
+	return table;
 }
 void Database::DropTable(string tableName) {
 	Table* table = GetTable(tableName);

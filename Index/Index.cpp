@@ -68,6 +68,9 @@ void Index::LoadHeader() {
 	numberOfPage = b[offset >> 2];
 	offset += 4;
 
+	bitMapPage = b[offset >> 2];
+	offset += 4;
+
 	rootPage = b[offset >> 2];
 	offset += 4;
 	
@@ -106,6 +109,9 @@ void Index::SaveHeader() const {
 	offset += MAX_IDENTIFIER_LEN;
 
 	b[offset >> 2] = numberOfPage;
+	offset += 4;
+
+	b[offset >> 2] = bitMapPage;
 	offset += 4;
 	
 	b[offset >> 2] = rootPage;
