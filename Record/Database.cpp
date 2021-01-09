@@ -319,8 +319,9 @@ Table* Database::CreateTable(string tableName, const FieldList& fieldList) {
 		throw "Table already exsists!";
 	currentDatabase->tables[tableName] = new Table(currentDatabase->databaseName, tableName, fieldList);
 	cout << "Table " << tableName << " successfully created." << endl;
-	Table *table = currentDatabase->tables[tableName];
-	return table;
+	if(fieldList.pkConstraints.size() > 0)
+		CreateIndex(tableName, "-" + tableName, fieldList.pkConstraints[0].colNames);
+	return currentDatabase->tables[tableName];
 }
 void Database::DropTable(string tableName) {
 	Table* table = GetTable(tableName);
@@ -384,7 +385,21 @@ void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 		record.NullCheck();
 		recordList.push_back(record);
 	}
-
+	if(table->fieldList.pkConstraints.size() > 0) {
+		Index *index = currentDatabase->indexes["-" + tableName];
+		if(!index)
+			throw "Primary key index not created!";
+		vector<unsigned int> gatherer;
+		const vector<string>& colNames = index->colNames;
+		for(vector<Record>::iterator it = recordList.begin(); it != recordList.end(); it++) {
+			vector<Data> datas;
+			for(int i = 0; i < (signed)colNames.size(); i++)
+				datas.push_back(it->fieldList.GetColumn(it->fieldList.GetColumnIndex(colNames[i])).GetData());
+			index->Search(datas, datas, gatherer);
+			if(gatherer.size() > 0)
+				throw "Primary key constraint violated!";
+		}
+	}
 	vector<Index*> idxes;
 	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
 		if(it->second->tableName == tableName)
@@ -421,7 +436,7 @@ void Database::Update(string tableName, const vector<unsigned int>& recordList, 
 }
 void Database::CreateIndex(string tableName, string indexName, const vector<string>& columnList) {
 	Table* table = GetTable(tableName);
-	if(indexName.length() > MAX_IDENTIFIER_LEN)
+	if(indexName[0] != '-' && indexName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
 	if(currentDatabase->indexes.find(indexName) != currentDatabase->indexes.end())
 		throw "Index already exsists!";

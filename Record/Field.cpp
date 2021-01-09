@@ -28,6 +28,7 @@ Field Field::SetDefault(Data data) {
 }
 Field Field::SetPrimaryKey() {
 	constraints |= PRIMARY_KEY;
+	constraints |= NOT_NULL;
 	return *this;
 }
 Field Field::SetForeignKey() {
