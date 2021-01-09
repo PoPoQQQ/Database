@@ -15,6 +15,8 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 {					//lex.l中也有类似的这段extern "C"，可以把它们合并成一段，放到共同的头文件main.h中
 	void yyerror(const char *s);
 	extern int yylex(void);//该函数是在lex.yy.c里定义的，yyparse()里要调用该函数，为了能编译和链接，必须用extern加以声明
+	extern int yylineno;
+	extern const char* yytext;
 }
 
 %}
@@ -39,7 +41,7 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %token UPDATE SET SELECT IS INTTOKEN VARCHARTOKEN
 %token DEFAULT CONSTRAINT CHANGE ALTER ADD RENAME
 %token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN ON TO
-%token NOTEQUAL GEQUAL LEQUAL
+%token NOTEQUAL GEQUAL LEQUAL CHARTOKEN
 %token<m_sId> DATETOKEN TABLES
 
 %left AND
@@ -79,7 +81,6 @@ stmt: 	sysStmt ';'
 		}
 	| 	idxStmt ';'
 		{
-
 		}
 	| 	alterStmt ';'
 		{
@@ -581,12 +582,12 @@ type  	:	INTTOKEN '(' VALUE_INT ')'
 			{
 				$$ = Data(Data::INT, $3);
 			}
-		/*
+		
 		| CHARTOKEN '(' VALUE_INT ')'
 			{
-				$$ = Data(Data::CHAR, $3);
+				$$ = Data(Data::VARCHAR, $3);
 			}
-        */
+        
         |	VARCHARTOKEN '(' VALUE_INT ')'
         	{
         		$$ = Data(Data::VARCHAR, $3);
@@ -821,10 +822,9 @@ idxName : IDENTIFIER
 			}
 		;
 %%
-
-void yyerror(const char *s)			//当yacc遇到语法错误时，会回调yyerror函数，并且把错误信息放在参数s中
+void yyerror(const char *msg)
 {
-	cerr << s << endl;					//直接输出错误信息
+    printf("%d:  %s  at  '%s'  \n",yylineno,msg,yytext);
 }
 
 
