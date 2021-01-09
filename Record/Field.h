@@ -18,7 +18,7 @@ public:
 	char columnName[MAX_IDENTIFIER_LEN + 1];
 	Data data;
 
-	int constraints;
+	int constraints = 0;
 	char primaryKeyName[MAX_IDENTIFIER_LEN + 1];
 	char foreignKeyTable[MAX_IDENTIFIER_LEN + 1];
 	char foreignKeyColumn[MAX_IDENTIFIER_LEN + 1];
@@ -26,6 +26,9 @@ public:
 
 	Field();
 	Field(const char *columnName);
+	Field(const Field& other);
+
+	Field& operator = (const Field& field);
 
 	Data GetData();
 	void SetData(const Data& data);
@@ -48,14 +51,4 @@ public:
 	// 如果不满足要求则会直接抛出错误
 	//* @throws string 错误原因
 	bool validateData(const Data& data) const;
-	// Field(const Field& other): data(other.data) {
-	// 	memset(this->fieldName, 0, sizeof this->fieldName);
-	// 	strcpy(this->fieldName, other.fieldName);
-	// }
-	// Field& operator = (const Field& field) {
-	// 	this->data = field.data;
-	// 	memset(this->fieldName, 0, sizeof this->fieldName);
-	// 	strcpy(this->fieldName, field.fieldName);
-	// 	return *this;
- 	// }
 };

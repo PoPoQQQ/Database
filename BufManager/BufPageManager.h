@@ -96,6 +96,20 @@ public:
 			return b;
 		}
 	}
+	/**
+	 * 在缓存中查找某一个文件的某一个页
+	 * 如果可以找到则返回 index 的值
+	 * 如果不行则返回 -1
+	 * 这个操作不会对替换算法产生任何影响
+	 * */
+	int getIndex(int fileID, int pageID) {
+		int index = hash->findIndex(fileID, pageID);
+		if (index != -1) {
+			return index;
+		} else {
+			return -1;
+		}
+	}
 	/*
 	 * @函数名access
 	 * @参数index:缓存页面数组中的下标，用来表示一个缓存页面

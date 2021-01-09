@@ -8,7 +8,11 @@
 using namespace std;
 struct FieldDesc {
     enum class FieldType {
+        UNDEFINED,
+        NORMAL,
+        NOTNULL,
         DEFAULT,
+        NOTNULLWITHDEFAULT,
         PRIMARY,
         FOREIGN
     };
@@ -18,7 +22,7 @@ struct FieldDesc {
     string tbName;
     vector<string> ref_columnList;
     FieldDesc(){
-        this->type = FieldType::DEFAULT;
+        this->type = FieldType::UNDEFINED;
     }
     void print() {
         cout << "FieldType(" << (int)type << ")" << endl;

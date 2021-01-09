@@ -6,6 +6,7 @@
 #include "../Index/Index.h"
 #include "../Parser/SetClauseObj.h"
 #include "../Index/WhereCondition.h"
+#include "./FieldDesc.h"
 using namespace std;
 
 int RemoveDirectory(const char* dir);
@@ -62,7 +63,6 @@ public:
 	/** 
 	 * 重命名表格
 	 * 会同时使得 Database 类和表格的文件名改变
-	 * TODO：没有考虑 index
 	 * */
 	static void RenameTable(const string& oldTbName, const string& newTbName);
 	/**
@@ -78,6 +78,18 @@ public:
 	static void Update(string tableName, const vector<unsigned int>& recordList, SetClauseObj& setClause);
 	static void CreateIndex(string tableName, string indexName, const vector<string>& columnList);
 	static void DropIndex(string tableName, string indexName);
+	
+	// alter table
+	static void addTableField(const string& tbName, const FieldDesc& fieldDesc);
+private:
+	/**
+	 * 和 DropTable 相同的操作，但是没有输出
+	 * */
+	void quietDropTable(string tableName);
+	/**
+	 * 和 DropIndex 相同的操作，但是没有输出
+	 * */
+	void quietDropIndex(string tableName,string indexName);
 };
 
 

@@ -169,3 +169,8 @@ void Index::Print() {
 	page->Print(keyTypes, 1);
 	delete page;
 }
+
+void Index::changeTableName(const string& newName) {
+	this->tableName = newName;
+	SaveHeader();
+}

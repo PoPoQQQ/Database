@@ -499,6 +499,9 @@ idxStmt		:	CREATE INDEX idxName ON tbName '(' columnList ')'
 			;
 			
 alterStmt	:	ALTER TABLE tbName ADD field
+				{
+					Database::addTableField($3, $5);
+				}
 			|   ALTER TABLE tbName DROP colName
 			|	ALTER TABLE tbName CHANGE colName field
 			|	ALTER TABLE tbName RENAME TO tbName
@@ -524,23 +527,27 @@ fieldList	:	field
 
 field  	: 	colName type
 			{
+				$$.type = FieldDesc::FieldType::NORMAL;
 				$$.field = Field($1.c_str());
 				$$.field.SetDataType($2);
 			}
       	| 	colName type NOT NULLTOKEN
 		  	{
+				$$.type = FieldDesc::FieldType::NOTNULL;
 				$$.field = Field($1.c_str());
 				$$.field.SetDataType($2);
 				$$.field.SetNotNull();
 			}
 		| 	colName	type DEFAULT value
 			{
+				$$.type = FieldDesc::FieldType::DEFAULT;
 				$$.field = Field($1.c_str());
 				$$.field.SetDataType($2);
 				$$.field.SetDefault($4);
 			}
 		|	colName type NOT NULLTOKEN DEFAULT value
 			{
+				$$.type = FieldDesc::FieldType::NOTNULLWITHDEFAULT;
 				$$.field = Field($1.c_str());
 				$$.field.SetDataType($2);
 				$$.field.SetNotNull();

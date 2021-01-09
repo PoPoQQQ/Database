@@ -59,8 +59,8 @@ void FieldList::AddField(const Field& field) {
 void FieldList::AddFieldDescVec(const char* tbName, const vector<FieldDesc>& field_desc_vec) {
 	for(vector<FieldDesc>::const_iterator it = field_desc_vec.begin(); it != field_desc_vec.end(); it++) {
 		switch(it->type) {
-			case FieldDesc::FieldType::DEFAULT:
-				this->fields.push_back(it->field);
+			case FieldDesc::FieldType::UNDEFINED:
+				throw "Error in FieldList::AddFieldDescVec: undefined FieldType";
 				break;
 			case FieldDesc::FieldType::PRIMARY:
 				{
@@ -91,7 +91,7 @@ void FieldList::AddFieldDescVec(const char* tbName, const vector<FieldDesc>& fie
 				break;
 			}
 			default:
-				throw "Error in FieldList::AddFieldDescVec: error FieldType";
+				this->fields.push_back(it->field);
 				break;
 		}
 	}

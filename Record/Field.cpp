@@ -10,6 +10,25 @@ Field::Field(const char *columnName) {
 	strcpy(this->columnName, columnName);
 }
 
+Field::Field(const Field& other) 
+	:data(other.data), constraints(other.constraints){
+	memcpy(columnName, other.columnName, MAX_IDENTIFIER_LEN + 1);
+	memcpy(primaryKeyName, other.primaryKeyName, MAX_IDENTIFIER_LEN + 1);
+	memcpy(foreignKeyTable, other.foreignKeyTable, MAX_IDENTIFIER_LEN + 1);
+	memcpy(foreignKeyColumn, other.foreignKeyColumn, MAX_IDENTIFIER_LEN + 1);
+	memcpy(foreignKeyName, other.foreignKeyName, MAX_IDENTIFIER_LEN + 1);
+}
+
+Field& Field::operator=(const Field& other) {
+	data = other.data;
+	constraints = other.constraints;
+	memcpy(columnName, other.columnName, MAX_IDENTIFIER_LEN + 1);
+	memcpy(primaryKeyName, other.primaryKeyName, MAX_IDENTIFIER_LEN + 1);
+	memcpy(foreignKeyTable, other.foreignKeyTable, MAX_IDENTIFIER_LEN + 1);
+	memcpy(foreignKeyColumn, other.foreignKeyColumn, MAX_IDENTIFIER_LEN + 1);
+	memcpy(foreignKeyName, other.foreignKeyName, MAX_IDENTIFIER_LEN + 1);
+}
+
 Data Field::GetData() {
 	return data;
 }

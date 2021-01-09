@@ -3,6 +3,7 @@
 #include "PageFactory.h"
 #include "../Utils/Global.h"
 
+// 所有的文件至少有两页，第一页是 Header ，第二页是 BitMap
 FileBase::FileBase(string fileDirectory, bool createFile): 
 	numberOfPage(2), fileDirectory(fileDirectory), bitMapPage(-1) {
 	if(createFile) {
@@ -21,6 +22,13 @@ FileBase::FileBase(string fileDirectory, bool createFile):
 }
 
 FileBase::~FileBase() {
+	int index = 0;
+	for(int i = 0;i < numberOfPage; ++i) {
+		index = Global::getInstance()->bpm->getIndex(fileID, i);
+		if (index >= 0) {
+			Global::getInstance()->bpm->writeBack(index);
+		}
+	}
 	Global::getInstance()->fm->closeFile(fileID);
 }
 

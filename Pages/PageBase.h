@@ -18,6 +18,8 @@ public:
 	
 	PageBase(int pageNumber, int pageIndex, BufType b): 
 		pageNumber(pageNumber), pageIndex(pageIndex), b(b) {}
+	~PageBase() { 
+	}
 	virtual void LoadPageHeader() = 0;
 	virtual void SavePageHeader() = 0;
 	void MarkDirty() {
