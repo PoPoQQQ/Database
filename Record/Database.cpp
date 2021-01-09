@@ -473,6 +473,24 @@ void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 				throw "Primary key constraint violated!";
 		}
 	}
+	for(vector<ForeignKeyCstrnt>::iterator _it = table->fieldList.fkConstraints.begin(); _it != table->fieldList.fkConstraints.end(); _it++) {
+		Index *index = currentDatabase->indexes["-" + _it->tbName];
+		if(!index)
+			throw "Foreign key index not created!";
+		vector<unsigned int> gatherer;
+		const vector<string>& colNames = _it->colNames;
+		for(vector<Record>::iterator it = recordList.begin(); it != recordList.end(); it++) {
+			gatherer.clear();
+			vector<Data> datas;
+			for(int i = 0; i < (signed)colNames.size(); i++)
+				datas.push_back(it->fieldList.GetColumn(it->fieldList.GetColumnIndex(colNames[i])).GetData());
+			index->Search(datas, datas, gatherer);
+			if(gatherer.size() == 0)
+				throw "Foreign key constraint violated!";
+			else
+				cout << gatherer.back() << endl;
+		}
+	}
 	vector<Index*> idxes;
 	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
 		if(it->second->tableName == tableName)

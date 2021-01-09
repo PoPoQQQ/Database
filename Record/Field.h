@@ -17,13 +17,13 @@ public:
 	};
 	string columnName;
 	Data data;
+	int constraints = 0;
 
 	Field();
 	Field(const string& columnName);
 	Field(const Field& other);
 
 	Field& operator = (const Field& field);
-	int constraints;
 
 	Data GetData();
 	void SetData(const Data& data);

@@ -210,9 +210,13 @@ Data& Data::SetData(const Data &data) {
 		SetData(data.stringData);
 	}
 	else if((dataType & 0xff) == DATE) {
-		if((data.dataType & 0xff) != DATE)
+		if((data.dataType & 0xff) == DATE)
+			*this = data;
+		else if((data.dataType & 0xff) == VARCHAR)
+			SetData(data.stringData);
+		else
 			throw "Invalid data type!";
-		*this = data;
+		
 	}
 	else if((dataType & 0xff) == FLOAT) {
 		if((data.dataType & 0xff) == FLOAT)
