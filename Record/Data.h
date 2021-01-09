@@ -35,6 +35,10 @@ public:
 	Data SetData(const char *data);
 	Data SetData(const Data &data);
 
+	Data SetNull();
+	Data SetNegInf();
+	Data SetPosInf();
+
 	void LoadType(unsigned int* b);
 	void SaveType(unsigned int* b) const;
 	void LoadData(unsigned char* b);

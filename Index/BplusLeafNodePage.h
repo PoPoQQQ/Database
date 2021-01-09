@@ -9,8 +9,9 @@ public:
 	void LoadPageHeader();
 	void SavePageHeader();
 
-	void Insert(vector<Data> keys, int value,
-		bool& added, vector<Data>& addedKey, int& addedValue);
-	void Remove(vector<Data> keys);
+	void Insert(vector<Data> keys, unsigned int value,
+		bool& added, vector<Data>& addedKey, unsigned int& addedValue);
+	void Remove(vector<Data> keys, unsigned int value);
+	void Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer);
 	void Print(vector<Data> keys, int indent);
 };

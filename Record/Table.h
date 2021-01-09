@@ -37,6 +37,7 @@ public:
 	void DeleteRecords(const vector<unsigned int>& records, const vector<Index*>& idxes);
 	void UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause);
 	vector<unsigned int> GetRecordList(WhereCondition& whereCondition);
+	vector<unsigned int> CheckRecordList(WhereCondition& whereCondition, const vector<unsigned int>& gatherer);
 	void PrintTable();
 	// 根据给定的函数对表中的每一个 Record 进行迭代
 	// 类似于 forEach 函数

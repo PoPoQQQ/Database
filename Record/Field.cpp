@@ -1,32 +1,20 @@
 #include "Field.h"
 using namespace std;
 
-Field::Field() {
-	memset(columnName, 0, sizeof columnName);
-}
-Field::Field(const char *columnName) {
-	if(strlen(columnName) > MAX_IDENTIFIER_LEN)
+Field::Field() {}
+Field::Field(const string& columnName): columnName(columnName) {
+	if(columnName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
-	strcpy(this->columnName, columnName);
 }
 
 Field::Field(const Field& other) 
-	:data(other.data), constraints(other.constraints){
-	memcpy(columnName, other.columnName, MAX_IDENTIFIER_LEN + 1);
-	memcpy(primaryKeyName, other.primaryKeyName, MAX_IDENTIFIER_LEN + 1);
-	memcpy(foreignKeyTable, other.foreignKeyTable, MAX_IDENTIFIER_LEN + 1);
-	memcpy(foreignKeyColumn, other.foreignKeyColumn, MAX_IDENTIFIER_LEN + 1);
-	memcpy(foreignKeyName, other.foreignKeyName, MAX_IDENTIFIER_LEN + 1);
+	:columnName(other.columnName), data(other.data), constraints(other.constraints){
 }
 
 Field& Field::operator=(const Field& other) {
+	columnName = other.columnName;
 	data = other.data;
 	constraints = other.constraints;
-	memcpy(columnName, other.columnName, MAX_IDENTIFIER_LEN + 1);
-	memcpy(primaryKeyName, other.primaryKeyName, MAX_IDENTIFIER_LEN + 1);
-	memcpy(foreignKeyTable, other.foreignKeyTable, MAX_IDENTIFIER_LEN + 1);
-	memcpy(foreignKeyColumn, other.foreignKeyColumn, MAX_IDENTIFIER_LEN + 1);
-	memcpy(foreignKeyName, other.foreignKeyName, MAX_IDENTIFIER_LEN + 1);
 }
 
 Data Field::GetData() {
@@ -48,22 +36,12 @@ Field Field::SetDefault(Data data) {
 	SetData(data);
 	return *this;
 }
-Field Field::SetPrimaryKey(const char* primaryKeyName) {
-	if(strlen(primaryKeyName) > MAX_IDENTIFIER_LEN)
-		throw "Identifier is too long!";
-	constraints |= NOT_NULL | PRIMARY_KEY;
-	strcpy(this->primaryKeyName, primaryKeyName);
+Field Field::SetPrimaryKey() {
+	constraints |= PRIMARY_KEY;
 	return *this;
 }
-Field Field::SetForeignKey(const char *foreignKeyTable, const char *foreignKeyColumn, const char *foreignKeyName) {
-	if(strlen(foreignKeyTable) > MAX_IDENTIFIER_LEN)
-		throw "Identifier is too long!";
-	if(strlen(foreignKeyColumn) > MAX_IDENTIFIER_LEN)
-		throw "Identifier is too long!";
+Field Field::SetForeignKey() {
 	constraints |= FOREIGN_KEY;
-	strcpy(this->foreignKeyTable, foreignKeyTable);
-	strcpy(this->foreignKeyColumn, foreignKeyColumn);
-	strcpy(this->foreignKeyName, foreignKeyName);
 	return *this;
 }
 
@@ -77,13 +55,14 @@ int Field::FieldSize() const {
 	int size = MAX_IDENTIFIER_LEN + 12;
 	if(constraints & 2)
 		size += RoundedDataSize();
-	if(constraints & 8)
-		size += MAX_IDENTIFIER_LEN * 2;
 	return size;
 }
 void Field::Load(BufType b) {
-	memcpy(columnName, b, MAX_IDENTIFIER_LEN);
-	b += MAX_IDENTIFIER_LEN >> 2;
+	char buffer[MAX_IDENTIFIER_LEN + 1];
+    memcpy(buffer, b, MAX_IDENTIFIER_LEN);
+    buffer[MAX_IDENTIFIER_LEN] = 0;
+    columnName = string(buffer);
+    b += MAX_IDENTIFIER_LEN >> 2;
 
 	data.LoadType(b);
 	b += 2;
@@ -95,25 +74,9 @@ void Field::Load(BufType b) {
 		data.LoadData((unsigned char*)b);
 		b += RoundedDataSize() >> 2;
 	}
-
-	if(constraints & 3) {
-		memcpy(primaryKeyName, b, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-	}
-
-	if(constraints & 4) {
-		memcpy(foreignKeyTable, b, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-
-		memcpy(foreignKeyColumn, b, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-
-		memcpy(foreignKeyName, b, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-	}
 }
 void Field::Save(BufType b) const{
-	memcpy(b, columnName, MAX_IDENTIFIER_LEN);
+	memcpy(b, columnName.c_str(), min((signed)columnName.length() + 1, MAX_IDENTIFIER_LEN));
 	b += MAX_IDENTIFIER_LEN >> 2;
 
 	data.SaveType(b);
@@ -126,22 +89,6 @@ void Field::Save(BufType b) const{
 		data.SaveData((unsigned char*)b);
 		b += RoundedDataSize() >> 2;
 	}
-
-	if(constraints & 3) {
-		memcpy(b, primaryKeyName, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-	}
-
-	if(constraints & 4) {
-		memcpy(b, foreignKeyTable, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-
-		memcpy(b, foreignKeyColumn, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-
-		memcpy(b, foreignKeyName, MAX_IDENTIFIER_LEN);
-		b += MAX_IDENTIFIER_LEN >> 2;
-	}
 }
 void Field::LoadData(unsigned char* b) {
 	data.LoadData(b);
@@ -149,7 +96,7 @@ void Field::LoadData(unsigned char* b) {
 void Field::SaveData(unsigned char* b) const {
 	data.SaveData(b);
 }
-
+/*
 string Field::toString() const {
 	char buf[256];
 	snprintf(buf, sizeof(buf), "Field{colName: %s, type: %d, constraints: %d }", columnName, data.dataType, constraints);
@@ -177,4 +124,4 @@ bool Field::validateData(const Data& data) const {
 		// this->index.check(data);
 		return true;
 	}
-}
+}*/

@@ -23,7 +23,7 @@ public:
 	void SaveDatas(unsigned char* b) const;
 
 	void AddField(const Field& field);
-	void AddFieldDescVec(const char* tbName, const vector<FieldDesc>& field_desc_vec);
+	void AddFieldDescVec(string tbName, const vector<FieldDesc>& vec);
 	void PrintFields();
 	void DescFields() const;
 	void PrintDatas(unsigned int bitMap);

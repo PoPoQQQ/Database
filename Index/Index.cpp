@@ -68,6 +68,9 @@ void Index::LoadHeader() {
 	numberOfPage = b[offset >> 2];
 	offset += 4;
 
+	bitMapPage = b[offset >> 2];
+	offset += 4;
+
 	rootPage = b[offset >> 2];
 	offset += 4;
 	
@@ -107,6 +110,9 @@ void Index::SaveHeader() const {
 
 	b[offset >> 2] = numberOfPage;
 	offset += 4;
+
+	b[offset >> 2] = bitMapPage;
+	offset += 4;
 	
 	b[offset >> 2] = rootPage;
 	offset += 4;
@@ -129,10 +135,10 @@ void Index::SaveHeader() const {
 	MarkDirty();
 }
 
-void Index::Insert(vector<Data> keys, int value) {
+void Index::Insert(vector<Data> keys, unsigned int value) {
 	bool added = false;
 	vector<Data> addedKey;
-	int addedValue;
+	unsigned int addedValue;
 
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
 	page->Insert(keys, value, added, addedKey, addedValue);
@@ -151,9 +157,9 @@ void Index::Insert(vector<Data> keys, int value) {
 	delete _page;
 }
 
-void Index::Remove(vector<Data> keys) {
+void Index::Remove(vector<Data> keys, unsigned int value) {
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
-	page->Remove(keys);
+	page->Remove(keys, value);
 	if(page->pageType == PageBase::BPLUS_LEAF_NODE_PAGE || page->keyCount > 0) {
 		delete page;
 		return;
@@ -162,6 +168,12 @@ void Index::Remove(vector<Data> keys) {
 	delete page;
 	FreePage(rootPage);
 	rootPage = pageNumber;
+}
+
+void Index::Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer) {
+	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
+	page->Search(lowerBound, upperBound, gatherer);
+	delete page;
 }
 
 void Index::Print() {

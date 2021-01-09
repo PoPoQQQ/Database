@@ -196,6 +196,48 @@ Data Data::SetData(const Data &data) {
 	return *this;
 }
 
+Data Data::SetNull() {
+	return SetPosInf();
+}
+
+Data Data::SetNegInf() {
+	switch(dataType & 0xff) {
+		case INT:
+			intData = 0u;
+			break;
+		case VARCHAR:
+			throw "Invalid data type!";
+		case DATE:
+			intData = 0u;
+			break;
+		case FLOAT:
+			floatData = -1e20f;
+			break;
+		default:
+			throw "Invalid data type!";
+	}
+	return *this;
+}
+
+Data Data::SetPosInf() {
+	switch(dataType & 0xff) {
+		case INT:
+			intData = 0xffffffffu;
+			break;
+		case VARCHAR:
+			throw "Invalid data type!";
+		case DATE:
+			intData = 0x7fffffu;
+			break;
+		case FLOAT:
+			floatData = 1e20f;
+			break;
+		default:
+			throw "Invalid data type!";
+	}
+	return *this;
+}
+
 void Data::LoadType(unsigned int* b) {
 	if((dataType & 0xff) == VARCHAR) {
 		delete stringData;

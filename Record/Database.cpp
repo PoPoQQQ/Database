@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <exception>
 #include "Database.h"
+#include "../Index/Query.h"
 
 int RemoveDirectory(const char* dir) {
 #ifndef __linux__
@@ -319,7 +320,8 @@ Table* Database::CreateTable(const string& tableName, const FieldList& fieldList
 		throw "Table already exsists!";
 	currentDatabase->tables[tableName] = new Table(currentDatabase->databaseName, tableName, fieldList);
 	cout << "Table " << tableName << " successfully created." << endl;
-	return currentDatabase->tables[tableName];
+	Table *table = currentDatabase->tables[tableName];
+	return table;
 }
 void Database::DropTable(const string& tableName) {
 	Table* table = GetTable(tableName);
@@ -422,8 +424,25 @@ vector<unsigned int> Database::GetRecordList(string tableName, WhereCondition& w
 	if(!whereCondition.validate(table))
 		throw "whereClause Error";
 	//Index!
-
-	return table->GetRecordList(whereCondition);
+	Query query;
+	Index* index;
+	float maxCoverRate = 0.f;
+	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
+		if(it->second->tableName == tableName) {
+			Query _query(it->second->colNames, it->second->keyTypes);
+			_query.SetUpQuery(whereCondition);
+			if(_query.coverRate > maxCoverRate) {
+				query = _query;
+				index = it->second;
+				maxCoverRate = query.coverRate;
+			}
+		}
+	if(maxCoverRate == 0.f)
+		return table->GetRecordList(whereCondition);
+	vector<unsigned int> gatherer;
+	index->Search(query.LowerBound(), query.UpperBound(), gatherer);
+	cout << "Index: " << index->indexName << " used!" << endl;
+	return table->CheckRecordList(whereCondition, gatherer);
 }
 void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 	vector<Record> recordList;

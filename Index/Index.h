@@ -23,8 +23,9 @@ public:
 	Index(string databaseName, string tableName, string indexName, 
 		const vector<string> colNames, const vector<Data>& keyTypes);
 
-	void Insert(vector<Data> keys, int value);
-	void Remove(vector<Data> keys);
+	void Insert(vector<Data> keys, unsigned int value);
+	void Remove(vector<Data> keys, unsigned int value);
+	void Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer);
 	void Print();
 	/** 
 	 * 直接改变所指向的 Table 的名称

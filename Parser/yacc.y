@@ -112,7 +112,7 @@ dbStmt:		CREATE DATABASE dbName
 tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
 				FieldList fieldList;
-				fieldList.AddFieldDescVec($3.c_str(), $5);
+				fieldList.AddFieldDescVec($3, $5);
 				Database::CreateTable($3, fieldList);
 			}
         |	DROP TABLE tbName
@@ -528,27 +528,27 @@ fieldList	:	field
 field  	: 	colName type
 			{
 				$$.type = FieldDesc::FieldType::NORMAL;
-				$$.field = Field($1.c_str());
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 			}
       	| 	colName type NOT NULLTOKEN
 		  	{
 				$$.type = FieldDesc::FieldType::NOTNULL;
-				$$.field = Field($1.c_str());
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 				$$.field.SetNotNull();
 			}
 		| 	colName	type DEFAULT value
 			{
 				$$.type = FieldDesc::FieldType::DEFAULT;
-				$$.field = Field($1.c_str());
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 				$$.field.SetDefault($4);
 			}
 		|	colName type NOT NULLTOKEN DEFAULT value
 			{
 				$$.type = FieldDesc::FieldType::NOTNULLWITHDEFAULT;
-				$$.field = Field($1.c_str());
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 				$$.field.SetNotNull();
 				$$.field.SetDefault($6);

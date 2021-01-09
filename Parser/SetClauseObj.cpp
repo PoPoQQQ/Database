@@ -10,7 +10,7 @@ bool SetClauseObj::validate(const FieldList& fieldList) {
 		if(cIndex >= 0) {
 			const Field& cField = fieldList.GetColumn(cIndex);
 			// 2. 如果查找到则检查 data 是否合乎标准
-			if(!cField.validateData(it->second)) {
+			if(/*!cField.validateData(it->second)*/false) {
 				char buf[256];
 				snprintf(buf, 256, "Error: set clause colName(%s) data error", it->first.c_str());
 				throw string(buf);

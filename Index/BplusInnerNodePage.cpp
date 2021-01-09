@@ -76,8 +76,8 @@ void BplusInnerNodePage::Merge(int index, BplusNodePage* leftSon, BplusNodePage*
 	}
 }
 
-void BplusInnerNodePage::Insert(vector<Data> keys, int value,
-	bool& added, vector<Data>& addedKey, int& addedValue) {
+void BplusInnerNodePage::Insert(vector<Data> keys, unsigned int value,
+	bool& added, vector<Data>& addedKey, unsigned int& addedValue) {
 	int index;
 	for(index = 0; index < keyCount; index++)
 		if(keys < GetKey(index))
@@ -85,7 +85,7 @@ void BplusInnerNodePage::Insert(vector<Data> keys, int value,
 	int pageNumber = GetValue(index) >> 8;
 	bool _added = false;
 	vector<Data> _addedKey;
-	int _addedValue = -1;
+	unsigned int _addedValue = 0;
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(context->LoadPage(pageNumber));
 	page->Insert(keys, value, _added, _addedKey, _addedValue);
 	delete page;
@@ -107,14 +107,14 @@ void BplusInnerNodePage::Insert(vector<Data> keys, int value,
 	MarkDirty();
 }
 
-void BplusInnerNodePage::Remove(vector<Data> keys) {
+void BplusInnerNodePage::Remove(vector<Data> keys, unsigned int value) {
 	int index;
 	for(index = 0; index < keyCount; index++)
-		if(keys < GetKey(index))
+		if(keys <= GetKey(index))
 			break;
 	int pageNumber = GetValue(index) >> 8;
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(context->LoadPage(pageNumber));
-	page->Remove(keys);
+	page->Remove(keys, value);
 	delete page;
 
 	if(index == keyCount)
@@ -145,6 +145,17 @@ void BplusInnerNodePage::Remove(vector<Data> keys) {
 	delete leftSon;
 	delete rightSon;
 	context->FreePage(rightSonPageNumber);
+}
+
+void BplusInnerNodePage::Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer) {
+	int index;
+	for(index = 0; index < keyCount; index++)
+		if(lowerBound <= GetKey(index))
+			break;
+	int pageNumber = GetValue(index) >> 8;
+	BplusNodePage* page = dynamic_cast<BplusNodePage*>(context->LoadPage(pageNumber));
+	page->Search(lowerBound, upperBound, gatherer);
+	delete page;
 }
 
 void BplusInnerNodePage::Print(vector<Data> keys, int indent) {
