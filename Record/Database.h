@@ -6,6 +6,7 @@
 #include "../Index/Index.h"
 #include "../Parser/SetClauseObj.h"
 #include "../Index/WhereCondition.h"
+#include "./FieldDesc.h"
 using namespace std;
 
 int RemoveDirectory(const char* dir);
@@ -57,21 +58,38 @@ public:
 	 * @param tableName 表名
 	 * @param fieldList 域列表
 	 * */
-	static Table* CreateTable(string tableName, const FieldList& fieldList);
-	static void DropTable(string tableName);
+	static Table* CreateTable(const string& tableName, const FieldList& fieldList);
+	static void DropTable(const string& tableName);
+	/** 
+	 * 重命名表格
+	 * 会同时使得 Database 类和表格的文件名改变
+	 * */
+	static void RenameTable(const string& oldTbName, const string& newTbName);
 	/**
 	 * 从当前打开的数据库中获得某个 table 对象指针
 	 * 如果当前数据库不存在或者表名不存在则会直接报错退出
 	 * @param tableName 表名
 	 * @return Table* 指向该表的指针
 	 * */
-	static Table* GetTable(string tableName);
+	static Table* GetTable(const string& tableName);
 	static vector<unsigned int> GetRecordList(string tableName, WhereCondition& whereCondition);
 	static void Insert(string tableName, const vector<vector<Data>>& dataLists);
 	static void Delete(string tableName, const vector<unsigned int>& recordList);
 	static void Update(string tableName, const vector<unsigned int>& recordList, SetClauseObj& setClause);
 	static void CreateIndex(string tableName, string indexName, const vector<string>& columnList);
 	static void DropIndex(string tableName, string indexName);
+	
+	// alter table
+	static void addTableField(const string& tbName, const FieldDesc& fieldDesc);
+private:
+	/**
+	 * 和 DropTable 相同的操作，但是没有输出
+	 * */
+	void quietDropTable(string tableName);
+	/**
+	 * 和 DropIndex 相同的操作，但是没有输出
+	 * */
+	void quietDropIndex(string tableName,string indexName);
 };
 
 

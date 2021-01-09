@@ -282,3 +282,8 @@ void Table::IterTable(function<void(Record&, BufType)> iterFunc) {
 void Table::DescTable() const {
 	this->fieldList.DescFields();
 }
+
+void Table::changeName(const string& newName) {
+	this->tableName = newName;
+	SaveHeader();
+}

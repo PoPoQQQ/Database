@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <cstring>
 #include <algorithm>
+#include <exception>
 #include "Database.h"
 #include "../Index/Query.h"
 
@@ -310,7 +311,7 @@ void Database::ShowTables() {
 		cout << "-";
 	cout << "-+" << endl;
 }
-Table* Database::CreateTable(string tableName, const FieldList& fieldList) {
+Table* Database::CreateTable(const string& tableName, const FieldList& fieldList) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
 	if(tableName.length() > MAX_IDENTIFIER_LEN)
@@ -323,7 +324,7 @@ Table* Database::CreateTable(string tableName, const FieldList& fieldList) {
 		CreateIndex(tableName, "-" + tableName, fieldList.pkConstraints[0].colNames);
 	return currentDatabase->tables[tableName];
 }
-void Database::DropTable(string tableName) {
+void Database::DropTable(const string& tableName) {
 	Table* table = GetTable(tableName);
 	delete table;
 	currentDatabase->tables.erase(currentDatabase->tables.find(tableName));
@@ -338,7 +339,79 @@ void Database::DropTable(string tableName) {
 		DropIndex(tableName, *it);
 	cout << "Drop table: " << tableName << " succeed." << endl;
 }
-Table* Database::GetTable(string tableName) {
+void Database::RenameTable(const string& oldTbName, const string& newTbName) {
+	// 处理二者相同的特殊情况
+	if(oldTbName == newTbName){
+		return;
+	}
+	// 调用 GetTable 获得 table, 出现错误会抛出异常
+	// 如果有返回值的话说明 table 存在于 currentDatabase
+	Table* table = Database::GetTable(oldTbName);
+	// 检查 newTbName 是否合法
+	if(newTbName.length() > MAX_IDENTIFIER_LEN)
+		throw "Error(RenameTable): NewTbName is too long!";
+	// 如果 newTbName 对应一个表则不合理
+	if(Database::currentDatabase->tables.find(newTbName) != Database::currentDatabase->tables.end()){
+		throw "Error(RenameTable): the given new table name has an existing table entry";
+	}
+	// 从当前的 map 中移除 entry
+	Database::currentDatabase->tables.erase(Database::currentDatabase->tables.find(oldTbName));
+	// 改变文件内部的名字
+	table->changeName(newTbName);
+	// 删除 Table
+	delete table;
+	// 将文件重命名
+	string oldTablePath = string("Database/") + currentDatabase->databaseName + "/" + oldTbName;
+	string newTablePath = string("Database/") + currentDatabase->databaseName + "/" + newTbName;
+	if(Global::getInstance()->fm->moveFile(oldTablePath.c_str(), newTablePath.c_str())) {
+		// 如果成功重命名
+
+		// 重新创建 Table
+		table = new Table(currentDatabase->databaseName, newTbName);
+		// 将新的 Table 加入数据库
+		Database::currentDatabase->tables[newTbName] = table;
+	} else {
+		cerr << "Warning: rename table failed, rename function returns a false" << endl;
+		// 否则重新创建一个原始的 Table (原始文件依然存在)
+		table = new Table(currentDatabase->databaseName, oldTbName);
+		table->changeName(oldTbName);
+		// 将旧的 Table 重新加回去
+		Database::currentDatabase->tables[oldTbName] = table;
+	}
+	Index* index = nullptr;
+	string indexName;
+	// 对于找到所有索引中 TableName 相同的索引，和 Table 做类似的处理
+	for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+		if(iter->second->tableName == oldTbName) {
+			index = iter->second;
+			indexName = index->indexName;
+			oldTablePath = string("Database/") + currentDatabase->databaseName + "/" + oldTbName + "-" + indexName;
+			newTablePath = string("Database/") + currentDatabase->databaseName + "/" + newTbName + "-" + indexName;
+			// 因为 indexName 不变，所以不需要移除 entry，而是修改
+			index->changeTableName(newTbName);
+			// 删除结构
+			delete index;
+			// 重命名文件
+			if(Global::getInstance()->fm->moveFile(oldTablePath.c_str(), newTablePath.c_str())) {
+				// 如果成功重命名
+
+				// 重新创建
+				index = new Index(currentDatabase->databaseName, newTbName, indexName);
+				// 加入数据库
+				Database::currentDatabase->indexes[indexName] = index;
+			} else {
+				cerr << "Warning: rename index failed, rename function returns a false" << endl;
+				// 否则重新创建一个原始的 Index (原始文件依然存在)
+				index = new Index(currentDatabase->databaseName, oldTbName, indexName);
+				index->changeTableName(oldTbName);
+				// 将旧的 Index 重新加回去
+				Database::currentDatabase->indexes[indexName] = index;
+			}
+		}
+	}
+}
+
+Table* Database::GetTable(const string &tableName) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
 	if(tableName.length() > MAX_IDENTIFIER_LEN)
@@ -461,4 +534,125 @@ void Database::DropIndex(string tableName, string indexName) {
 	sprintf(dir, "Database/%s/%s-%s", currentDatabase->databaseName, tableName.c_str(), indexName.c_str());
 	remove(dir);
 	cout << "Drop index: " << tableName << "-" << indexName << " succeed." << endl;
+}
+
+void Database::addTableField(const string& tbName, const FieldDesc& fieldDesc) {
+	switch(fieldDesc.type) {
+		case FieldDesc::FieldType::NOTNULL:
+			cerr << "Error: Try to ADD a not null column without giving default" << endl;
+			return;
+		case FieldDesc::FieldType::PRIMARY:
+			cerr << "Error: Cannot ADD PRIMARY KEY into table: " << tbName << endl;
+			return;
+		case FieldDesc::FieldType::FOREIGN:
+			cerr << "Error: Cannot ADD FOREIGN KEY into table: " << tbName << endl;
+			return;
+		case FieldDesc::FieldType::UNDEFINED:
+			cerr << "Error: undefined fieldDesc in Database::addTableField" << endl;
+			return;
+		default:
+			break;
+	}
+	try {
+		// 找到 Table，可能抛出异常
+		Table *table = currentDatabase->GetTable(tbName);
+		// 复制一个 FieldList
+		FieldList newFieldList = table->fieldList;
+		// 添加新的 Field
+		vector<FieldDesc> fieldDescVec;
+		fieldDescVec.push_back(fieldDesc);
+		// 如果添加中产生错误则这句话会抛出异常
+		newFieldList.AddFieldDescVec(tbName.c_str(), fieldDescVec);
+		// 创建一个新的叫作 ~ 的临时表，利用全新的 FieldList
+		Table *newTable = new Table(currentDatabase->databaseName, "~", newFieldList);
+		// 遍历 table ，将每一个条目插入到新的 FieldList 中
+		function<void(Record&, BufType)> it = [&newTable, &fieldDesc](Record& record, BufType b) {
+			Record newRecord = newTable->EmptyRecord();
+			// 使用以前的 Record 进行赋值
+			for(int i = 0;i < record.fieldList.fields.size(); ++i) {
+				// 如果数据位为 0 则表示 data 为 NULL
+				if(record.bitMap & (1u << i) == 0) {
+					newRecord.FillData(i, Data());
+				} else {
+					newRecord.FillData(i, record.fieldList.fields[i].data);
+				}
+			}
+			// 对新的一列进行赋值
+			switch(fieldDesc.type) {
+				case FieldDesc::FieldType::DEFAULT:
+				case FieldDesc::FieldType::NOTNULLWITHDEFAULT:
+					newRecord.FillData(record.fieldList.fields.size(), fieldDesc.field.data);
+					break;
+				case FieldDesc::FieldType::NORMAL:
+					newRecord.FillData(record.fieldList.fields.size(), Data());
+					break;
+				default:
+					cerr << "Error: default branch in addTableField" << endl;
+					return;
+			}
+			// 添加 Record
+			unsigned int recordPosition = 0;
+			newTable->AddRecord(newRecord, recordPosition);
+		};
+		table->IterTable(it);
+		// 将之前的表格的相关 index 转移到新的表格上
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == tbName) {
+				iter->second->tableName = "~";
+			}
+		}
+		// 将新的表插入到 map 中
+		currentDatabase->tables["~"] = newTable;
+		// 删除之前的表格与对应关系
+		currentDatabase->quietDropTable(tbName);
+		// 将之前修改过的 index tablename 改回来
+		// 因为实际上 index 的对应关系没有改变，所以可以不重新保存表中的数据
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == "~") {
+				iter->second->tableName = tbName;
+			}
+		}
+		// 重命名 ~ 表为原来的名字
+		currentDatabase->RenameTable("~", tbName);
+	}
+	catch(const char* err) {
+		cerr << err << endl;
+	}
+	catch(string err) {
+		cerr << err << endl;
+	}
+	catch(exception& e) {
+		cerr << e.what() << endl;
+	}
+}
+void Database::quietDropTable(string tableName) {
+	Table* table = GetTable(tableName);
+	delete table;
+	currentDatabase->tables.erase(currentDatabase->tables.find(tableName));
+	char dir[1000];
+	sprintf(dir, "Database/%s/%s", currentDatabase->databaseName, tableName.c_str());
+	remove(dir);
+	vector<string> idxes;
+	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
+		if(it->second->tableName == tableName)
+			idxes.push_back(it->first);
+	for(vector<string>::iterator it = idxes.begin(); it != idxes.end(); it++)
+		DropIndex(tableName, *it);
+}
+
+void Database::quietDropIndex(string tableName,string indexName) {
+	if(currentDatabase == NULL)
+		throw "No database selected!";
+	if(currentDatabase->indexes.find(indexName) == currentDatabase->indexes.end())
+		throw "Index does not exist!";
+	Index* index = currentDatabase->indexes[indexName];
+	if(tableName == "")
+		tableName = index->tableName;
+	if(tableName != index->tableName)
+		throw "Index does not exist!";
+	delete index;
+	currentDatabase->indexes.erase(currentDatabase->indexes.find(indexName));
+	char dir[1000];
+	sprintf(dir, "Database/%s/%s-%s", currentDatabase->databaseName, tableName.c_str(), indexName.c_str());
+	remove(dir);
 }

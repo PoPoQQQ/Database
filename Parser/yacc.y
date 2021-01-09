@@ -499,9 +499,15 @@ idxStmt		:	CREATE INDEX idxName ON tbName '(' columnList ')'
 			;
 			
 alterStmt	:	ALTER TABLE tbName ADD field
+				{
+					Database::addTableField($3, $5);
+				}
 			|   ALTER TABLE tbName DROP colName
 			|	ALTER TABLE tbName CHANGE colName field
 			|	ALTER TABLE tbName RENAME TO tbName
+				{
+					Database::RenameTable($3, $6);
+				}
 			|	ALTER TABLE tbName DROP PRIMARY KEY
 			|	ALTER TABLE tbName ADD CONSTRAINT pkName PRIMARY KEY '(' columnList ')'
 			|	ALTER TABLE tbName DROP PRIMARY KEY pkName
@@ -521,24 +527,28 @@ fieldList	:	field
 
 field  	: 	colName type
 			{
-				$$.field = Field($1.c_str());
+				$$.type = FieldDesc::FieldType::NORMAL;
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 			}
       	| 	colName type NOT NULLTOKEN
 		  	{
-				$$.field = Field($1.c_str());
+				$$.type = FieldDesc::FieldType::NOTNULL;
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 				$$.field.SetNotNull();
 			}
 		| 	colName	type DEFAULT value
 			{
-				$$.field = Field($1.c_str());
+				$$.type = FieldDesc::FieldType::DEFAULT;
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 				$$.field.SetDefault($4);
 			}
 		|	colName type NOT NULLTOKEN DEFAULT value
 			{
-				$$.field = Field($1.c_str());
+				$$.type = FieldDesc::FieldType::NOTNULLWITHDEFAULT;
+				$$.field = Field($1);
 				$$.field.SetDataType($2);
 				$$.field.SetNotNull();
 				$$.field.SetDefault($6);

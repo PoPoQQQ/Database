@@ -2,9 +2,19 @@
 using namespace std;
 
 Field::Field() {}
-Field::Field(string columnName): columnName(columnName) {
+Field::Field(const string& columnName): columnName(columnName) {
 	if(columnName.length() > MAX_IDENTIFIER_LEN)
 		throw "Identifier is too long!";
+}
+
+Field::Field(const Field& other) 
+	:columnName(other.columnName), data(other.data), constraints(other.constraints){
+}
+
+Field& Field::operator=(const Field& other) {
+	columnName = other.columnName;
+	data = other.data;
+	constraints = other.constraints;
 }
 
 Data Field::GetData() {

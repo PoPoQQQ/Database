@@ -45,6 +45,10 @@ public:
 	// 对应 mysql 的 desc table 命令
 	// 将表头信息以及约束按照一定的规则进行打印
 	void DescTable() const;
+	/** 
+	 * 修改自身结构的 table name 并且将其写到文件中
+	 * */
+	void changeName(const string&);
 private:
 	void LoadHeader();
 	void SaveHeader() const;

@@ -8,3 +8,6 @@ Database/
 Parser/lex.yy.c
 Parser/yacc.tab.c
 Parser/yacc.tab.h
+
+obj/
+main

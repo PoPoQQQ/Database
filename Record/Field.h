@@ -17,10 +17,13 @@ public:
 	};
 	string columnName;
 	Data data;
-	int constraints;
 
 	Field();
-	Field(string columnName);
+	Field(const string& columnName);
+	Field(const Field& other);
+
+	Field& operator = (const Field& field);
+	int constraints;
 
 	Data GetData();
 	void SetData(const Data& data);
@@ -42,15 +45,5 @@ public:
 	// 检查传入的 Data 结构是否符合当前 Field 的数据要求
 	// 如果不满足要求则会直接抛出错误
 	//* @throws string 错误原因
-	//bool validateData(const Data& data) const;
-	// Field(const Field& other): data(other.data) {
-	// 	memset(this->fieldName, 0, sizeof this->fieldName);
-	// 	strcpy(this->fieldName, other.fieldName);
-	// }
-	// Field& operator = (const Field& field) {
-	// 	this->data = field.data;
-	// 	memset(this->fieldName, 0, sizeof this->fieldName);
-	// 	strcpy(this->fieldName, field.fieldName);
-	// 	return *this;
- 	// }
+	bool validateData(const Data& data) const;
 };

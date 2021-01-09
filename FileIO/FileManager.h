@@ -41,6 +41,14 @@ private:
 			return -1;
 		}
 	}
+	/**
+	 * 重命名文件
+	 * 目标文件从某个路径移动至另一个路径
+	 * 如果目标路径已经存在某个文件了，则会直接删除目标文件
+	 * */
+	int _renameFile(const char* oldFileName, const char* newFileName) {
+		return rename(oldFileName, newFileName);
+	}
 public:
 	/*
 	 * FilManager构造函数
@@ -98,14 +106,23 @@ public:
 		fclose(f);
 		return 0;
 	}
-	/*
-	 * @函数名createFile
-	 * @参数name:文件名
-	 * 功能:新建name指定的文件名
-	 * 返回:操作成功，返回true
-	 */
+	/**
+	 * 通过操作系统，新建name指定的文件名的文件
+	 * 不会打开文件，只是创建文件
+	 * @param name 文件名
+	 * @return 操作成功，返回true
+	 * */
 	bool createFile(const char* name) {
 		return _createFile(name) == 0;
+	}
+	/**
+	 * 通过操作系统将文件移动至目标位置
+	 * 如果相对路径相同则相当于重命名
+	 * 不会检查当前文件是否打开，需要手动维护文件的状态
+	 * @return 如果操作成功则返回 true
+	 * */
+	bool moveFile(const char* oldFileName, const char* newFileName) {
+		return _renameFile(oldFileName, newFileName) == 0;
 	}
 	/*
 	 * @函数名openFile

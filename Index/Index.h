@@ -27,6 +27,11 @@ public:
 	void Remove(vector<Data> keys, unsigned int value);
 	void Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer);
 	void Print();
+	/** 
+	 * 直接改变所指向的 Table 的名称
+	 * 不进行任何的检测
+	 * */
+	void changeTableName(const string&);
 private:
 	void LoadHeader();
 	void SaveHeader() const;

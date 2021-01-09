@@ -92,8 +92,8 @@ void FieldList::AddField(const Field& field) {
 void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
 	for(vector<FieldDesc>::const_iterator it = vec.begin(); it != vec.end(); it++)
 		switch(it->type) {
-			case FieldDesc::FieldType::DEFAULT:
-				fields.push_back(it->field);
+			case FieldDesc::FieldType::UNDEFINED:
+				throw "Error in FieldList::AddFieldDescVec: undefined FieldType";
 				break;
 			case FieldDesc::FieldType::PRIMARY: {
 				if(pkConstraints.size() > 0)
@@ -108,7 +108,8 @@ void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
 				break;
 			}
 			default:
-				throw "Error in FieldList::AddFieldDescVec: error FieldType";
+				this->fields.push_back(it->field);
+				break;
 		}
 	for(vector<PrimaryKeyCstrnt>::iterator it = pkConstraints.begin(); it != pkConstraints.end(); it++) {
 		for(int i = 0; i < (signed)it->colNames.size(); i++) {
