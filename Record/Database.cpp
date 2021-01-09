@@ -577,10 +577,8 @@ void Database::addTableField(const string& tbName, const FieldDesc& fieldDesc) {
 		// 复制一个 FieldList
 		FieldList newFieldList = table->fieldList;
 		// 添加新的 Field
-		vector<FieldDesc> fieldDescVec;
-		fieldDescVec.push_back(fieldDesc);
 		// 如果添加中产生错误则这句话会抛出异常
-		newFieldList.AddFieldDescVec(tbName.c_str(), fieldDescVec);
+		newFieldList.AddFieldDesc(fieldDesc);
 		// 创建一个新的叫作 ~ 的临时表，利用全新的 FieldList
 		Table *newTable = new Table(currentDatabase->databaseName, "~", newFieldList);
 		// 遍历 table ，将每一个条目插入到新的 FieldList 中
