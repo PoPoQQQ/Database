@@ -23,7 +23,7 @@ public:
 	// 仅用于读取表格。从给定的数据库和表中读取信息到内存中
 	Table(string databaseName, string tableName);
 	// 创建表格数据结构并进行创建对应的文件进行保存
-	Table(string databaseName, string tableName, FieldList fieldList);
+	Table(string databaseName, string tableName, const FieldList& fieldList);
 
 	Record EmptyRecord();
 	vector<int> GetColumnIndexes(const vector<string>& columnList);

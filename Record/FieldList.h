@@ -16,6 +16,9 @@ public:
 	vector<PrimaryKeyCstrnt> pkConstraints;
 	vector<ForeignKeyCstrnt> fkConstraints;
 
+	FieldList();
+	~FieldList();
+
 	void LoadFields(BufType b);
 	void SaveFields(BufType b) const;
 	void LoadDatas(unsigned char* b);
@@ -32,9 +35,5 @@ public:
 	int RoundedDataSize() const;
 	Field& GetColumn(int index);
 	const Field& GetColumn(int index) const;
-	int GetColumnIndex(string columnName) const;
-
-	FieldList(){};
-	FieldList(const FieldList&);
-	~FieldList();
+	int GetColumnIndex(string columnName) const;	
 };

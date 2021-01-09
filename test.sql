@@ -48,12 +48,12 @@ INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMA
 --CREATE INDEX idx ON customer(id);
 --INSERT INTO customer VALUES (300005,'CHAD CABELLO II','M'),(300006,'FAUSTO VANNORMAN II','M');
 --INSERT INTO customer VALUES (300005,'CHAD CABELLO II','M'),(300006,'FAUSTO VANNORMAN II','M');
-DELETE FROM customer WHERE id = 300002;
-UPDATE customer SET id = 300007, name = 'CHAD CABELLON', gender = 'M' WHERE name = 'CHAD CABELLO';
-alter table customer add sex VARCHAR(1) DEFAULT 'N';
-desc customer;
-select * from customer;
-insert into customer values (233, '233', 'S', 'M');
+--DELETE FROM customer WHERE id = 300002;
+--UPDATE customer SET id = 300007, name = 'CHAD CABELLON', gender = 'M' WHERE name = 'CHAD CABELLO';
+--alter table customer add sex VARCHAR(1) DEFAULT 'N';
+--desc customer;
+--select * from customer;
+--insert into customer values (233, '233', 'S', 'M');
 --UPDATE customer SET id = 300007, name = 'CHAD CABELLON', gender = 'M' WHERE name = 'CHAD CABELLO';
 --INSERT INTO restaurant VALUES (1, 'main', 'dalian', NULL, NULL), (2, 'sub', 'beijing', '74513', NULL);
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');

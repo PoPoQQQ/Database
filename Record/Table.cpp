@@ -17,7 +17,7 @@ Table::Table(string databaseName, string tableName):
 	LoadHeader();
 }
 
-Table::Table(string databaseName, string tableName, FieldList fieldList):
+Table::Table(string databaseName, string tableName, const FieldList& fieldList):
 	FileBase("Database/" + databaseName + "/" + tableName, true),
 	databaseName(databaseName), tableName(tableName),
 	ridTimestamp(0), recordCount(0), fieldList(fieldList) {

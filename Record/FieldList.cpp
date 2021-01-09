@@ -4,11 +4,7 @@
 #include "../Utils/Constraints.h"
 using namespace std;
 
-FieldList::FieldList(const FieldList& other)
-	:fields(other.fields),pkConstraints(other.pkConstraints){
-
-}
-
+FieldList::FieldList() {}
 FieldList::~FieldList() {}
 
 void FieldList::LoadFields(BufType b) {
@@ -90,27 +86,26 @@ void FieldList::AddField(const Field& field) {
 }
 
 void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
-	for(vector<FieldDesc>::const_iterator it = vec.begin(); it != vec.end(); it++)
+	for(vector<FieldDesc>::const_iterator it = vec.begin(); it != vec.end(); it++) {
 		switch(it->type) {
 			case FieldDesc::FieldType::UNDEFINED:
 				throw "Error in FieldList::AddFieldDescVec: undefined FieldType";
 				break;
-			case FieldDesc::FieldType::PRIMARY: {
+			case FieldDesc::FieldType::PRIMARY:
 				if(pkConstraints.size() > 0)
 					// 在声明的时候只能定义一个主键，所以此时有语法错误
 					throw "Error: Multiple Primary keys defined";
 				// 否则记录下来所有的主键，最后进行检验
 				pkConstraints.push_back(PrimaryKeyCstrnt("_pk_0", it->columnList));
 				break;
-			}
-			case FieldDesc::FieldType::FOREIGN: {
+			case FieldDesc::FieldType::FOREIGN:
 				fkConstraints.push_back(ForeignKeyCstrnt("_fk_0", it->tbName, it->columnList, it->ref_columnList));
 				break;
-			}
 			default:
 				this->fields.push_back(it->field);
 				break;
 		}
+	}
 	for(vector<PrimaryKeyCstrnt>::iterator it = pkConstraints.begin(); it != pkConstraints.end(); it++) {
 		for(int i = 0; i < (signed)it->colNames.size(); i++) {
 			string colName = it->colNames[i];
