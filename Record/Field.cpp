@@ -15,6 +15,7 @@ Field& Field::operator=(const Field& other) {
 	columnName = other.columnName;
 	data = other.data;
 	constraints = other.constraints;
+	return *this;
 }
 
 Data Field::GetData() {
