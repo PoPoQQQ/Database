@@ -88,7 +88,23 @@ void FieldList::AddField(const Field& field) {
 	}
 	fields.push_back(field);
 }
-
+void FieldList::AddFieldDesc(const FieldDesc& fieldDesc) {
+	switch(fieldDesc.type) {
+		case FieldDesc::FieldType::UNDEFINED:
+			throw "Error in FieldList::AddFieldDescVec: undefined FieldType";
+		case FieldDesc::FieldType::PRIMARY: {
+			cerr <<  "Warning: try to add primary key by AddFieldDesc. Ignored." << endl;
+			return;
+		}
+		case FieldDesc::FieldType::FOREIGN: {
+			cerr <<  "Warning: try to add foreign key by AddFieldDesc. Ignored." << endl;
+			return;
+		}
+		default:
+			this->fields.push_back(fieldDesc.field);
+			break;
+	}
+}
 void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
 	for(vector<FieldDesc>::const_iterator it = vec.begin(); it != vec.end(); it++)
 		switch(it->type) {

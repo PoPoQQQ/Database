@@ -23,6 +23,17 @@ public:
 	void SaveDatas(unsigned char* b) const;
 
 	void AddField(const Field& field);
+	/** 
+	 * 通过 FieldDesc 添加一个 Field
+	 * 添加过程中忽略添加约束的操作
+	 * 目前只能用于 ALTER ADD 命令
+	 * */
+	void AddFieldDesc(const FieldDesc& fieldDesc);
+	/**
+	 * 通过 FieldDesc vec 来构建 FieldList
+	 * 仅能用于 parser 的读取操作，一般只能调用一次
+	 * 在解析完毕所有的 field 后会将 pk 和 fk 约束加在 field 上
+	 * */
 	void AddFieldDescVec(string tbName, const vector<FieldDesc>& vec);
 	void PrintFields();
 	void DescFields() const;

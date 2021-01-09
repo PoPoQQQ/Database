@@ -21,10 +21,13 @@ void PrimaryKeyCstrnt::LoadConstraint(BufType b) {
     pkName = string(buffer);
     offset += MAX_IDENTIFIER_LEN;
 
-    for(vector<string>::iterator it = colNames.begin(); it != colNames.end(); it++) {
+    uint32_t size = (b + (offset >> 2))[0];
+    offset += 4;
+
+    for(uint32_t i = 0; i < size; i++) {
         memcpy(buffer, b + (offset >> 2), MAX_IDENTIFIER_LEN);
         buffer[MAX_IDENTIFIER_LEN] = 0;
-        *it = string(buffer);
+        colNames.push_back(string(buffer));
         offset += MAX_IDENTIFIER_LEN;
     }
 }
@@ -34,6 +37,9 @@ void PrimaryKeyCstrnt::SaveConstraint(BufType b) const {
 
     memcpy(b + (offset >> 2), pkName.c_str(), min((signed)pkName.length() + 1, MAX_IDENTIFIER_LEN));
     offset += MAX_IDENTIFIER_LEN;
+
+    (b + (offset >> 2))[0] = (uint32_t) colNames.size();
+    offset += 4;
 
     for(vector<string>::const_iterator it = colNames.begin(); it != colNames.end(); it++) {
         memcpy(b + (offset >> 2), it->c_str(), min((signed)it->length() + 1, MAX_IDENTIFIER_LEN));
