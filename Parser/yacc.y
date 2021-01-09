@@ -508,7 +508,7 @@ alterStmt	:	ALTER TABLE tbName ADD field
 				}
 			|	ALTER TABLE tbName CHANGE colName field
 				{
-					
+					Database::changeTableField($3, $5, $6);
 				}
 			|	ALTER TABLE tbName RENAME TO tbName
 				{
