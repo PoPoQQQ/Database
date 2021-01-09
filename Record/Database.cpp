@@ -623,6 +623,86 @@ void Database::addTableField(const string& tbName, const FieldDesc& fieldDesc) {
 		cerr << e.what() << endl;
 	}
 }
+void Database::dropTableField(const string& tbName, const string& colName) {
+	try {
+		// 找到 Table，可能抛出异常
+		Table *table = currentDatabase->GetTable(tbName);
+		//* 如果其对应某个主键则禁止删除，直接返回
+		const FieldList& tFieldList = table->fieldList;
+		if(tFieldList.pkConstraints.size() > 0) {
+			for(vector<string>::const_iterator it = tFieldList.pkConstraints[0].colNames.begin(); it != tFieldList.pkConstraints[0].colNames.end(); ++it) {
+				if (*it == colName) {
+					cerr << "Error: cannot remove primary key column" << endl;
+					return;
+				}
+			}
+		}
+		//* 如果其对应某个 Index 则提示并禁止删除
+		for(map<string, Index*>::const_iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); ++it) {
+			for(vector<string>::const_iterator iter = it->second->colNames.begin(); iter != it->second->colNames.end(); ++iter) {
+				if (*iter == colName) {
+					cerr << "Error: cannot remove column in an index" << endl;
+					return;
+				}
+			}
+		}
+		// 复制一个 FieldList
+		FieldList newFieldList = tFieldList;
+		// 找到 colName 对应的列
+		const int cIndex = tFieldList.GetColumnIndex(colName);
+		// 删除对应列的 Field
+		//! 这里面可能缺少某些项的更新从而导致 bug
+		newFieldList.fields.erase(newFieldList.fields.begin() + cIndex);
+		// 创建一个新的叫作 ~ 的临时表，利用全新的 FieldList
+		Table *newTable = new Table(currentDatabase->databaseName, "~", newFieldList);
+		// 遍历 table ，将每一个条目插入到新的 FieldList 中
+		function<void(Record&, BufType)> it = [&newTable, cIndex](Record& record, BufType b) {
+			Record newRecord = newTable->EmptyRecord();
+			// 使用以前的 Record 进行赋值
+			for(int i = 0;i < record.fieldList.fields.size(); ++i) {
+				if(i == cIndex) continue;
+				// 如果数据位为 0 则表示 data 为 NULL
+				if(record.bitMap & (1u << i) == 0) {
+					newRecord.FillData(i > cIndex ? i - 1 : i, Data());
+				} else {
+					newRecord.FillData(i > cIndex ? i - 1 : i, record.fieldList.fields[i].data);
+				}
+			}
+			// 添加 Record
+			unsigned int recordPosition = 0;
+			newTable->AddRecord(newRecord, recordPosition);
+		};
+		table->IterTable(it);
+		// 将之前的表格的相关 index 转移到新的表格上
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == tbName) {
+				iter->second->tableName = "~";
+			}
+		}
+		// 将新的表插入到 map 中
+		currentDatabase->tables["~"] = newTable;
+		// 删除之前的表格与对应关系
+		currentDatabase->quietDropTable(tbName);
+		// 将之前修改过的 index tablename 改回来
+		// 因为实际上 index 的对应关系没有改变，所以可以不重新保存表中的数据
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == "~") {
+				iter->second->tableName = tbName;
+			}
+		}
+		// 重命名 ~ 表为原来的名字
+		currentDatabase->RenameTable("~", tbName);
+	}
+	catch(const char* err) {
+		cerr << err << endl;
+	}
+	catch(string err) {
+		cerr << err << endl;
+	}
+	catch(exception& e) {
+		cerr << e.what() << endl;
+	}
+}
 void Database::quietDropTable(string tableName) {
 	Table* table = GetTable(tableName);
 	delete table;

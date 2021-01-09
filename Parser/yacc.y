@@ -503,7 +503,13 @@ alterStmt	:	ALTER TABLE tbName ADD field
 					Database::addTableField($3, $5);
 				}
 			|   ALTER TABLE tbName DROP colName
+				{
+					Database::dropTableField($3, $5);
+				}
 			|	ALTER TABLE tbName CHANGE colName field
+				{
+					
+				}
 			|	ALTER TABLE tbName RENAME TO tbName
 				{
 					Database::RenameTable($3, $6);

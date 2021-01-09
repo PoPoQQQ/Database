@@ -5,7 +5,7 @@
 using namespace std;
 
 FieldList::FieldList(const FieldList& other)
-	:fields(other.fields),pkConstraints(other.pkConstraints){
+	:fields(other.fields),pkConstraints(other.pkConstraints),fkConstraints(other.fkConstraints){
 
 }
 
@@ -33,7 +33,7 @@ void FieldList::LoadFields(BufType b) {
 	size = b[0];
 	b += 1;
 
-	pkConstraints.resize(size);
+	fkConstraints.resize(size);
 	for(vector<ForeignKeyCstrnt>::iterator it = fkConstraints.begin(); it != fkConstraints.end(); it++) {
 		it->LoadConstraint(b);
 		b += it->GetConstraintSize() >> 2;

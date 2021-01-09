@@ -48,7 +48,7 @@ void PrimaryKeyCstrnt::SaveConstraint(BufType b) const {
 }
 
 int PrimaryKeyCstrnt::GetConstraintSize() const {
-    return MAX_IDENTIFIER_LEN * (colNames.size() + 1);
+    return MAX_IDENTIFIER_LEN * (colNames.size() + 1) + 4;
 }
 
 /*

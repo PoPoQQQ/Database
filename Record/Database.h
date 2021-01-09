@@ -81,6 +81,7 @@ public:
 	
 	// alter table
 	static void addTableField(const string& tbName, const FieldDesc& fieldDesc);
+	static void dropTableField(const string& tbName, const string& colName);
 private:
 	/**
 	 * 和 DropTable 相同的操作，但是没有输出

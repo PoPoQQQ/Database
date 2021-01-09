@@ -54,6 +54,8 @@ alter table customer add sex VARCHAR(1) DEFAULT 'N';
 desc customer;
 select * from customer;
 insert into customer values (233, '233', 'S', 'M');
+alter table customer DROP name;
+select * from customer;
 --UPDATE customer SET id = 300007, name = 'CHAD CABELLON', gender = 'M' WHERE name = 'CHAD CABELLO';
 --INSERT INTO restaurant VALUES (1, 'main', 'dalian', NULL, NULL), (2, 'sub', 'beijing', '74513', NULL);
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');

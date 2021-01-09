@@ -82,5 +82,5 @@ void ForeignKeyCstrnt::SaveConstraint(BufType b) const {
 }
 
 int ForeignKeyCstrnt::GetConstraintSize() const {
-    return MAX_IDENTIFIER_LEN * (colNames.size() * 2 + 2);
+    return MAX_IDENTIFIER_LEN * (colNames.size() * 2 + 2) + 8;
 }
