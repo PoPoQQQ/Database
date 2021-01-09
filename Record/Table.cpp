@@ -154,7 +154,7 @@ void Table::RemoveRecordFromIndex(Index* index, Record record, unsigned int reco
 		else
 			datas.push_back(HashData(data));
 	}
-	index->Remove(datas/*, recordPosition*/);
+	index->Remove(datas, recordPosition);
 }
 
 void Table::AddRecord(Record &record, unsigned int& recordPosition) {

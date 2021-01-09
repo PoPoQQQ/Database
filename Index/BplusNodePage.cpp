@@ -26,40 +26,30 @@ vector<Data> BplusNodePage::GetKey(int index) {
 		ret[i].LoadData((unsigned char*)(_b + 1 + i * 2));
 	return ret;
 }
-int BplusNodePage::GetValue(int index) {
-	if(index < 0 || index > keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
+unsigned int BplusNodePage::GetValue(int index) {
+	if(index < 0 || index > keyCount)
+		throw "Invalid index!";
 	return b[PAGE_OFFSET + INDEX_SIZE * index >> 2];
 }
 void BplusNodePage::SetKey(int index, vector<Data> key) {
-	if(index < 0 || index >= keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
-	if(key.size() > INDEX_MAX_KEYS) {
-		cerr << "Too many keys" << endl;
-		exit(-1);
-	}
+	if(index < 0 || index >= keyCount)
+		throw "Invalid index!";
+	if(key.size() > INDEX_MAX_KEYS)
+		throw "Too many keys";
 	BufType _b = b + (PAGE_OFFSET + INDEX_SIZE * index >> 2);
 	for(int i = 0; i < (signed)key.size(); i++)
 		key[i].SaveData((unsigned char*)(_b + 1 + i * 2));
 	MarkDirty();
 }
-void BplusNodePage::SetValue(int index, int value) {
-	if(index < 0 || index > keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
+void BplusNodePage::SetValue(int index, unsigned int value) {
+	if(index < 0 || index > keyCount)
+		throw "Invalid index!";
 	b[PAGE_OFFSET + INDEX_SIZE * index >> 2] = value;
 	MarkDirty();
 }
-void BplusNodePage::InsertKeyAndValue(int index, vector<Data> key, int value) {
-	if(index < 0 || index > keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
+void BplusNodePage::InsertKeyAndValue(int index, vector<Data> key, unsigned int value) {
+	if(index < 0 || index > keyCount)
+		throw "Invalid index!";
 	int offset = PAGE_OFFSET + INDEX_SIZE * index + 4;
 	for(int i = PAGE_INT_NUM - 1 - (INDEX_SIZE >> 2); i >= (offset >> 2); i--)
 		b[i + (INDEX_SIZE >> 2)] = b[i];
@@ -69,11 +59,9 @@ void BplusNodePage::InsertKeyAndValue(int index, vector<Data> key, int value) {
 	SetValue(index + 1, value);
 	MarkDirty();
 }
-void BplusNodePage::InsertValueAndKey(int index, int value, vector<Data> key) {
-	if(index < 0 || index > keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
+void BplusNodePage::InsertValueAndKey(int index, unsigned int value, vector<Data> key) {
+	if(index < 0 || index > keyCount)
+		throw "Invalid index!";
 	int offset = PAGE_OFFSET + INDEX_SIZE * index;
 	for(int i = PAGE_INT_NUM - 1 - (INDEX_SIZE >> 2); i >= (offset >> 2); i--)
 		b[i + (INDEX_SIZE >> 2)] = b[i];
@@ -84,10 +72,8 @@ void BplusNodePage::InsertValueAndKey(int index, int value, vector<Data> key) {
 	MarkDirty();
 }
 void BplusNodePage::RemoveKeyAndValue(int index) {
-	if(index < 0 || index >= keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
+	if(index < 0 || index >= keyCount)
+		throw "Invalid index!";
 	int offset = PAGE_OFFSET + INDEX_SIZE * index + 4;
 	for(int i = (offset >> 2); i <= PAGE_INT_NUM - 1 - (INDEX_SIZE >> 2); i++)
 		b[i] = b[i + (INDEX_SIZE >> 2)];
@@ -96,10 +82,8 @@ void BplusNodePage::RemoveKeyAndValue(int index) {
 	MarkDirty();
 }
 void BplusNodePage::RemoveValueAndKey(int index) {
-	if(index < 0 || index >= keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
+	if(index < 0 || index >= keyCount)
+		throw "Invalid index!";
 	int offset = PAGE_OFFSET + INDEX_SIZE * index;
 	for(int i = (offset >> 2); i <= PAGE_INT_NUM - 1 - (INDEX_SIZE >> 2); i++)
 		b[i] = b[i + (INDEX_SIZE >> 2)];
@@ -108,10 +92,8 @@ void BplusNodePage::RemoveValueAndKey(int index) {
 	MarkDirty();
 }
 void BplusNodePage::Split(BplusNodePage *other, int index) {
-	if(index < 0 || index > keyCount) {
-		cerr << "Invalid index!" << endl;
-		exit(-1);
-	}
+	if(index < 0 || index > keyCount)
+		throw "Invalid index!";
 	int offset = PAGE_OFFSET + INDEX_SIZE * index;
 	for(int i = (offset >> 2); i < PAGE_INT_NUM - 1; i++)
 		other->b[i - (INDEX_SIZE * index >> 2)] = b[i];
@@ -128,10 +110,8 @@ void BplusNodePage::Split(BplusNodePage *other, int index) {
 }
 
 bool operator < (const vector<Data>& data1, const vector<Data>& data2) {
-	if(data1.size() != data2.size()) {
-		cerr << "Key size distinct!" << endl;
-		exit(-1);
-	}
+	if(data1.size() != data2.size())
+		throw "Key size distinct!";
 	for(int i = 0; i < (signed)data1.size(); i++) {
 		if(!(data1[i] == data2[i]))
 			return data1[i] < data2[i];
@@ -140,10 +120,8 @@ bool operator < (const vector<Data>& data1, const vector<Data>& data2) {
 }
 
 bool operator == (const vector<Data>& data1, const vector<Data>& data2) {
-	if(data1.size() != data2.size()) {
-		cerr << "Key size distinct!" << endl;
-		exit(-1);
-	}
+	if(data1.size() != data2.size())
+		throw "Key size distinct!";
 	for(int i = 0; i < (signed)data1.size(); i++) {
 		if(!(data1[i] == data2[i]))
 			return false;
@@ -152,10 +130,8 @@ bool operator == (const vector<Data>& data1, const vector<Data>& data2) {
 }
 
 ostream& operator << (ostream& os, const vector<Data>& data) {
-	if(data.size() == 0) {
-		cerr << "Nothing to output!" << endl;
-		exit(-1);
-	}
+	if(data.size() == 0)
+		throw "Nothing to output!";
 	os << data[0];
 	for(int i = 1; i < (signed)data.size(); i++) {
 		os << ", " << data[i];

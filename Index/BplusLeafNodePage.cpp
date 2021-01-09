@@ -17,8 +17,8 @@ void BplusLeafNodePage::SavePageHeader() {
 	MarkDirty();
 }
 
-void BplusLeafNodePage::Insert(vector<Data> keys, int value,
-	bool& added, vector<Data>& addedKey, int& addedValue) {
+void BplusLeafNodePage::Insert(vector<Data> keys, unsigned int value,
+	bool& added, vector<Data>& addedKey, unsigned int& addedValue) {
 	int index;
 	for(index = 0; index < keyCount; index++) {
 		vector<Data> keys_index = GetKey(index);
@@ -38,19 +38,21 @@ void BplusLeafNodePage::Insert(vector<Data> keys, int value,
 	Split(_page, leftCount);
 }
 
-void BplusLeafNodePage::Remove(vector<Data> keys) {
+void BplusLeafNodePage::Remove(vector<Data> keys, unsigned int value) {
 	for(int index = 0; index < keyCount; index++) {
 		vector<Data> keys_index = GetKey(index);
-		if(keys < keys_index) {
-			cerr << "Keys not found!" << endl;
-			exit(-1);
-		}
-		if(keys == keys_index) {
+		if(keys < keys_index)
+			throw "Keys not found!";
+		if(keys == keys_index && value == GetValue(index + 1)) {
 			RemoveKeyAndValue(index);
 			return;
 		}
 	}
-	throw "Keys not found!";
+	if(nextPage <= 0)
+		throw "Keys not found!";
+	BplusNodePage* page = dynamic_cast<BplusNodePage*>(context->LoadPage(nextPage));
+	page->Remove(keys, value);
+	delete page;
 }
 
 void BplusLeafNodePage::Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer) {

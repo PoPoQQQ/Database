@@ -129,10 +129,10 @@ void Index::SaveHeader() const {
 	MarkDirty();
 }
 
-void Index::Insert(vector<Data> keys, int value) {
+void Index::Insert(vector<Data> keys, unsigned int value) {
 	bool added = false;
 	vector<Data> addedKey;
-	int addedValue;
+	unsigned int addedValue;
 
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
 	page->Insert(keys, value, added, addedKey, addedValue);
@@ -151,9 +151,9 @@ void Index::Insert(vector<Data> keys, int value) {
 	delete _page;
 }
 
-void Index::Remove(vector<Data> keys) {
+void Index::Remove(vector<Data> keys, unsigned int value) {
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
-	page->Remove(keys);
+	page->Remove(keys, value);
 	if(page->pageType == PageBase::BPLUS_LEAF_NODE_PAGE || page->keyCount > 0) {
 		delete page;
 		return;
