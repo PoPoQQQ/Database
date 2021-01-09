@@ -164,6 +164,12 @@ void Index::Remove(vector<Data> keys) {
 	rootPage = pageNumber;
 }
 
+void Index::Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer) {
+	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
+	page->Search(lowerBound, upperBound, gatherer);
+	delete page;
+}
+
 void Index::Print() {
 	BplusNodePage* page = dynamic_cast<BplusNodePage*>(LoadPage(rootPage));
 	page->Print(keyTypes, 1);

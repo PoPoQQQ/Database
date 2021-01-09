@@ -11,6 +11,7 @@ public:
 
 	void Insert(vector<Data> keys, int value,
 		bool& added, vector<Data>& addedKey, int& addedValue);
-	virtual void Remove(vector<Data> keys);
+	void Remove(vector<Data> keys);
+	void Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer);
 	void Print(vector<Data> keys, int indent);
 };

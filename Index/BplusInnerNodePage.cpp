@@ -147,6 +147,17 @@ void BplusInnerNodePage::Remove(vector<Data> keys) {
 	context->FreePage(rightSonPageNumber);
 }
 
+void BplusInnerNodePage::Search(vector<Data> lowerBound, vector<Data> upperBound, vector<unsigned int>& gatherer) {
+	int index;
+	for(index = 0; index < keyCount; index++)
+		if(lowerBound <= GetKey(index))
+			break;
+	int pageNumber = GetValue(index) >> 8;
+	BplusNodePage* page = dynamic_cast<BplusNodePage*>(context->LoadPage(pageNumber));
+	page->Search(lowerBound, upperBound, gatherer);
+	delete page;
+}
+
 void BplusInnerNodePage::Print(vector<Data> keys, int indent) {
 	for(int index = 0; index <= keyCount; index++) {
 		int pageNumber = GetValue(index) >> 8;

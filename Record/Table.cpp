@@ -131,13 +131,13 @@ void Table::InsertRecordIntoIndex(Index* index, Record record, unsigned int reco
 	vector<Data> datas;
 	vector<int> columnIndexes = GetColumnIndexes(index->colNames);
 	for(vector<int>::const_iterator it = columnIndexes.begin(); it != columnIndexes.end(); it++) {
-		if((record.bitMap & (1 << *it)) == 0)
-			return;
 		Data data = record.fieldList.GetColumn(*it).GetData();
 		if((data.dataType & 0xff) != Data::VARCHAR)
 			datas.push_back(data);
 		else
 			datas.push_back(HashData(data));
+		if((record.bitMap & (1 << *it)) == 0)
+			datas.back().SetNull();
 	}
 	index->Insert(datas, recordPosition);
 }
@@ -230,6 +230,20 @@ vector<unsigned int> Table::GetRecordList(WhereCondition& whereCondition) {
 			vector<unsigned int> _recordList = dynamic_cast<RecordPage*>(page)->GetRecordList(whereCondition);
 			recordList.insert(recordList.end(), _recordList.begin(), _recordList.end());
 		}
+		delete page;
+	}
+	return recordList;
+}
+
+vector<unsigned int> Table::CheckRecordList(WhereCondition& whereCondition, const vector<unsigned int>& gatherer) {
+	vector<unsigned int> recordList;
+	for(vector<unsigned int>::const_iterator it = gatherer.begin(); it != gatherer.end(); it++) {
+		PageBase *page = PageFactory::LoadPage(this, fileID, (*it) >> 8);
+		if(page == NULL || page->pageType != PageBase::RECORD_PAGE)
+			throw "Gatherer error!";
+		Record record = dynamic_cast<RecordPage*>(page)->GetRecord((*it) & 0xffu);
+		if(whereCondition.check(record))
+			recordList.push_back(*it);
 		delete page;
 	}
 	return recordList;
