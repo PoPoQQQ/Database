@@ -37,6 +37,8 @@ PageBase* PageFactory::CreatePage(FileBase* context, int fileID, int pageNumber,
 	int index;
 	BufType b = Global::getInstance()->bpm->getPage(fileID, pageNumber, index);
 	PageBase* page = AllocPage(context, pageNumber, index, b, pageType);
+	if(page->pageType == PageBase::BITMAP_PAGE)
+		dynamic_cast<BitMapPage*>(page)->Initialize();
 	if(page == NULL)
 		throw "What r u doing?";
 	page->SavePageHeader();

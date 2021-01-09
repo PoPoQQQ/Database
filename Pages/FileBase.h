@@ -13,7 +13,7 @@ public:
 	int bitMapPage;
 
 	FileBase(string fileDirectory, bool createFile);
-	~FileBase();
+	virtual ~FileBase();
 
 	PageBase* GetAvailablePage(int pageType);
 	PageBase* LoadPage(int pageNumber);

@@ -46,7 +46,14 @@ Field Field::SetForeignKey() {
 	constraints |= FOREIGN_KEY;
 	return *this;
 }
-
+Field Field::ResetPrimaryKey() {
+	(constraints |= PRIMARY_KEY) ^= PRIMARY_KEY;
+	return *this;
+}
+Field Field::ResetForeignKey() {
+	(constraints |= FOREIGN_KEY) ^= FOREIGN_KEY;
+	return *this;
+}
 int Field::DataSize() const {
 	return data.dataSize;
 }

@@ -12,8 +12,10 @@ int LowBit(unsigned int x) {
 BitMapPage::BitMapPage(FileBase* context, int pageNumber, int pageIndex, BufType b): 
 	PageBase(pageNumber, pageIndex, b), context(context), nextPage(-1) {
 	pageType = BITMAP_PAGE;
-	if(b[0] != PageBase::BITMAP_PAGE)
-		memset(b + (PAGE_OFFSET >> 2), 0xff, BITMAP_SIZE << 2);
+}
+
+void BitMapPage::Initialize() {
+	memset(b + (PAGE_OFFSET >> 2), 0xff, BITMAP_SIZE << 2);
 }
 
 void BitMapPage::LoadPageHeader() {

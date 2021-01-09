@@ -32,6 +32,8 @@ public:
 	 * 目前只能用于 ALTER ADD 命令
 	 * */
 	void AddFieldDesc(const FieldDesc& fieldDesc);
+	void AddPrimaryKey(string pkName, const vector<string>& columnList);
+	void DropPrimaryKey();
 	/**
 	 * 通过 FieldDesc vec 来构建 FieldList
 	 * 仅能用于 parser 的读取操作，一般只能调用一次

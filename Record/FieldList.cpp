@@ -101,6 +101,20 @@ void FieldList::AddFieldDesc(const FieldDesc& fieldDesc) {
 			break;
 	}
 }
+void FieldList::AddPrimaryKey(string pkName, const vector<string>& columnList) {
+	if(pkConstraints.size() > 0)
+		throw "Primary key already exists!";
+	for(vector<string>::const_iterator it = columnList.begin(); it != columnList.end(); it++)
+		GetColumn(GetColumnIndex(*it)).SetPrimaryKey();
+	pkConstraints.push_back(PrimaryKeyCstrnt(pkName, columnList));
+}
+void FieldList::DropPrimaryKey() {
+	if(pkConstraints.size() == 0)
+		throw "Primary key dows not exist!";
+	for(vector<string>::iterator it = pkConstraints[0].colNames.begin(); it != pkConstraints[0].colNames.end(); it++)
+		GetColumn(GetColumnIndex(*it)).ResetPrimaryKey();
+	pkConstraints.clear();
+}
 void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
 	for(vector<FieldDesc>::const_iterator it = vec.begin(); it != vec.end(); it++) {
 		switch(it->type) {

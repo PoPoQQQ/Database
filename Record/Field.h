@@ -32,6 +32,8 @@ public:
 	Field SetDefault(Data data);
 	Field SetPrimaryKey();
 	Field SetForeignKey();
+	Field ResetPrimaryKey();
+	Field ResetForeignKey();
 
 	int DataSize() const;
 	int RoundedDataSize() const;

@@ -10,6 +10,7 @@ public:
 	FileBase* context;
 	int nextPage;
 	BitMapPage(FileBase* context, int pageNumber, int pageIndex, BufType b);
+	void Initialize();
 	void LoadPageHeader();
 	void SavePageHeader();
 	void SetBit(int index, int bit);

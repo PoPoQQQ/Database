@@ -9,7 +9,7 @@ FileBase::FileBase(string fileDirectory, bool createFile):
 	if(createFile) {
 		Global::getInstance()->fm->createFile(fileDirectory.c_str());
 		Global::getInstance()->fm->openFile(fileDirectory.c_str(), fileID);
-		delete PageFactory::CreatePage(this, fileID, 0, PageBase::BITMAP_PAGE);
+		delete PageFactory::CreatePage(this, fileID, 0, PageBase::RECORD_PAGE);
 		PageBase* page = PageFactory::CreatePage(this, fileID, 1, PageBase::BITMAP_PAGE);
 		bitMapPage = page->pageNumber;
 		dynamic_cast<BitMapPage*>(page)->SetBit(0, 0);
@@ -25,9 +25,8 @@ FileBase::~FileBase() {
 	int index = 0;
 	for(int i = 0;i < numberOfPage; ++i) {
 		index = Global::getInstance()->bpm->getIndex(fileID, i);
-		if (index >= 0) {
+		if (index >= 0)
 			Global::getInstance()->bpm->writeBack(index);
-		}
 	}
 	Global::getInstance()->fm->closeFile(fileID);
 }

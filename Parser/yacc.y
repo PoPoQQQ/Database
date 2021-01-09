@@ -509,8 +509,17 @@ alterStmt	:	ALTER TABLE tbName ADD field
 					Database::RenameTable($3, $6);
 				}
 			|	ALTER TABLE tbName DROP PRIMARY KEY
+				{
+					Database::DropPrimaryKey($3, "");
+				}
 			|	ALTER TABLE tbName ADD CONSTRAINT pkName PRIMARY KEY '(' columnList ')'
+				{
+					Database::AddPrimaryKey($3, $6, $10);
+				}
 			|	ALTER TABLE tbName DROP PRIMARY KEY pkName
+				{
+					Database::DropPrimaryKey($3, $7);
+				}
 			|	ALTER TABLE tbName ADD CONSTRAINT fkName FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
 			|	ALTER TABLE tbName DROP FOREIGN KEY fkName
 			;

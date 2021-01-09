@@ -81,6 +81,8 @@ public:
 	
 	// alter table
 	static void addTableField(const string& tbName, const FieldDesc& fieldDesc);
+	static void AddPrimaryKey(string tableName, string pkName, const vector<string>& columnList);
+	static void DropPrimaryKey(string tableName, string pkName);
 private:
 	/**
 	 * 和 DropTable 相同的操作，但是没有输出

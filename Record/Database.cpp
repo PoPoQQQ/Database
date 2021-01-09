@@ -466,8 +466,13 @@ void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 		const vector<string>& colNames = index->colNames;
 		for(vector<Record>::iterator it = recordList.begin(); it != recordList.end(); it++) {
 			vector<Data> datas;
-			for(int i = 0; i < (signed)colNames.size(); i++)
-				datas.push_back(it->fieldList.GetColumn(it->fieldList.GetColumnIndex(colNames[i])).GetData());
+			for(int i = 0; i < (signed)colNames.size(); i++) {
+				Data data = it->fieldList.GetColumn(it->fieldList.GetColumnIndex(colNames[i])).GetData();
+				if((data.dataType & 0xff) != Data::VARCHAR)
+					datas.push_back(data);
+				else
+					datas.push_back(HashData(data));
+			}
 			index->Search(datas, datas, gatherer);
 			if(gatherer.size() > 0)
 				throw "Primary key constraint violated!";
@@ -482,8 +487,13 @@ void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 		for(vector<Record>::iterator it = recordList.begin(); it != recordList.end(); it++) {
 			gatherer.clear();
 			vector<Data> datas;
-			for(int i = 0; i < (signed)colNames.size(); i++)
-				datas.push_back(it->fieldList.GetColumn(it->fieldList.GetColumnIndex(colNames[i])).GetData());
+			for(int i = 0; i < (signed)colNames.size(); i++) {
+				Data data = it->fieldList.GetColumn(it->fieldList.GetColumnIndex(colNames[i])).GetData();
+				if((data.dataType & 0xff) != Data::VARCHAR)
+					datas.push_back(data);
+				else
+					datas.push_back(HashData(data));
+			}
 			index->Search(datas, datas, gatherer);
 			if(gatherer.size() == 0)
 				throw "Foreign key constraint violated!";
@@ -532,6 +542,8 @@ void Database::CreateIndex(string tableName, string indexName, const vector<stri
 	if(currentDatabase->indexes.find(indexName) != currentDatabase->indexes.end())
 		throw "Index already exsists!";
 	vector<Data> keyTypes = table->GetKeyTypes(columnList);
+	cout << columnList[0] << endl;
+	cout << keyTypes[0].dataType << endl;
 	Index* index = currentDatabase->indexes[indexName] = new Index(currentDatabase->databaseName, tableName, indexName, columnList, keyTypes);
 	table->InsertAllIntoIndex(index);
 	index->Print();
@@ -640,6 +652,37 @@ void Database::addTableField(const string& tbName, const FieldDesc& fieldDesc) {
 	catch(exception& e) {
 		cerr << e.what() << endl;
 	}
+}
+void Database::AddPrimaryKey(string tableName, string pkName, const vector<string>& columnList) {
+	Table* table = GetTable(tableName);
+	if(table->fieldList.pkConstraints.size() > 0)
+		throw "Primary key already exists!";
+	for(int i = 0; i < (signed)columnList.size(); i++) {
+		string colName = columnList[i];
+		int colIndex = table->fieldList.GetColumnIndex(colName);
+		if(colIndex == -1)
+			throw "Error: Column does not exist";
+		Field& field = table->fieldList.GetColumn(colIndex);
+		if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+			throw "Error: Multiple constraint is not supported!";
+	}
+	CreateIndex(tableName, "-" + tableName, columnList);
+	table->fieldList.AddPrimaryKey(pkName, columnList);
+}
+void Database::DropPrimaryKey(string tableName, string pkName) {
+	Table* table = GetTable(tableName);
+	if(table->fieldList.pkConstraints.size() == 0)
+		throw "Primary key does not exist!";
+	if(pkName == "")
+		pkName = table->fieldList.pkConstraints[0].pkName;
+	if(pkName != table->fieldList.pkConstraints[0].pkName)
+		throw "Primary key does not exist!";
+	for(map<string, Table*>::iterator it = currentDatabase->tables.begin(); it != currentDatabase->tables.end(); it++)
+		for(int i = 0; i < (signed)it->second->fieldList.fkConstraints.size(); i++)
+			if(it->second->fieldList.fkConstraints[i].tbName == tableName)
+				throw "Dropping failed!";
+	DropIndex(tableName, "-" + tableName);
+	table->fieldList.DropPrimaryKey();
 }
 void Database::quietDropTable(string tableName) {
 	Table* table = GetTable(tableName);
