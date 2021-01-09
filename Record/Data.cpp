@@ -85,7 +85,38 @@ Data::~Data() {
 }
 
 Data::Data(const Data& data) {
-	*this = data;
+	if(dataType == VARCHAR)
+		delete stringData;
+	dataType = data.dataType;
+	dataSize = data.dataSize;
+
+	switch(data.dataType & 0xff) {
+		case UNDEFINED:
+			stringData = NULL;
+			break;
+		case INT:
+			intData = data.intData;
+			break;
+		case VARCHAR: {
+			if(data.stringData == NULL) {
+				cerr << "Data class error!" << endl;
+				exit(-1);
+			}
+			stringData = new char[dataSize + 1];
+			memcpy(stringData, data.stringData, dataSize + 1);
+			break;
+		}
+		case DATE:
+			intData = data.intData;
+			break;
+		case FLOAT:
+			floatData = data.floatData;
+			break;
+		default:
+			cerr << "Data type error!" << endl;
+			exit(-1);
+			break;
+	}
 }
 
 Data& Data::operator = (const Data& data) {
@@ -124,7 +155,7 @@ Data& Data::operator = (const Data& data) {
 	return *this;
 }
 
-Data Data::SetData(unsigned int data) {
+Data& Data::SetData(unsigned int data) {
 	if((dataType & 0xff) == INT) {
 		if(GetDigit(data) > (dataType >> 8))
 			throw "Integer is too big!";
@@ -137,7 +168,7 @@ Data Data::SetData(unsigned int data) {
 	return *this;
 }
 
-Data Data::SetData(float data) {
+Data& Data::SetData(float data) {
 	if((dataType & 0xff) == FLOAT)
 		floatData = data;
 	else
@@ -145,7 +176,7 @@ Data Data::SetData(float data) {
 	return *this;
 }
 
-Data Data::SetData(const char *data) {
+Data& Data::SetData(const char *data) {
 	if((dataType & 0xff) == VARCHAR) {
 		if(strlen(data) > dataSize)
 			throw "String is too long!";
@@ -164,7 +195,7 @@ Data Data::SetData(const char *data) {
 	return *this;
 }
 
-Data Data::SetData(const Data &data) {
+Data& Data::SetData(const Data &data) {
 	if((dataType & 0xff) == INT) {
 		if((data.dataType & 0xff) == INT)
 			SetData(data.intData);
@@ -196,11 +227,11 @@ Data Data::SetData(const Data &data) {
 	return *this;
 }
 
-Data Data::SetNull() {
+Data& Data::SetNull() {
 	return SetPosInf();
 }
 
-Data Data::SetNegInf() {
+Data& Data::SetNegInf() {
 	switch(dataType & 0xff) {
 		case INT:
 			intData = 0u;
@@ -219,7 +250,7 @@ Data Data::SetNegInf() {
 	return *this;
 }
 
-Data Data::SetPosInf() {
+Data& Data::SetPosInf() {
 	switch(dataType & 0xff) {
 		case INT:
 			intData = 0xffffffffu;

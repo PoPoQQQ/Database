@@ -30,14 +30,14 @@ public:
 	Data(const Data& data);
 	Data& operator = (const Data& data);
 
-	Data SetData(unsigned int data);
-	Data SetData(float data);
-	Data SetData(const char *data);
-	Data SetData(const Data &data);
+	Data& SetData(unsigned int data);
+	Data& SetData(float data);
+	Data& SetData(const char *data);
+	Data& SetData(const Data &data);
 
-	Data SetNull();
-	Data SetNegInf();
-	Data SetPosInf();
+	Data& SetNull();
+	Data& SetNegInf();
+	Data& SetPosInf();
 
 	void LoadType(unsigned int* b);
 	void SaveType(unsigned int* b) const;

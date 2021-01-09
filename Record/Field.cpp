@@ -15,6 +15,7 @@ Field& Field::operator=(const Field& other) {
 	columnName = other.columnName;
 	data = other.data;
 	constraints = other.constraints;
+	return *this;
 }
 
 Data Field::GetData() {
@@ -38,6 +39,7 @@ Field Field::SetDefault(Data data) {
 }
 Field Field::SetPrimaryKey() {
 	constraints |= PRIMARY_KEY;
+	constraints |= NOT_NULL;
 	return *this;
 }
 Field Field::SetForeignKey() {
