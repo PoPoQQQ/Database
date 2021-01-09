@@ -57,15 +57,21 @@ public:
 	 * @param tableName 表名
 	 * @param fieldList 域列表
 	 * */
-	static Table* CreateTable(string tableName, const FieldList& fieldList);
-	static void DropTable(string tableName);
+	static Table* CreateTable(const string& tableName, const FieldList& fieldList);
+	static void DropTable(const string& tableName);
+	/** 
+	 * 重命名表格
+	 * 会同时使得 Database 类和表格的文件名改变
+	 * TODO：没有考虑 index
+	 * */
+	static void RenameTable(const string& oldTbName, const string& newTbName);
 	/**
 	 * 从当前打开的数据库中获得某个 table 对象指针
 	 * 如果当前数据库不存在或者表名不存在则会直接报错退出
 	 * @param tableName 表名
 	 * @return Table* 指向该表的指针
 	 * */
-	static Table* GetTable(string tableName);
+	static Table* GetTable(const string& tableName);
 	static vector<unsigned int> GetRecordList(string tableName, WhereCondition& whereCondition);
 	static void Insert(string tableName, const vector<vector<Data>>& dataLists);
 	static void Delete(string tableName, const vector<unsigned int>& recordList);

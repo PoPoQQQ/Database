@@ -49,6 +49,7 @@ CREATE INDEX idx ON customer(id);
 INSERT INTO customer VALUES (300005,'CHAD CABELLO II','M'),(300006,'FAUSTO VANNORMAN II','M');
 DELETE FROM customer WHERE id = 300002;
 UPDATE customer SET id = 300007, name = 'CHAD CABELLON', gender = 'M' WHERE name = 'CHAD CABELLO';
+alter table customer rename to newcustomer;
 --INSERT INTO restaurant VALUES (1, 'main', 'dalian', NULL, NULL), (2, 'sub', 'beijing', '74513', NULL);
 --INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
 --select id, name from customer where id = 300001;

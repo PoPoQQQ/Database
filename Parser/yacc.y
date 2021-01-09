@@ -502,6 +502,9 @@ alterStmt	:	ALTER TABLE tbName ADD field
 			|   ALTER TABLE tbName DROP colName
 			|	ALTER TABLE tbName CHANGE colName field
 			|	ALTER TABLE tbName RENAME TO tbName
+				{
+					Database::RenameTable($3, $6);
+				}
 			|	ALTER TABLE tbName DROP PRIMARY KEY
 			|	ALTER TABLE tbName ADD CONSTRAINT pkName PRIMARY KEY '(' columnList ')'
 			|	ALTER TABLE tbName DROP PRIMARY KEY pkName

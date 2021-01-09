@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <cstring>
 #include <algorithm>
+#include <exception>
 #include "Database.h"
 
 int RemoveDirectory(const char* dir) {
@@ -309,7 +310,7 @@ void Database::ShowTables() {
 		cout << "-";
 	cout << "-+" << endl;
 }
-Table* Database::CreateTable(string tableName, const FieldList& fieldList) {
+Table* Database::CreateTable(const string& tableName, const FieldList& fieldList) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
 	if(tableName.length() > MAX_IDENTIFIER_LEN)
@@ -320,7 +321,7 @@ Table* Database::CreateTable(string tableName, const FieldList& fieldList) {
 	cout << "Table " << tableName << " successfully created." << endl;
 	return currentDatabase->tables[tableName];
 }
-void Database::DropTable(string tableName) {
+void Database::DropTable(const string& tableName) {
 	Table* table = GetTable(tableName);
 	delete table;
 	currentDatabase->tables.erase(currentDatabase->tables.find(tableName));
@@ -335,7 +336,75 @@ void Database::DropTable(string tableName) {
 		DropIndex(tableName, *it);
 	cout << "Drop table: " << tableName << " succeed." << endl;
 }
-Table* Database::GetTable(string tableName) {
+void Database::RenameTable(const string& oldTbName, const string& newTbName) {
+	// 处理二者相同的特殊情况
+	if(oldTbName == newTbName){
+		return;
+	}
+	// 调用 GetTable 获得 table, 出现错误会抛出异常
+	// 如果有返回值的话说明 table 存在于 currentDatabase
+	Table* table = Database::GetTable(oldTbName);
+
+	// 检查 newTbName 是否合法
+	if(newTbName.length() > MAX_IDENTIFIER_LEN)
+		throw "Error(RenameTable): NewTbName is too long!";
+	// 如果 newTbName 对应一个表则不合理
+	if(Database::currentDatabase->tables.find(newTbName) != Database::currentDatabase->tables.end()){
+		throw "Error(RenameTable): the given new table name has an existing table entry";
+	}
+	// 从当前的 map 中移除 entry
+	Database::currentDatabase->tables.erase(Database::currentDatabase->tables.find(oldTbName));
+	// 删除 Table
+	delete table;
+	// 将文件重命名
+	string oldTablePath = string("Database/") + currentDatabase->databaseName + "/" + oldTbName;
+	string newTablePath = string("Database/") + currentDatabase->databaseName + "/" + newTbName;
+	if(Global::getInstance()->fm->moveFile(oldTablePath.c_str(), newTablePath.c_str())) {
+		// 如果成功重命名
+
+		// 重新创建 Table
+		table = new Table(currentDatabase->databaseName, newTbName);
+		// 将新的 Table 加入数据库
+		Database::currentDatabase->tables[newTbName] = table;
+	} else {
+		cerr << "Warning: rename table failed, rename function returns a false" << endl;
+		// 否则重新创建一个原始的 Table (原始文件依然存在)
+		table = new Table(currentDatabase->databaseName, oldTbName);
+		// 将旧的 Table 重新加回去
+		Database::currentDatabase->tables[oldTbName] = table;
+	}
+	Index* index = nullptr;
+	string indexName;
+	// 对于找到所有索引中 TableName 相同的索引，和 Table 做类似的处理
+	for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+		if(iter->second->tableName == oldTbName) {
+			index = iter->second;
+			indexName = index->indexName;
+			oldTablePath = string("Database/") + currentDatabase->databaseName + "/" + oldTbName + "-" + indexName;
+			newTablePath = string("Database/") + currentDatabase->databaseName + "/" + newTbName + "-" + indexName;
+			// 因为 indexName 不变，所以不需要移除 entry，而是修改
+			// 删除结构
+			delete index;
+			// 重命名文件
+			if(Global::getInstance()->fm->moveFile(oldTablePath.c_str(), newTablePath.c_str())) {
+				// 如果成功重命名
+
+				// 重新创建
+				index = new Index(currentDatabase->databaseName, newTbName, indexName);
+				// 加入数据库
+				Database::currentDatabase->indexes[indexName] = index;
+			} else {
+				cerr << "Warning: rename index failed, rename function returns a false" << endl;
+				// 否则重新创建一个原始的 Index (原始文件依然存在)
+				index = new Index(currentDatabase->databaseName, oldTbName, indexName);
+				// 将旧的 Index 重新加回去
+				Database::currentDatabase->indexes[indexName] = index;
+			}
+		}
+	}
+}
+
+Table* Database::GetTable(const string &tableName) {
 	if(currentDatabase == NULL)
 		throw "No database selected!";
 	if(tableName.length() > MAX_IDENTIFIER_LEN)
