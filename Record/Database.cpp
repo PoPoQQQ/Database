@@ -533,10 +533,10 @@ void Database::Delete(string tableName, const vector<unsigned int>& recordList) 
 		if(it->second->tableName == tableName)
 			idxes.push_back(it->second);
 	table->DeleteRecords(recordList, idxes);
-	cout << "Deletion succeeded!" << endl;
-	table->PrintTable();
-	for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
-		(*it)->Print();
+	cout << "Deletion succeeded! " << recordList.size() << " rows affected." << endl;
+	//table->PrintTable();
+	//for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
+	//	(*it)->Print();
 }
 void Database::Update(string tableName, const vector<unsigned int>& recordList, SetClauseObj& setClause) {
 	Table* table = GetTable(tableName);
@@ -545,10 +545,10 @@ void Database::Update(string tableName, const vector<unsigned int>& recordList, 
 		if(it->second->tableName == tableName)
 			idxes.push_back(it->second);
 	table->UpdateRecords(recordList, idxes, setClause);
-	cout << "Updation succeeded!" << endl;
-	table->PrintTable();
-	for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
-		(*it)->Print();
+	cout << "Updation succeeded!" << recordList.size() << " rows affected." << endl;
+	//table->PrintTable();
+	//for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
+	//	(*it)->Print();
 }
 void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 	int selectCount = 0;
