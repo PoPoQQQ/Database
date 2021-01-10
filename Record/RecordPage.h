@@ -49,7 +49,7 @@ public:
 		index = FindLeftOne();
 		if(index >= recordVolume)
 			throw "Page volume not enough!";
-		bitMaps[index >> 5] ^= 1u << (index & 31);
+		bitMaps[index >> 5] ^= (1u << (index & 31));
 		SavePageHeader();
 		record.enabled = 1;
 		record.Save(b + (PAGE_OFFSET + index * recordSize) / 4);
@@ -85,7 +85,7 @@ public:
 		bool ret = (FindLeftOne() == recordVolume);
 		bitMaps[index >> 5] |= (1u << (index & 31));
 		SavePageHeader();
-		return ret;
+		return false;
 	}
 	vector<unsigned int> GetRecordList(WhereCondition& whereCondition) {
 		vector<unsigned int> recordList;
