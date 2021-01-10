@@ -453,7 +453,7 @@ vector<unsigned int> Database::GetRecordList(string tableName, WhereCondition& w
 	cout << "Index: " << index->indexName << " used!" << endl;
 	return table->CheckRecordList(whereCondition, gatherer);
 }
-void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
+bool Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 	vector<Record> recordList;
 	Table* table = GetTable(tableName);
 	for(vector<vector<Data>>::const_iterator it = dataLists.begin(); it != dataLists.end(); it++) {

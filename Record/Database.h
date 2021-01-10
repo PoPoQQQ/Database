@@ -73,7 +73,7 @@ public:
 	 * */
 	static Table* GetTable(const string& tableName);
 	static vector<unsigned int> GetRecordList(string tableName, WhereCondition& whereCondition);
-	static void Insert(string tableName, const vector<vector<Data>>& dataLists);
+	static bool Insert(string tableName, const vector<vector<Data>>& dataLists);
 	static void Delete(string tableName, const vector<unsigned int>& recordList);
 	static void Update(string tableName, const vector<unsigned int>& recordList, SetClauseObj& setClause);
 	static void Select(vector<ColObj>&, const vector<string>&);
