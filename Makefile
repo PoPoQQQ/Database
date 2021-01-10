@@ -70,7 +70,7 @@ load: all
 	./main.exe Tools/customer.tbl.sql
 	./main.exe Tools/partsupp.tbl.sql
 	./main.exe Tools/orders.tbl.sql
-	./main.exe Tools/lineitem.tbl.sql
+	# ./main.exe Tools/lineitem.tbl.sql
 
 sqltest: rmps rmdb all
 	./main.exe test.sql

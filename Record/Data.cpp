@@ -121,8 +121,10 @@ Data& Data::SetData(float data) {
 
 Data& Data::SetData(string data) {
 	if((dataType & 0xff) == VARCHAR) {
-		if(data.length() > dataSize)
+		if(data.length() > dataSize) {
+			cerr << data << endl;
 			throw "String is too long!";
+		}
 		stringData = data;
 	}
 	else if((dataType & 0xff) == DATE) {

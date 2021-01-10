@@ -377,6 +377,8 @@ bool WhereCondition::check(SelectFieldList& sFieldList) {
 bool WhereCondition::evaluate(const Data& lData, const Data& rData) {
 	// 不同类型默认返回 NULL
 	// 另外，NULL 类型有关的所有操作默认返回 false
+	// if((((lData.dataType & 0xff) == Data::DataType::INT) && (rData.dataType & 0xff) == Data::DataType::FLOAT)) ||
+	// 	(((lData.dataType & 0xff) == Data::DataType::FLOAT) && (rData.dataType & 0xff) == Data::DataType::FLOAT))
 	if((lData.dataType & 0xff) != (rData.dataType & 0xff)) {
 		if(!evaluateAlert) {
 			char buf[128];

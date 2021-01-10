@@ -482,8 +482,11 @@ bool Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 					datas.push_back(HashData(data));
 			}
 			index->Search(datas, datas, gatherer);
-			if(gatherer.size() > 0)
-				throw "Primary key constraint violated!";
+			if(gatherer.size() > 0){
+				// throw "Primary key constraint violated!";
+				cerr << "Primary key constraint violated!" << endl;
+				return;
+			}
 		}
 	}
 	for(vector<ForeignKeyCstrnt>::iterator _it = table->fieldList.fkConstraints.begin(); _it != table->fieldList.fkConstraints.end(); _it++) {
@@ -503,8 +506,12 @@ bool Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 					datas.push_back(HashData(data));
 			}
 			index->Search(datas, datas, gatherer);
-			if(gatherer.size() == 0)
-				throw "Foreign key constraint violated!";
+			if(gatherer.size() == 0) {
+				// throw "Foreign key constraint violated!";
+				cerr << "Foreign key constraint violated!" << endl;
+				return;
+			}
+				
 			//else
 			//	cout << gatherer.back() << endl;
 		}
@@ -544,12 +551,14 @@ void Database::Update(string tableName, const vector<unsigned int>& recordList, 
 	//	(*it)->Print();
 }
 void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
+	int selectCount = 0;
 	if (tbList.size() == 1) {
 		// 查询单个 db
 		Table* table = Database::GetTable(tbList[0].c_str());
 		if(selector.size() == 0) {
 			// 如果是 * , 则可以偷懒直接打印
 			table->PrintTable();
+			selectCount = table->recordCount;
 		} else {
 			// 验证每一个 col 是否合法
 			for(int i = 0;i < selector.size(); ++i) {
@@ -566,7 +575,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 				tFieldList.AddField(table->fieldList.GetColumn(table->fieldList.GetColumnIndex(selector[i].colName.c_str())));
 			}
 			tFieldList.PrintFields();
-			function<void(Record&, BufType)> it = [&tFieldList](Record& record, BufType b) {
+			function<void(Record&, BufType)> it = [&tFieldList, &selectCount](Record& record, BufType b) {
 				unsigned int bitmap = 0;
 				int index = -1;
 				for(int i = 0;i < tFieldList.fields.size(); ++i) {
@@ -575,6 +584,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 					bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
 				}
 				tFieldList.PrintDatas(bitmap);
+				selectCount ++;
 			};
 			table->IterTable(it);
 		}
@@ -606,7 +616,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 			int depth = 0;
 			unsigned int bitmap = 0;
 			unsigned int bitmapPos = 0;
-			function<void(Record&, BufType)> it = [&tFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+			function<void(Record&, BufType)> it = [&selectCount, &tFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
 				depth++;
 				for(int i = 0;i < record.fieldList.fields.size(); ++i) {
 					if(((record.bitMap & (1u << i)) ? (1u << bitmapPos) : 0u) == 0) {
@@ -619,6 +629,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 				}
 				if(depth == tbList.size()) {
 					tFieldList.PrintDatas(bitmap);
+					selectCount++;
 				} else {
 					tbMap.find(tbList[depth])->second->IterTable(it);
 				}
@@ -649,7 +660,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 			int depth = 0;
 			unsigned int bitmap = 0;
 			unsigned int bitmapPos = 0;
-			function<void(Record&, BufType)> it = [&tFieldList, &depth, &selector, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
+			function<void(Record&, BufType)> it = [&selectCount, &tFieldList, &depth, &selector, &tbMap, &bitmap, &bitmapPos, &it](Record& record, BufType b) {
 				// selector 对应的列（目前已经在表中）
 				const int cIndex = record.fieldList.GetColumnIndex(selector[depth].colName.c_str());
 				const Field& field = record.fieldList.GetColumn(cIndex);
@@ -665,6 +676,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 				depth++;
 				if(depth == selector.size()) {
 					tFieldList.PrintDatas(bitmap);
+					selectCount++;
 				} else {
 					tbMap.find(selector[depth].tbName)->second->IterTable(it);
 				}
@@ -679,9 +691,10 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList) {
 			tbMap.find(tbList[0])->second->IterTable(it);
 		}
 	}
-	cout << "SELECT finished!" << endl;
+	cout << "SELECT finished! Total rows: " << selectCount << endl;
 }
 void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, WhereCondition& where) {
+	int selectCount = 0;
 	if (tbList.size() == 1) {
 		// 查询单个 db
 		Table* table = Database::GetTable(tbList[0].c_str());
@@ -693,8 +706,9 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 			// 根据 whereClause 中的条件进行搜索，如果满足条件则打印
 			WhereCondition& whereClause = where;
 			table->fieldList.PrintFields();
-			function<void(Record&, BufType)> it = [&whereClause](Record& record, BufType b) {
+			function<void(Record&, BufType)> it = [&selectCount, &whereClause](Record& record, BufType b) {
 				if((whereClause).check(record)) {
+					selectCount++;
 					record.fieldList.PrintDatas(record.bitMap);
 				}
 			};
@@ -716,7 +730,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 			}
 			tFieldList.PrintFields();
 			WhereCondition& whereClause = where;
-			function<void(Record&, BufType)> it = [&tFieldList, &whereClause](Record& record, BufType b) {
+			function<void(Record&, BufType)> it = [&selectCount, &tFieldList, &whereClause](Record& record, BufType b) {
 				if(whereClause.check(record)) {
 					unsigned int bitmap = 0;
 					int index = -1;
@@ -726,6 +740,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 						bitmap |= (record.bitMap & (1u << index)) ? 1u << i : 0u;
 					}
 					tFieldList.PrintDatas(bitmap);
+					selectCount++;
 				}
 			};
 			table->IterTable(it);
@@ -775,7 +790,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 			int depth = 0;
 			unsigned int bitmap = 0;
 			unsigned int bitmapPos = 0;
-			function<void(Record&, BufType)> it = [&tFieldList, &sFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &selector, &where, &it](Record& record, BufType b) {
+			function<void(Record&, BufType)> it = [&selectCount, &tFieldList, &sFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &selector, &where, &it](Record& record, BufType b) {
 				depth++;
 				// 递归获得如同 * 的全部表格列的数据
 				for(int i = 0;i < record.fieldList.fields.size(); ++i) {
@@ -796,6 +811,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 							sFieldList.GetColumn(sFieldList.GetColumnIndex(selector[i])) = tFieldList.GetColumn(tFieldList.GetColumnIndex(selector[i]));
 						}
 						sFieldList.PrintDatas(bitmap);
+						selectCount++;
 					}
 				} else {
 					tbMap.find(tbList[depth])->second->IterTable(it);
@@ -820,7 +836,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 			int depth = 0;
 			unsigned int bitmap = 0;
 			unsigned int bitmapPos = 0;
-			function<void(Record&, BufType)> it = [&tFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &where, &it](Record& record, BufType b) {
+			function<void(Record&, BufType)> it = [&selectCount, &tFieldList, &depth, &tbList, &tbMap, &bitmap, &bitmapPos, &where, &it](Record& record, BufType b) {
 				depth++;
 				for(int i = 0;i < record.fieldList.fields.size(); ++i) {
 					if(((record.bitMap & (1u << i)) ? (1u << bitmapPos) : 0u) == 0) {
@@ -836,6 +852,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 				if(depth == tbList.size()) {
 					if(where.check(tFieldList)) {
 						tFieldList.PrintDatas(bitmap);
+						selectCount++;
 					}
 				} else {
 					tbMap.find(tbList[depth])->second->IterTable(it);
@@ -849,7 +866,7 @@ void Database::Select(vector<ColObj>& selector, const vector<string>& tbList, Wh
 			tbMap.find(tbList[0])->second->IterTable(it);
 		}
 	}
-	cout << "SELECT finished!" << endl;
+	cout << "SELECT finished! Total rows: " << selectCount << endl;
 }
 void Database::CreateIndex(string tableName, string indexName, const vector<string>& columnList) {
 	Table* table = GetTable(tableName);
