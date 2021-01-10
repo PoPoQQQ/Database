@@ -1168,7 +1168,7 @@ void Database::AddPrimaryKey(string tableName, string pkName, const vector<strin
 		if(colIndex == -1)
 			throw "Error: Column does not exist";
 		Field& field = table->fieldList.GetColumn(colIndex);
-		if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+		if((field.constraints & Field::PRIMARY_KEY))
 			throw "Error: Multiple constraint is not supported!";
 	}
 	CreateIndex(tableName, "-" + tableName, columnList);
@@ -1198,7 +1198,7 @@ void Database::AddForeignKey(string tableName, string fkName, const vector<strin
 		if(colIndex == -1)
 			throw "Error: Column does not exist";
 		Field& field = table->fieldList.GetColumn(colIndex);
-		if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+		if((field.constraints & Field::FOREIGN_KEY))
 			throw "Error: Multiple constraint is not supported!";
 	}
 	table->fieldList.AddForeignKey(fkName, refTableName, columnList, refColumnList);
