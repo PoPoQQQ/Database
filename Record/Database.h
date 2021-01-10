@@ -76,6 +76,8 @@ public:
 	static void Insert(string tableName, const vector<vector<Data>>& dataLists);
 	static void Delete(string tableName, const vector<unsigned int>& recordList);
 	static void Update(string tableName, const vector<unsigned int>& recordList, SetClauseObj& setClause);
+	static void Select(vector<ColObj>&, const vector<string>&);
+	static void Select(vector<ColObj>&, const vector<string>&, WhereCondition&);
 	static void CreateIndex(string tableName, string indexName, const vector<string>& columnList);
 	static void DropIndex(string tableName, string indexName);
 	
