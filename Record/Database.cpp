@@ -485,7 +485,7 @@ bool Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 			if(gatherer.size() > 0){
 				// throw "Primary key constraint violated!";
 				cerr << "Primary key constraint violated!" << endl;
-				return;
+				return false;
 			}
 		}
 	}
@@ -509,7 +509,7 @@ bool Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 			if(gatherer.size() == 0) {
 				// throw "Foreign key constraint violated!";
 				cerr << "Foreign key constraint violated!" << endl;
-				return;
+				return false;
 			}
 				
 			//else
@@ -525,6 +525,7 @@ bool Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 	// table->PrintTable();
 	// for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
 	// 	(*it)->Print();
+	return true;
 }
 void Database::Delete(string tableName, const vector<unsigned int>& recordList) {
 	Table* table = GetTable(tableName);
@@ -544,8 +545,11 @@ void Database::Update(string tableName, const vector<unsigned int>& recordList, 
 	for(map<string, Index*>::iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); it++)
 		if(it->second->tableName == tableName)
 			idxes.push_back(it->second);
-	table->UpdateRecords(recordList, idxes, setClause);
-	cout << "Updation succeeded!" << recordList.size() << " rows affected." << endl;
+	bool ret = table->UpdateRecords(recordList, idxes, setClause);
+	if(ret)
+		cout << "Updation succeeded!" << recordList.size() << " rows affected." << endl;
+	else
+		cout << "Updation failed." << endl;
 	//table->PrintTable();
 	//for(vector<Index*>::iterator it = idxes.begin(); it != idxes.end(); it++)
 	//	(*it)->Print();

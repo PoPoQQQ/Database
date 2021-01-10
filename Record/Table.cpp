@@ -211,7 +211,7 @@ void Table::DeleteRecords(const vector<unsigned int>& records, const vector<Inde
 	}
 }
 
-void Table::UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause) {
+bool Table::UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause) {
 	vector<vector<Data>> dataGatherer;
 	for(int i = 0; i < (signed)records.size(); i++) {
 		Record record = EmptyRecord();
@@ -234,7 +234,7 @@ void Table::UpdateRecords(const vector<unsigned int>& records, const vector<Inde
 		for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++)
 			InsertRecordIntoIndex(*it, record, recordPosition);*/
 	}
-	Database::Insert(tableName, dataGatherer);
+	return Database::Insert(tableName, dataGatherer);
 }
 
 vector<unsigned int> Table::GetRecordList(WhereCondition& whereCondition) {

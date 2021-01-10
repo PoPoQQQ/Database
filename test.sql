@@ -43,7 +43,7 @@ CREATE TABLE orders(
 -- DESC food;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
-UPDATE customer SET id = 300003 where id = 300001;
+UPDATE customer SET id = 300002 where id = 300001;
 SELECT * FROM customer;
 --SELECT * FROM customer where id = 300001;
 --INSERT INTO orders VALUES(1, '2018-2-29', 100);

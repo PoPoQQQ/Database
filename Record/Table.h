@@ -40,7 +40,7 @@ public:
 	void AddRecords(vector<Record>& records, const vector<Index*>& idxes);
 	void DeleteRecord(Record& record, unsigned int recordPosition);
 	void DeleteRecords(const vector<unsigned int>& records, const vector<Index*>& idxes);
-	void UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause);
+	bool UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause);
 	vector<unsigned int> GetRecordList(WhereCondition& whereCondition);
 	vector<unsigned int> CheckRecordList(WhereCondition& whereCondition, const vector<unsigned int>& gatherer);
 	void PrintTable();
