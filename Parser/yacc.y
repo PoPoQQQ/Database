@@ -153,13 +153,13 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
 				function<void(Record&, BufType)> it = [&table, &updateCount, &whereClause, &setClause](Record& record, BufType b) {
 					if((whereClause).check(record)) {
-						(setClause).apply(table, record);
+						(setClause).apply(record);
 						record.Save(b);
 						updateCount++;
 					}
 				};
 				table->IterTable(it);
-				cout << "Update finished! Affecting" << updateCount << "rows." << endl;
+				cout << "Update finished! Affecting " << updateCount << " rows." << endl;
 				
 			}
 		|	SELECT selector FROM tableList
