@@ -1228,8 +1228,11 @@ void Database::AddForeignKey(string tableName, string fkName, const vector<strin
 		if((field.constraints & Field::FOREIGN_KEY))
 			throw "Error: Multiple constraint is not supported!";
 	}
-
-	table->fieldList.AddForeignKey(fkName, refTableName, columnList, refColumnList);
+	bool ret = table->CheckForeignKey(columnList, currentDatabase->indexes["-" + refTableName]);
+	if(ret)
+		cout << "Add foreign key failed: constraint validated!" << endl;
+	else
+		table->fieldList.AddForeignKey(fkName, refTableName, columnList, refColumnList);
 }
 void Database::DropForeignKey(string tableName, string fkName) {
 	Table* table = GetTable(tableName);

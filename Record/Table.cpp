@@ -252,6 +252,21 @@ bool Table::CheckPrimaryKey(Index *index) {
 	return false;
 }
 
+bool Table::CheckForeignKey(const vector<string>& columnList, Index *index) {
+	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
+		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);
+		if(page == NULL)
+			continue;
+		if(page->pageType == PageBase::RECORD_PAGE)
+			if(dynamic_cast<RecordPage*>(page)->CheckForeignKey(columnList, index)) {
+				delete page;
+				return true;
+			}
+		delete page;
+	}
+	return false;
+}
+
 vector<unsigned int> Table::GetRecordList(WhereCondition& whereCondition) {
 	vector<unsigned int> recordList;
 	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {

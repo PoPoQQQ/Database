@@ -159,4 +159,32 @@ public:
 			}
 		return false;
 	}
+	bool CheckForeignKey(Record& record, const vector<string>& columnList, Index* index) {
+		vector<Data> datas;
+		for(int i = 0; i < (signed)columnList.size(); i++) {
+			Data data = record.fieldList.GetColumn(record.fieldList.GetColumnIndex(columnList[i])).GetData();
+			if((data.dataType & 0xff) != Data::VARCHAR)
+				datas.push_back(data);
+			else
+				datas.push_back(HashData(data));
+		}
+		vector<unsigned int> gatherer;
+		index->Search(datas, datas, gatherer);
+		if(gatherer.size() == 0)
+			return true;
+		return false;
+	}
+	bool CheckForeignKey(const vector<string>& columnList, Index *_index) {
+		Record record = context->EmptyRecord();
+		int recordSize = record.RecordSize();
+		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
+		for(int index = 0; index < recordVolume; index++)
+			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
+				record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
+				// 逐个对 record 进行处理
+				if(CheckForeignKey(record, columnList, _index))
+					return true;
+			}
+		return false;
+	}
 };
