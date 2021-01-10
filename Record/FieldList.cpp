@@ -238,7 +238,7 @@ void FieldList::DescFields() const {
 				snprintf(buf, 256, "VARCHAR(%d)", it->data.dataSize);
 				max_type_length = max(max_type_length, (int) strlen(buf));
 				if(it->constraints & Field::DEFAULT) {
-					max_default_length = max(max_default_length, min((int) strlen(it->data.stringData), MAX_IDENTIFIER_LEN));
+					max_default_length = max(max_default_length, min((signed)it->data.stringData.length(), MAX_IDENTIFIER_LEN));
 				}
 				break;
 			case Data::DATE:

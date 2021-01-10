@@ -1,4 +1,5 @@
 #pragma once
+#include <string>
 #include <iostream>
 using namespace std;
 
@@ -18,11 +19,9 @@ public:
 
 	int dataType;
 	int dataSize;
-	union {
-		unsigned int intData;
-		float floatData;
-		char* stringData;
-	};
+	unsigned int intData;
+	float floatData;
+	string stringData;
 	
 	Data();
 	Data(DataType dataType, int para = 10);
@@ -32,7 +31,7 @@ public:
 
 	Data& SetData(unsigned int data);
 	Data& SetData(float data);
-	Data& SetData(const char *data);
+	Data& SetData(string data);
 	Data& SetData(const Data &data);
 
 	Data& SetNull();

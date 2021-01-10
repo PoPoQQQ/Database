@@ -39,11 +39,13 @@ int GetDigit(unsigned int number) {
 }
 
 Data::Data(): 
-	dataType(UNDEFINED), dataSize(0), stringData(NULL) {}
+	dataType(UNDEFINED), dataSize(0), intData(0), floatData(0), stringData("") {}
 
 Data::Data(DataType dataType, int para) {
 	this->dataType = dataType;
-	stringData = NULL;
+	intData = 0;
+	floatData = 0;
+	stringData = string("");
 	switch(dataType) {
 		case UNDEFINED:
 			dataSize = 0;
@@ -63,8 +65,6 @@ Data::Data(DataType dataType, int para) {
 			}
 			this->dataType = dataType | (para << 8);
 			dataSize = para;
-			stringData = new char[dataSize + 1];
-			memset(stringData, 0, dataSize + 1);
 			break;
 		case DATE:
 			dataSize = 3;
@@ -79,79 +79,22 @@ Data::Data(DataType dataType, int para) {
 	}
 }
 
-Data::~Data() {
-	if((dataType & 0xff) == VARCHAR)
-		delete stringData;
-}
+Data::~Data() {}
 
 Data::Data(const Data& data) {
-	if(dataType == VARCHAR)
-		delete stringData;
 	dataType = data.dataType;
 	dataSize = data.dataSize;
-
-	switch(data.dataType & 0xff) {
-		case UNDEFINED:
-			stringData = NULL;
-			break;
-		case INT:
-			intData = data.intData;
-			break;
-		case VARCHAR: {
-			if(data.stringData == NULL) {
-				cerr << "Data class error!" << endl;
-				exit(-1);
-			}
-			stringData = new char[dataSize + 1];
-			memcpy(stringData, data.stringData, dataSize + 1);
-			break;
-		}
-		case DATE:
-			intData = data.intData;
-			break;
-		case FLOAT:
-			floatData = data.floatData;
-			break;
-		default:
-			cerr << "Data type error!" << endl;
-			exit(-1);
-			break;
-	}
+	intData = data.intData;
+	floatData = data.floatData;
+	stringData = data.stringData;
 }
 
 Data& Data::operator = (const Data& data) {
-	if(dataType == VARCHAR)
-		delete stringData;
 	dataType = data.dataType;
 	dataSize = data.dataSize;
-
-	switch(data.dataType & 0xff) {
-		case UNDEFINED:
-			stringData = NULL;
-			break;
-		case INT:
-			intData = data.intData;
-			break;
-		case VARCHAR: {
-			if(data.stringData == NULL) {
-				cerr << "Data class error!" << endl;
-				exit(-1);
-			}
-			stringData = new char[dataSize + 1];
-			memcpy(stringData, data.stringData, dataSize + 1);
-			break;
-		}
-		case DATE:
-			intData = data.intData;
-			break;
-		case FLOAT:
-			floatData = data.floatData;
-			break;
-		default:
-			cerr << "Data type error!" << endl;
-			exit(-1);
-			break;
-	}
+	intData = data.intData;
+	floatData = data.floatData;
+	stringData = data.stringData;
 	return *this;
 }
 
@@ -176,15 +119,17 @@ Data& Data::SetData(float data) {
 	return *this;
 }
 
-Data& Data::SetData(const char *data) {
+Data& Data::SetData(string data) {
 	if((dataType & 0xff) == VARCHAR) {
-		if(strlen(data) > dataSize)
+		if(data.length() > dataSize)
 			throw "String is too long!";
-		strcpy(stringData, data);
+		stringData = data;
 	}
 	else if((dataType & 0xff) == DATE) {
 		int year, month, day;
-		int res = sscanf(data, "%u/%u/%u", &year, &month, &day);
+		int res = sscanf(data.c_str(), "%u/%u/%u", &year, &month, &day);
+		if(res < 3)
+			res = sscanf(data.c_str(), "%u-%u-%u", &year, &month, &day);
 		if(res < 3)
 			throw "Invalid date format!";
 		CheckDate(year, month, day);
@@ -274,16 +219,8 @@ Data& Data::SetPosInf() {
 }
 
 void Data::LoadType(unsigned int* b) {
-	if((dataType & 0xff) == VARCHAR) {
-		delete stringData;
-		stringData = NULL;
-	}
 	dataType = b[0];
 	dataSize = b[1];
-	if((dataType & 0xff) == VARCHAR) {
-		stringData = new char[dataSize + 1];
-		memset(stringData, 0, dataSize + 1);
-	}
 }
 
 void Data::SaveType(unsigned int* b) const {
@@ -296,10 +233,13 @@ void Data::LoadData(unsigned char*  b) {
 		case INT:
 			memcpy(&intData, b, dataSize);
 			break;
-		case VARCHAR:
-			memset(stringData, 0, dataSize + 1);
-			memcpy(stringData, b, dataSize);
+		case VARCHAR:{
+			char buffer[dataSize + 1];
+			buffer[dataSize] = 0;
+			memcpy(buffer, b, dataSize);
+			stringData = string(buffer);
 			break;
+		}
 		case DATE:
 			intData = 0;
 			memcpy(&intData, b, dataSize);
@@ -314,13 +254,13 @@ void Data::LoadData(unsigned char*  b) {
 	}
 }
 
-void Data::SaveData(unsigned char*  b) const {
+void Data::SaveData(unsigned char* b) const {
 	switch(dataType & 0xff) {
 		case INT:
 			memcpy(b, &intData, dataSize);
 			break;
 		case VARCHAR:
-			memcpy(b, stringData, dataSize);
+			memcpy(b, stringData.c_str(), min((signed)stringData.length() + 1, dataSize));
 			break;
 		case DATE:
 			memcpy(b, &intData, dataSize);
@@ -361,7 +301,7 @@ bool operator < (const Data &data1, const Data &data2) {
 		case Data::INT:
 			return data1.intData < data2.intData;
 		case Data::VARCHAR:
-			return strcmp(data1.stringData, data2.stringData) < 0;
+			return data1.stringData < data2.stringData;
 		case Data::DATE:
 			return data1.intData < data2.intData;
 		case Data::FLOAT:
@@ -383,7 +323,7 @@ bool operator == (const Data &data1, const Data &data2) {
 		case Data::INT:
 			return data1.intData == data2.intData;
 		case Data::VARCHAR:
-			return strcmp(data1.stringData, data2.stringData) == 0;
+			return data1.stringData == data2.stringData;
 		case Data::DATE:
 			return data1.intData == data2.intData;
 		case Data::FLOAT:
@@ -401,7 +341,7 @@ Data HashData(const Data &data) {
 		throw "Hashed data must be string!";
 	unsigned int hash = 0;
 	const unsigned int base = 131;
-	int len = strlen(data.stringData);
+	int len = data.stringData.length();
 	for(int i = 0; i < len; i++) {
 		unsigned int v = (unsigned char)data.stringData[i];
 		hash = hash * base + len;

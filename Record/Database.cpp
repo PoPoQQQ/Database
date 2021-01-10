@@ -505,8 +505,6 @@ void Database::Insert(string tableName, const vector<vector<Data>>& dataLists) {
 			index->Search(datas, datas, gatherer);
 			if(gatherer.size() == 0)
 				throw "Foreign key constraint violated!";
-			else
-				cout << gatherer.back() << endl;
 		}
 	}
 	vector<Index*> idxes;
