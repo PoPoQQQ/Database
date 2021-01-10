@@ -236,7 +236,7 @@ void Database::OpenDatabase(const char *databaseName) {
 				{
 					static char ___dir[1000];
 					strcpy(___dir, fileinfo.name);
-					char* p = strstr(fileinfo.name, "-");
+					char* p = strstr(___dir, "-");
 					*p = '\0';
 					string tableName(___dir), indexName(p + 1);
 					currentDatabase->indexes[indexName] = new Index(currentDatabase->databaseName, tableName, indexName);
@@ -259,8 +259,15 @@ void Database::OpenDatabase(const char *databaseName) {
 			if(!strstr(fileinfo->d_name, "-")){
 				currentDatabase->tables[fileinfo->d_name] = new Table(currentDatabase->databaseName, fileinfo->d_name);
 			}
-			else
-				;//TODO
+			else {
+				
+					static char ___dir[1000];
+					strcpy(___dir, fileinfo->d_name);
+					char* p = strstr(___dir, "-");
+					*p = '\0';
+					string tableName(___dir), indexName(p + 1);
+					currentDatabase->indexes[indexName] = new Index(currentDatabase->databaseName, tableName, indexName);
+			}
 		}
 	}
 	closedir(dir);
