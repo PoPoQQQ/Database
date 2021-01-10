@@ -23,7 +23,7 @@ private:
 		return 0;
 	}
 	int _openFile(const char* name, int fileID) {
-		FILE* f = fopen(name, "ab+");
+		FILE* f = fopen(name, "rwb+");
 		if (f == NULL) {
 			return -1;
 		}

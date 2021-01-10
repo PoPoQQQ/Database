@@ -25,8 +25,9 @@ FileBase::~FileBase() {
 	int index = 0;
 	for(int i = 0;i < numberOfPage; ++i) {
 		index = Global::getInstance()->bpm->getIndex(fileID, i);
-		if (index >= 0)
+		if (index >= 0) {
 			Global::getInstance()->bpm->writeBack(index);
+		}
 	}
 	Global::getInstance()->fm->closeFile(fileID);
 }

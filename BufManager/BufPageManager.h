@@ -151,7 +151,9 @@ public:
 		if (dirty[index]) {
 			int f, p;
 			hash->getKeys(index, f, p);
-			fileManager->writePage(f, p, addr[index], 0);
+			int ret = fileManager->writePage(f, p, addr[index], 0);
+			if(ret != 0)
+				throw "writeBack failed!";
 			dirty[index] = false;
 		}
 		replace->free(index);
