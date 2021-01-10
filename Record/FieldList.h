@@ -17,6 +17,7 @@ public:
 	vector<ForeignKeyCstrnt> fkConstraints;
 
 	FieldList();
+	FieldList(const FieldList&);
 	~FieldList();
 
 	void LoadFields(BufType b);

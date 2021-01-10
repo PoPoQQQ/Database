@@ -61,6 +61,17 @@ rmdb:
 test: rmdb all
 	./main.exe
 
+load: all
+	./main.exe Tools/build.sql
+	./main.exe Tools/part.tbl.sql
+	./main.exe Tools/region.tbl.sql
+	./main.exe Tools/nation.tbl.sql
+	./main.exe Tools/supplier.tbl.sql
+	./main.exe Tools/customer.tbl.sql
+	./main.exe Tools/partsupp.tbl.sql
+	./main.exe Tools/orders.tbl.sql
+	./main.exe Tools/lineitem.tbl.sql
+
 sqltest: rmps rmdb all
 	./main.exe test.sql
 

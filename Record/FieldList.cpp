@@ -6,6 +6,14 @@ using namespace std;
 
 FieldList::FieldList() {}
 FieldList::~FieldList() {}
+FieldList::FieldList(const FieldList& other) 
+	:pkConstraints(other.pkConstraints), fkConstraints(other.fkConstraints)
+{
+	this->fields.resize(other.fields.size());
+	for(int i = 0;i < other.fields.size();i++) {
+		this->fields[i] = other.fields[i];
+	}
+}
 
 void FieldList::LoadFields(BufType b) {
 	unsigned int size = b[0];
@@ -154,7 +162,7 @@ void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
 			if(colIndex == -1)
 				throw "Error: Column does not exist";
 			Field& field = GetColumn(colIndex);
-			if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+			if((field.constraints & Field::PRIMARY_KEY))
 				throw "Error: Multiple constraint is not supported!";
 			field.constraints |= Field::PRIMARY_KEY;
 		}
@@ -166,7 +174,7 @@ void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
 			if(colIndex == -1)
 				throw "Error: Column does not exist";
 			Field& field = GetColumn(colIndex);
-			if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+			if((field.constraints & Field::FOREIGN_KEY))
 				throw "Error: Multiple constraint is not supported!";
 			field.constraints |= Field::FOREIGN_KEY;
 		}
