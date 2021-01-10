@@ -4,6 +4,7 @@
 #include "Field.h"
 #include "Table.h"
 #include "Record.h"
+#include "Database.h"
 #include "RecordPage.h"
 #include "../Utils/Global.h"
 #include "../Pages/PageFactory.h"
@@ -211,6 +212,7 @@ void Table::DeleteRecords(const vector<unsigned int>& records, const vector<Inde
 }
 
 void Table::UpdateRecords(const vector<unsigned int>& records, const vector<Index*>& idxes, SetClauseObj& setClause) {
+	vector<vector<Data>> dataGatherer;
 	for(int i = 0; i < (signed)records.size(); i++) {
 		Record record = EmptyRecord();
 		DeleteRecord(record, records[i]);
@@ -218,12 +220,21 @@ void Table::UpdateRecords(const vector<unsigned int>& records, const vector<Inde
 			RemoveRecordFromIndex(*it, record, records[i]);
 
 		setClause.apply(record);
-
+		vector<Data> datas;
+		for(int i = 0; i < (signed)record.fieldList.fields.size(); i++) {
+			if((record.bitMap & (1u << i)) == 0)
+				datas.push_back(Data(Data::UNDEFINED));
+			else
+				datas.push_back(record.fieldList.fields[i].GetData());
+		}
+		dataGatherer.push_back(datas);
+		/*
 		unsigned int recordPosition;
 		AddRecord(record, recordPosition);
 		for(vector<Index*>::const_iterator it = idxes.begin(); it != idxes.end(); it++)
-			InsertRecordIntoIndex(*it, record, recordPosition);
+			InsertRecordIntoIndex(*it, record, recordPosition);*/
 	}
+	Database::Insert(tableName, dataGatherer);
 }
 
 vector<unsigned int> Table::GetRecordList(WhereCondition& whereCondition) {

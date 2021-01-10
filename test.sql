@@ -26,10 +26,9 @@ CREATE TABLE food(
 	PRIMARY KEY (id),
 	FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
 );
-
 CREATE TABLE orders(
 	id INT(10) NOT NULL,
-	customer_id INT(10) NOT NULL,
+	--customer_id INT(10) NOT NULL,
 	--food_id INT(10) NOT NULL,
 	date DATE,
 	quantity INT(10),
@@ -44,4 +43,6 @@ CREATE TABLE orders(
 -- DESC food;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
-SELECT * FROM customer where id = 300001;
+UPDATE customer SET id = 300002 where id = 300001;
+--SELECT * FROM customer where id = 300001;
+--INSERT INTO orders VALUES(1, '2018-2-29', 100);
