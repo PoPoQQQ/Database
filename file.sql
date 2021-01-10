@@ -1,46 +1,23 @@
--- CREATE DATABASE orderDB;
+use mingzi;
 
-USE orderDB;
-SHOW TABLES;
-SHOW DATABASES;
-/****************************************************************
-comment!
-*/
--- Hello World!
-CREATE TABLE restaurant (
-  id INT(10) NOT NULL,
-  name CHAR(25) NOT NULL,
-  address CHAR(100),
-  phone CHAR(20),
-  rate FLOAT,
-  PRIMARY KEY (id)
-);
-
-CREATE TABLE customer(
-	id INT(10) NOT NULL,
-	name CHAR(25) NOT NULL,
-	gender CHAR(1) NOT NULL,
-	PRIMARY KEY (id)
-);
-
-CREATE TABLE food(
-	id INT(10) NOT NULL,
-	restaurant_id INT(10),
-	name CHAR(100) NOT NULL,
-	price FLOAT NOT NULL,
-	PRIMARY KEY (id),
-	FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
-);
-
-CREATE TABLE orders(
-	id INT(10) NOT NULL,
-	customer_id INT(10) NOT NULL,
-	food_id INT(10) NOT NULL,
-	date DATE,
-	quantity INT(10),
-	PRIMARY KEY (id),
-	FOREIGN KEY (customer_id) REFERENCES customer(id),
-	FOREIGN KEY (food_id) REFERENCES food(id)
-);
-
-INSERT INTO `customer` VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
+UPDATE PARTSUPP SET PS_AVAILQTY=8774 WHERE PS_PARTKEY=12.0;
+-- select * from PARTSUPP where PS_PARTKEY=12.0;
+-- SELECT * FROM CUSTOMER WHERE C_NATIONKEY < 10.0;
+-- SELECT O_ORDERDATE,O_TOTALPRICE FROM ORDERS WHERE O_ORDERDATE='1996-01-02';
+-- SELECT C_PHONE,O_ORDERSTATUS FROM CUSTOMER,ORDERS where C_CUSTKEY=O_CUSTKEY AND C_NAME='Customer#000000001';
+-- UPDATE NATION SET N_REGIONKEY = 0.0 WHERE N_NATIONKEY= 15.0;
+-- select * from NATION where N_NATIONKEY= 15.0;
+-- ALTER TABLE NATION ADD N_COMMENT_2 varchar(32);
+-- ALTER TABLE NATION drop N_COMMENT_2;
+-- Desc NATION;
+-- ALTER TABLE NATION RENAME TO PROVINCE;
+-- show tables;
+-- insert into CUSTOMER values (100, 'ALGERIA                  ', 0, ' haggle. carefully final deposits detect slyly agai')
+-- alter table PROVINCE rename to NATION;
+-- alter table NATION drop primary key;
+-- ALTER TABLE NATION ADD FOREIGN KEY NATION_FK1 (N_REGIONKEY) references REGION(R_REGIONKEY);
+-- ALTER TABLE CUSTOMER ADD INDEX Idx_residual(C_ACCTBAL);
+-- ALTER TABLE CUSTOMER DROP INDEX Idx_residual;
+-- SELECT C_NAME, O_ORDERSTATUS, N_NATIONKEY FROM CUSTOMER,ORDERS,NATION  WHERE c_custkey=o_custkey AND c_nationkey=n_nationkey and n_name='CHINA';
+-- alter table NATION drop primary key;
+-- ALTER TABLE NATION ADD CONSTRAINT NATION_FK1 FOREIGN KEY  (N_REGIONKEY) references REGION(R_REGIONKEY);

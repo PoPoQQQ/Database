@@ -135,8 +135,32 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			}
         |	UPDATE tbName SET setClause WHERE whereClause
 			{
-				vector<unsigned int> recordList = Database::GetRecordList($2, $6);
-				Database::Update($2, recordList, $4);
+				// vector<unsigned int> recordList = Database::GetRecordList($2, $6);
+				// Database::Update($2, recordList, $4);
+				
+				// 检查并读取表格
+				Table *table = Database::GetTable($2.c_str()); 
+				// 检查 setClause
+				$4.validate(table->fieldList);
+				// 检查 whereClause
+
+				if(!$6.validate(table)){
+					throw "whereClause Error";
+				}
+				WhereCondition& whereClause = $6;
+				SetClauseObj& setClause = $4;
+				int updateCount = 0;
+				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
+				function<void(Record&, BufType)> it = [&table, &updateCount, &whereClause, &setClause](Record& record, BufType b) {
+					if((whereClause).check(record)) {
+						(setClause).apply(table, record);
+						record.Save(b);
+						updateCount++;
+					}
+				};
+				table->IterTable(it);
+				cout << "Update finished! Affecting" << updateCount << "rows." << endl;
+				
 			}
 		|	SELECT selector FROM tableList
 			{
