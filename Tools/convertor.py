@@ -8,7 +8,7 @@ parser.add_argument("-c", "--csv", help="Load csv file from given path")
 
 def tbl2sql(filename, tablename):
     with open(filename, 'r') as file:
-        df = pd.read_table(file, '|')
+        df = pd.read_table(file, '|', header=None)
         print(len(df.columns))
         types = []
         for i in range(len(df.columns)):

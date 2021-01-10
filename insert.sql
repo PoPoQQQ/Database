@@ -1,0 +1,2 @@
+use mingzi;
+INSERT INTO CUSTOMER VALUES ( 1, 'Customer#000000001', 'IVhzIApeRb ot|c|E', 15, '25-989-741-2988', 711.56, 'BUILDING  ', NULL);

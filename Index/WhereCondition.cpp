@@ -377,39 +377,40 @@ bool WhereCondition::check(SelectFieldList& sFieldList) {
 bool WhereCondition::evaluate(const Data& lData, const Data& rData) {
 	// 不同类型默认返回 NULL
 	// 另外，NULL 类型有关的所有操作默认返回 false
-	// if((((lData.dataType & 0xff) == Data::DataType::INT) && (rData.dataType & 0xff) == Data::DataType::FLOAT)) ||
-	// 	(((lData.dataType & 0xff) == Data::DataType::FLOAT) && (rData.dataType & 0xff) == Data::DataType::FLOAT))
-	if((lData.dataType & 0xff) != (rData.dataType & 0xff)) {
+	Data prData = lData;
+	try {
+		// 通过 SetData 可以让右值变成和左值相同的 Data 类型
+		// 如果不可以这么做则会抛出异常
+		prData.SetData(rData);
+		switch(this->op) {
+			case OpEnum::EQUAL:{
+				return lData == prData;
+			}
+			case OpEnum::NOTEQUAL: {
+				return !(lData == prData);
+			}
+			case OpEnum::LEQUAL: {
+				return !(prData < lData);
+			}
+			case OpEnum::GEQUAL: {
+				return !(lData < prData);
+			}
+			case OpEnum::LESS: {
+				return lData < prData;
+			}
+			case OpEnum::GREATER: {
+				return prData < lData;
+			}
+			case OpEnum::NONE:
+				throw "Error: WhereCondition has NONE op in check";
+			default:
+				throw "Error: undefined op type in WhereCondition::check";
+		}	
+	} catch (const char *err) {
 		if(!evaluateAlert) {
-			char buf[128];
-			snprintf(buf, 128, "Comparing different data subtypes in WhereCondition::evaluate ( %d <-> %d ), return 'false' at default", (int) lData.dataType, (int) rData.dataType);
-			cerr << buf << endl;
+			cerr << err << endl;
 			evaluateAlert = true;
 		}
 		return false;
-	}
-	switch(this->op) {
-		case OpEnum::EQUAL:{
-			return lData == rData;
-		}
-		case OpEnum::NOTEQUAL: {
-			return !(lData == rData);
-		}
-		case OpEnum::LEQUAL: {
-			return !(rData < lData);
-		}
-		case OpEnum::GEQUAL: {
-			return !(lData < rData);
-		}
-		case OpEnum::LESS: {
-			return lData < rData;
-		}
-		case OpEnum::GREATER: {
-			return rData < lData;
-		}
-		case OpEnum::NONE:
-			throw "Error: WhereCondition has NONE op in check";
-		default:
-			throw "Error: undefined op type in WhereCondition::check";
 	}
 }
