@@ -119,7 +119,7 @@ int main(int argc, const char* argv[]) {
 			cout << err << endl;
 		}
     }
-
+	Database::CloseDatabase();
 	Global::getInstance()->bpm->close();
 	return 0;
 }

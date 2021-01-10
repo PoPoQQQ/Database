@@ -26,7 +26,9 @@ public:
 	Table(string databaseName, string tableName, const FieldList& fieldList);
 	// 在 Table 析构的时候一般都说明这个 Table 相关的文件需要保存
 	// 故进行 Header 缓存的写入，其余部分在 FileBase 中保存
-	~Table(){ SaveHeader(); }
+	~Table(){
+		SaveHeader(); 
+	}
 
 	Record EmptyRecord();
 	vector<int> GetColumnIndexes(const vector<string>& columnList);
