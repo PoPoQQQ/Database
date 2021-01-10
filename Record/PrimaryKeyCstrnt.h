@@ -11,7 +11,7 @@ public:
     PrimaryKeyCstrnt();
     PrimaryKeyCstrnt(string pkName, const vector<string>& colNames);
 
-    void LoadConstraint(BufType b); // TODO
-    void SaveConstraint(BufType b) const; // TODO
+    void LoadConstraint(BufType b);
+    void SaveConstraint(BufType b) const;
     int GetConstraintSize() const;
 };

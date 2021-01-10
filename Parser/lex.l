@@ -76,6 +76,7 @@ FLOAT		(?i:FLOAT)
 FOREIGN		(?i:FOREIGN)
 ON  		(?i:ON)
 TO  		(?i:TO)
+CHAR		(?i:CHAR)
 
 NOTEQUAL	(<>)
 GEQUAL		(>=)
@@ -101,7 +102,7 @@ MULTILINE_COMMENT_END (\*\/)
 %%
 
 {WHITESPACE}			{ /* Just ignore */ }
-{NEWLINE}				{ /* Just ignore */ }
+{NEWLINE}				{ yylineno++;	    }
 
 {DATABASE}				{ return DATABASE;	}
 {DATABASES}				{ return DATABASES;	}
@@ -148,6 +149,7 @@ MULTILINE_COMMENT_END (\*\/)
 {FOREIGN}				{ return FOREIGN;	}
 {ON}					{ return ON;		}
 {TO}					{ return TO; 		}
+{CHAR}					{ return CHARTOKEN; }
 
 {NOTEQUAL}				{ return NOTEQUAL;	}
 {GEQUAL}				{ return GEQUAL;	}
@@ -192,10 +194,15 @@ MULTILINE_COMMENT_END (\*\/)
 	BEGIN INITIAL;
 }
 
+<MULTILINE_COMMENT>{NEWLINE}	{
+	yylineno++;
+}
+
 <MULTILINE_COMMENT>.	{// 忽略注释中的内容
 }
 
 <SINGLELINE_COMMENT>{NEWLINE}	{	//注释状态下的规则，只有当前切换到COMMENT状态才会去匹配
+	yylineno++;
 	BEGIN INITIAL;			//在注释状态下，当遇到换行符时，表明注释结束了，返回初始态
 }
 

@@ -16,14 +16,17 @@ class Table: public FileBase {
 public:
 	string databaseName;
 	string tableName;
-	unsigned long long ridTimestamp;
-	int recordCount;
+	unsigned long long ridTimestamp = 0;
+	int recordCount = 0;
 	FieldList fieldList;
 
 	// 仅用于读取表格。从给定的数据库和表中读取信息到内存中
 	Table(string databaseName, string tableName);
 	// 创建表格数据结构并进行创建对应的文件进行保存
 	Table(string databaseName, string tableName, const FieldList& fieldList);
+	// 在 Table 析构的时候一般都说明这个 Table 相关的文件需要保存
+	// 故进行 Header 缓存的写入，其余部分在 FileBase 中保存
+	~Table(){ SaveHeader(); }
 
 	Record EmptyRecord();
 	vector<int> GetColumnIndexes(const vector<string>& columnList);

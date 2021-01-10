@@ -15,6 +15,8 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 {					//lex.l中也有类似的这段extern "C"，可以把它们合并成一段，放到共同的头文件main.h中
 	void yyerror(const char *s);
 	extern int yylex(void);//该函数是在lex.yy.c里定义的，yyparse()里要调用该函数，为了能编译和链接，必须用extern加以声明
+	extern int yylineno;
+	extern const char* yytext;
 }
 
 %}
@@ -39,7 +41,7 @@ extern "C"			//为了能够在C++程序里面调用C函数，必须把每一个�
 %token UPDATE SET SELECT IS INTTOKEN VARCHARTOKEN
 %token DEFAULT CONSTRAINT CHANGE ALTER ADD RENAME
 %token DESC	REFERENCES INDEX AND FLOATTOKEN FOREIGN ON TO
-%token NOTEQUAL GEQUAL LEQUAL
+%token NOTEQUAL GEQUAL LEQUAL CHARTOKEN
 %token<m_sId> DATETOKEN TABLES
 
 %left AND
@@ -79,7 +81,6 @@ stmt: 	sysStmt ';'
 		}
 	| 	idxStmt ';'
 		{
-
 		}
 	| 	alterStmt ';'
 		{
@@ -136,32 +137,6 @@ tbStmt  :	CREATE TABLE tbName '(' fieldList ')'
 			{
 				vector<unsigned int> recordList = Database::GetRecordList($2, $6);
 				Database::Update($2, recordList, $4);
-				/*
-				// 检查并读取表格
-				Table *table = Database::GetTable($2.c_str()); 
-				// 检查 setClause
-				$4.validate(table->fieldList);
-				// 检查 whereClause
-
-				if(!$6.validate(table)){
-					throw "whereClause Error";
-				}
-				WhereCondition& whereClause = $6;
-				SetClauseObj& setClause = $4;
-				// 根据 whereClause 中的条件进行搜索，并且利用 setClause 中的内容进行内容的更新
-				function<void(Record&, BufType)> it = [&whereClause, &setClause](Record& record, BufType b) {
-					cout << "I'm here!" << endl;
-					if((whereClause).check(record)) {
-						cout << "I'm here!!" << endl;
-						(setClause).apply(record);
-						cout << "I'm here!!!" << endl;
-						record.Save(b);
-						cout << "I'm here!!!!" << endl;
-					}
-				};
-				table->IterTable(it);
-				cout << "Update finished!" << endl;
-				*/
 			}
 		|	SELECT selector FROM tableList
 			{
@@ -503,7 +478,13 @@ alterStmt	:	ALTER TABLE tbName ADD field
 					Database::addTableField($3, $5);
 				}
 			|   ALTER TABLE tbName DROP colName
+				{
+					Database::dropTableField($3, $5);
+				}
 			|	ALTER TABLE tbName CHANGE colName field
+				{
+					Database::changeTableField($3, $5, $6);
+				}
 			|	ALTER TABLE tbName RENAME TO tbName
 				{
 					Database::RenameTable($3, $6);
@@ -521,7 +502,13 @@ alterStmt	:	ALTER TABLE tbName ADD field
 					Database::DropPrimaryKey($3, $7);
 				}
 			|	ALTER TABLE tbName ADD CONSTRAINT fkName FOREIGN KEY '(' columnList ')' REFERENCES tbName '(' columnList ')'
+				{
+					Database::AddForeignKey($3, $6, $10, $13, $15);
+				}
 			|	ALTER TABLE tbName DROP FOREIGN KEY fkName
+				{
+					Database::DropForeignKey($3, $7);
+				}
 			;
 fieldList	:	field
 				{
@@ -584,12 +571,12 @@ type  	:	INTTOKEN '(' VALUE_INT ')'
 			{
 				$$ = Data(Data::INT, $3);
 			}
-		/*
+		
 		| CHARTOKEN '(' VALUE_INT ')'
 			{
-				$$ = Data(Data::CHAR, $3);
+				$$ = Data(Data::VARCHAR, $3);
 			}
-        */
+        
         |	VARCHARTOKEN '(' VALUE_INT ')'
         	{
         		$$ = Data(Data::VARCHAR, $3);
@@ -824,10 +811,9 @@ idxName : IDENTIFIER
 			}
 		;
 %%
-
-void yyerror(const char *s)			//当yacc遇到语法错误时，会回调yyerror函数，并且把错误信息放在参数s中
+void yyerror(const char *msg)
 {
-	cerr << s << endl;					//直接输出错误信息
+    printf("%d:  %s  at  '%s'  \n",yylineno,msg,yytext);
 }
 
 

@@ -39,20 +39,23 @@ void Query::GetIntervals(WhereCondition& whereCondition) {
 		throw "Invalid where condition!";
 	if(whereCondition.expr.isCol)
 		return;
+	Data data = whereCondition.expr.value;
+	if((data.dataType & 0xff) == Data::VARCHAR)
+		data = HashData(data);
 	switch(whereCondition.op) {
 		case OpEnum::EQUAL:
-			intervals[index].first = max(intervals[index].first, whereCondition.expr.value);
-			intervals[index].second = min(intervals[index].second, whereCondition.expr.value);
+			intervals[index].first = max(intervals[index].first, data);
+			intervals[index].second = min(intervals[index].second, data);
 			break;
 		case OpEnum::NOTEQUAL:
 			break;
 		case OpEnum::LESS:
 		case OpEnum::LEQUAL:
-			intervals[index].second = min(intervals[index].second, whereCondition.expr.value);
+			intervals[index].second = min(intervals[index].second, data);
 			break;
 		case OpEnum::GREATER:
 		case OpEnum::GEQUAL:
-			intervals[index].first = max(intervals[index].first, whereCondition.expr.value);
+			intervals[index].first = max(intervals[index].first, data);
 			break;
 		case OpEnum::NONE:
 			throw "Error: WhereCondition has NONE op in GetIntervals";

@@ -29,7 +29,7 @@ void FieldList::LoadFields(BufType b) {
 	size = b[0];
 	b += 1;
 
-	pkConstraints.resize(size);
+	fkConstraints.resize(size);
 	for(vector<ForeignKeyCstrnt>::iterator it = fkConstraints.begin(); it != fkConstraints.end(); it++) {
 		it->LoadConstraint(b);
 		b += it->GetConstraintSize() >> 2;
@@ -114,6 +114,17 @@ void FieldList::DropPrimaryKey() {
 	for(vector<string>::iterator it = pkConstraints[0].colNames.begin(); it != pkConstraints[0].colNames.end(); it++)
 		GetColumn(GetColumnIndex(*it)).ResetPrimaryKey();
 	pkConstraints.clear();
+}
+void FieldList::AddForeignKey(string fkName, string tbName, const vector<string>& columnList, const vector<string>& refColumnList) {
+	for(vector<string>::const_iterator it = columnList.begin(); it != columnList.end(); it++)
+		GetColumn(GetColumnIndex(*it)).SetForeignKey();
+	fkConstraints.push_back(ForeignKeyCstrnt(fkName, tbName, columnList, refColumnList));
+}
+void FieldList::DropForeignKey(int index) {
+	if(index < 0 || index >= (signed)fkConstraints.size())
+		throw "drop index invalid!";
+	fkConstraints[index] = fkConstraints.back();
+	fkConstraints.pop_back();
 }
 void FieldList::AddFieldDescVec(string tbName, const vector<FieldDesc>& vec) {
 	for(vector<FieldDesc>::const_iterator it = vec.begin(); it != vec.end(); it++) {

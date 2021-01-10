@@ -542,8 +542,6 @@ void Database::CreateIndex(string tableName, string indexName, const vector<stri
 	if(currentDatabase->indexes.find(indexName) != currentDatabase->indexes.end())
 		throw "Index already exsists!";
 	vector<Data> keyTypes = table->GetKeyTypes(columnList);
-	cout << columnList[0] << endl;
-	cout << keyTypes[0].dataType << endl;
 	Index* index = currentDatabase->indexes[indexName] = new Index(currentDatabase->databaseName, tableName, indexName, columnList, keyTypes);
 	table->InsertAllIntoIndex(index);
 	index->Print();
@@ -653,6 +651,197 @@ void Database::addTableField(const string& tbName, const FieldDesc& fieldDesc) {
 		cerr << e.what() << endl;
 	}
 }
+void Database::dropTableField(const string& tbName, const string& colName) {
+	try {
+		// 找到 Table，可能抛出异常
+		Table *table = currentDatabase->GetTable(tbName);
+		//* 如果其对应某个主键则禁止删除，直接返回
+		const FieldList& tFieldList = table->fieldList;
+		if(tFieldList.pkConstraints.size() > 0) {
+			for(vector<string>::const_iterator it = tFieldList.pkConstraints[0].colNames.begin(); it != tFieldList.pkConstraints[0].colNames.end(); ++it) {
+				if (*it == colName) {
+					cerr << "Error: cannot remove primary key column" << endl;
+					return;
+				}
+			}
+		}
+		//* 如果其对应某个 Index 则提示并禁止删除
+		for(map<string, Index*>::const_iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); ++it) {
+			for(vector<string>::const_iterator iter = it->second->colNames.begin(); iter != it->second->colNames.end(); ++iter) {
+				if (*iter == colName) {
+					cerr << "Error: cannot remove column in an index" << endl;
+					return;
+				}
+			}
+		}
+		// 复制一个 FieldList
+		FieldList newFieldList = tFieldList;
+		// 找到 colName 对应的列
+		const int cIndex = tFieldList.GetColumnIndex(colName);
+		// 删除对应列的 Field
+		//! 这里面可能缺少某些项的更新从而导致 bug
+		newFieldList.fields.erase(newFieldList.fields.begin() + cIndex);
+		// 创建一个新的叫作 ~ 的临时表，利用全新的 FieldList
+		Table *newTable = new Table(currentDatabase->databaseName, "~", newFieldList);
+		// 遍历 table ，将每一个条目插入到新的 FieldList 中
+		function<void(Record&, BufType)> it = [&newTable, cIndex](Record& record, BufType b) {
+			Record newRecord = newTable->EmptyRecord();
+			// 使用以前的 Record 进行赋值
+			for(int i = 0;i < record.fieldList.fields.size(); ++i) {
+				if(i == cIndex) continue;
+				// 如果数据位为 0 则表示 data 为 NULL
+				if(record.bitMap & (1u << i) == 0) {
+					newRecord.FillData(i > cIndex ? i - 1 : i, Data());
+				} else {
+					newRecord.FillData(i > cIndex ? i - 1 : i, record.fieldList.fields[i].data);
+				}
+			}
+			// 添加 Record
+			unsigned int recordPosition = 0;
+			newTable->AddRecord(newRecord, recordPosition);
+		};
+		table->IterTable(it);
+		// 将之前的表格的相关 index 转移到新的表格上
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == tbName) {
+				iter->second->tableName = "~";
+			}
+		}
+		// 将新的表插入到 map 中
+		currentDatabase->tables["~"] = newTable;
+		// 删除之前的表格与对应关系
+		currentDatabase->quietDropTable(tbName);
+		// 将之前修改过的 index tablename 改回来
+		// 因为实际上 index 的对应关系没有改变，所以可以不重新保存表中的数据
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == "~") {
+				iter->second->tableName = tbName;
+			}
+		}
+		// 重命名 ~ 表为原来的名字
+		currentDatabase->RenameTable("~", tbName);
+	}
+	catch(const char* err) {
+		cerr << err << endl;
+	}
+	catch(string err) {
+		cerr << err << endl;
+	}
+	catch(exception& e) {
+		cerr << e.what() << endl;
+	}
+}
+void Database::changeTableField(const string& tbName, const string& colName, const FieldDesc& fieldDesc) {
+	switch(fieldDesc.type) {
+		case FieldDesc::FieldType::NOTNULL:
+			cerr << "Error: Try to CHANGE a not null column without giving default" << endl;
+			return;
+		case FieldDesc::FieldType::PRIMARY:
+			cerr << "Error: Cannot CHANGE a column into PRIMARY KEY" << endl;
+			return;
+		case FieldDesc::FieldType::FOREIGN:
+			cerr << "Error: Cannot CHANGE a column into FOREIGN KEY" << endl;
+			return;
+		case FieldDesc::FieldType::UNDEFINED:
+			cerr << "Error: undefined fieldDesc in Database::changeTableField" << endl;
+			return;
+		default:
+			break;
+	}
+	try {
+		// 找到 Table，可能抛出异常
+		Table *table = currentDatabase->GetTable(tbName);
+		//* 如果其对应某个主键则禁止删除，直接返回
+		const FieldList& tFieldList = table->fieldList;
+		if(tFieldList.pkConstraints.size() > 0) {
+			for(vector<string>::const_iterator it = tFieldList.pkConstraints[0].colNames.begin(); it != tFieldList.pkConstraints[0].colNames.end(); ++it) {
+				if (*it == colName) {
+					cerr << "Error: cannot remove primary key column" << endl;
+					return;
+				}
+			}
+		}
+		//* 如果其对应某个 Index 则提示并禁止删除
+		for(map<string, Index*>::const_iterator it = currentDatabase->indexes.begin(); it != currentDatabase->indexes.end(); ++it) {
+			for(vector<string>::const_iterator iter = it->second->colNames.begin(); iter != it->second->colNames.end(); ++iter) {
+				if (*iter == colName) {
+					cerr << "Error: cannot remove column in an index" << endl;
+					return;
+				}
+			}
+		}
+		// 复制一个 FieldList
+		FieldList newFieldList = table->fieldList;
+		// 找到 colName 对应的列
+		const int cIndex = tFieldList.GetColumnIndex(colName);
+		// 删除对应列的 Field
+		//! 这里面可能缺少某些项的更新从而导致 bug
+		newFieldList.fields.erase(newFieldList.fields.begin() + cIndex);
+		// 添加新的 Field
+		newFieldList.fields.insert(newFieldList.fields.begin() + cIndex, fieldDesc.field);
+		// 创建一个新的叫作 ~ 的临时表，利用全新的 FieldList
+		Table *newTable = new Table(currentDatabase->databaseName, "~", newFieldList);
+		// 遍历 table ，将每一个条目插入到新的 FieldList 中
+		function<void(Record&, BufType)> it = [&newTable, &fieldDesc, cIndex](Record& record, BufType b) {
+			Record newRecord = newTable->EmptyRecord();
+			// 使用以前的 Record 进行赋值
+			for(int i = 0;i < record.fieldList.fields.size(); ++i) {
+				if (i == cIndex) continue;
+				// 如果数据位为 0 则表示 data 为 NULL
+				if(record.bitMap & (1u << i) == 0) {
+					newRecord.FillData(i, Data());
+				} else {
+					newRecord.FillData(i, record.fieldList.fields[i].data);
+				}
+			}
+			// 对新的一列进行赋值
+			switch(fieldDesc.type) {
+				case FieldDesc::FieldType::DEFAULT:
+				case FieldDesc::FieldType::NOTNULLWITHDEFAULT:
+					newRecord.FillData(cIndex, fieldDesc.field.data);
+					break;
+				case FieldDesc::FieldType::NORMAL:
+					newRecord.FillData(cIndex, Data());
+					break;
+				default:
+					cerr << "Error: default branch in addTableField" << endl;
+					return;
+			}
+			// 添加 Record
+			unsigned int recordPosition = 0;
+			newTable->AddRecord(newRecord, recordPosition);
+		};
+		table->IterTable(it);
+		// 将之前的表格的相关 index 转移到新的表格上
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == tbName) {
+				iter->second->tableName = "~";
+			}
+		}
+		// 将新的表插入到 map 中
+		currentDatabase->tables["~"] = newTable;
+		// 删除之前的表格与对应关系
+		currentDatabase->quietDropTable(tbName);
+		// 将之前修改过的 index tablename 改回来
+		// 因为实际上 index 的对应关系没有改变，所以可以不重新保存表中的数据
+		for(map<string, Index*>::iterator iter = currentDatabase->indexes.begin(); iter != currentDatabase->indexes.end(); ++iter) {
+			if(iter->second->tableName == "~") {
+				iter->second->tableName = tbName;
+			}
+		}
+		// 重命名 ~ 表为原来的名字
+		currentDatabase->RenameTable("~", tbName);
+	}
+	catch(const char* err) {
+		cerr << err << endl;
+	}
+	catch(string err) {
+		cerr << err << endl;
+	}
+	catch(exception& e) {
+		cerr << e.what() << endl;
+	}
+}
 void Database::AddPrimaryKey(string tableName, string pkName, const vector<string>& columnList) {
 	Table* table = GetTable(tableName);
 	if(table->fieldList.pkConstraints.size() > 0)
@@ -683,6 +872,30 @@ void Database::DropPrimaryKey(string tableName, string pkName) {
 				throw "Dropping failed!";
 	DropIndex(tableName, "-" + tableName);
 	table->fieldList.DropPrimaryKey();
+}
+void Database::AddForeignKey(string tableName, string fkName, const vector<string>& columnList, 
+	string refTableName, const vector<string>& refColumnList) {
+	Table* table = GetTable(tableName);
+	for(int i = 0; i < (signed)columnList.size(); i++) {
+		string colName = columnList[i];
+		int colIndex = table->fieldList.GetColumnIndex(colName);
+		if(colIndex == -1)
+			throw "Error: Column does not exist";
+		Field& field = table->fieldList.GetColumn(colIndex);
+		if((field.constraints & Field::PRIMARY_KEY) || (field.constraints & Field::FOREIGN_KEY))
+			throw "Error: Multiple constraint is not supported!";
+	}
+	table->fieldList.AddForeignKey(fkName, refTableName, columnList, refColumnList);
+}
+void Database::DropForeignKey(string tableName, string fkName) {
+	Table* table = GetTable(tableName);
+	int i;
+	for(i = 0; i < (signed)table->fieldList.fkConstraints.size(); i++)
+		if(table->fieldList.fkConstraints[i].fkName == fkName)
+			break;
+	if(i == (signed)table->fieldList.fkConstraints.size())
+		throw "Foreign key does not exist!";
+	table->fieldList.DropForeignKey(i);
 }
 void Database::quietDropTable(string tableName) {
 	Table* table = GetTable(tableName);

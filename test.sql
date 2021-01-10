@@ -25,18 +25,18 @@ CREATE TABLE food(
 	price FLOAT NOT NULL,
 	PRIMARY KEY (id),
 	FOREIGN KEY (restaurant_id) REFERENCES restaurant(id)
-);
+);*/
 
 CREATE TABLE orders(
 	id INT(10) NOT NULL,
 	customer_id INT(10) NOT NULL,
-	food_id INT(10) NOT NULL,
+	--food_id INT(10) NOT NULL,
 	date DATE,
 	quantity INT(10),
-	PRIMARY KEY (id),
-	FOREIGN KEY (customer_id) REFERENCES customer(id),
-	FOREIGN KEY (food_id) REFERENCES food(id)
-);*/
+	PRIMARY KEY (id)--,
+	--FOREIGN KEY (customer_id) REFERENCES customer(id),
+	--FOREIGN KEY (food_id) REFERENCES food(id)
+);
 
 -- SHOW TABLES;
 -- DESC restaurant;
@@ -44,24 +44,8 @@ CREATE TABLE orders(
 -- DESC food;
 
 INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
-ALTER TABLE customer DROP PRIMARY KEY;
-ALTER TABLE customer ADD CONSTRAINT pk PRIMARY KEY (name);
-INSERT INTO customer VALUES (300001,'CHAD CABELLO II','F'),(300002,'FAUSTO VANNORMAN II','F');
--- INSERT INTO customer VALUES (300001,'CHAD CABELLO II','F'),(300002,'FAUSTO VANNORMAN II','F');
---CREATE INDEX idx ON customer(id);
---INSERT INTO customer VALUES (300005,'CHAD CABELLO II','M'),(300006,'FAUSTO VANNORMAN II','M');
---INSERT INTO customer VALUES (300005,'CHAD CABELLO II','M'),(300006,'FAUSTO VANNORMAN II','M');
---DELETE FROM customer WHERE id = 300002;
---UPDATE customer SET id = 300007, name = 'CHAD CABELLON', gender = 'M' WHERE name = 'CHAD CABELLO';
---alter table customer add sex VARCHAR(1) DEFAULT 'N';
---desc customer;
---select * from customer;
---insert into customer values (233, '233', 'S', 'M');
---UPDATE customer SET id = 300007, name = 'CHAD CABELLON', gender = 'M' WHERE name = 'CHAD CABELLO';
---INSERT INTO restaurant VALUES (1, 'main', 'dalian', NULL, NULL), (2, 'sub', 'beijing', '74513', NULL);
---INSERT INTO customer VALUES (NULL,'CHAD CABELLO','F');
---select id, name from customer where id = 300001;
---select name from customer;
---update customer set id=300003, name='apsodiaopsdjopai', gender='M' where id = 300001;
---select * from customer;
---select restaurant.id, customer.id, gender, address from customer, restaurant where restaurant.phone is null;
+ALTER TABLE orders ADD CONSTRAINT fk FOREIGN KEY (customer_id) REFERENCES customer(id);
+DESC orders;
+INSERT INTO orders VALUES (1, 300002, '1998/04/02', 10);
+ALTER TABLE orders DROP FOREIGN KEY fk;
+INSERT INTO orders VALUES (2, 300003, '1998/04/02', 10);
