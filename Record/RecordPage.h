@@ -85,7 +85,7 @@ public:
 		bool ret = (FindLeftOne() == recordVolume);
 		bitMaps[index >> 5] |= (1u << (index & 31));
 		SavePageHeader();
-		return false;
+		return ret;
 	}
 	vector<unsigned int> GetRecordList(WhereCondition& whereCondition) {
 		vector<unsigned int> recordList;
@@ -130,5 +130,33 @@ public:
 				// 逐个对 record 进行处理
 				iterFunc(record, b + (PAGE_OFFSET + index * recordSize) / 4);
 			}
+	}
+	bool CheckPrimaryKey(Record& record, Index* index) {
+		vector<Data> datas;
+		for(int i = 0; i < (signed)index->colNames.size(); i++) {
+			Data data = record.fieldList.GetColumn(record.fieldList.GetColumnIndex(index->colNames[i])).GetData();
+			if((data.dataType & 0xff) != Data::VARCHAR)
+				datas.push_back(data);
+			else
+				datas.push_back(HashData(data));
+		}
+		vector<unsigned int> gatherer;
+		index->Search(datas, datas, gatherer);
+		if(gatherer.size() > 1)
+			return true;
+		return false;
+	}
+	bool CheckPrimaryKey(Index *_index) {
+		Record record = context->EmptyRecord();
+		int recordSize = record.RecordSize();
+		int recordVolume = (PAGE_SIZE - PAGE_OFFSET) / recordSize;
+		for(int index = 0; index < recordVolume; index++)
+			if((bitMaps[index >> 5] & (1u << (index & 31))) == 0) {
+				record.Load(b + (PAGE_OFFSET + index * recordSize) / 4);
+				// 逐个对 record 进行处理
+				if(CheckPrimaryKey(record, _index))
+					return true;
+			}
+		return false;
 	}
 };

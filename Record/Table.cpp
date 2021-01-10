@@ -237,6 +237,21 @@ bool Table::UpdateRecords(const vector<unsigned int>& records, const vector<Inde
 	return Database::Insert(tableName, dataGatherer);
 }
 
+bool Table::CheckPrimaryKey(Index *index) {
+	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {
+		PageBase *page = PageFactory::LoadPage(this, fileID, pageNumber);
+		if(page == NULL)
+			continue;
+		if(page->pageType == PageBase::RECORD_PAGE)
+			if(dynamic_cast<RecordPage*>(page)->CheckPrimaryKey(index)) {
+				delete page;
+				return true;
+			}
+		delete page;
+	}
+	return false;
+}
+
 vector<unsigned int> Table::GetRecordList(WhereCondition& whereCondition) {
 	vector<unsigned int> recordList;
 	for(int pageNumber = 1; pageNumber < numberOfPage; pageNumber++) {

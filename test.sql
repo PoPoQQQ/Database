@@ -14,8 +14,8 @@ CREATE TABLE restaurant (
 CREATE TABLE customer(
 	id INT(10) NOT NULL,
 	name VARCHAR(25) NOT NULL,
-	gender VARCHAR(1) NOT NULL,
-	PRIMARY KEY (id)
+	gender VARCHAR(1) NOT NULL--,
+	--PRIMARY KEY (id)
 );
 /*
 CREATE TABLE food(
@@ -42,8 +42,9 @@ CREATE TABLE orders(
 -- desc customer;
 -- DESC food;
 
-INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300002,'FAUSTO VANNORMAN','F');
-UPDATE customer SET id = 300002 where id = 300001;
-SELECT * FROM customer;
+INSERT INTO customer VALUES (300001,'CHAD CABELLO','F'),(300001,'FAUSTO VANNORMAN','F');
+ALTER TABLE customer ADD CONSTRAINT pk PRIMARY KEY (id);
+--UPDATE customer SET id = 300002 where id = 300001;
+--SELECT * FROM customer;
 --SELECT * FROM customer where id = 300001;
 --INSERT INTO orders VALUES(1, '2018-2-29', 100);

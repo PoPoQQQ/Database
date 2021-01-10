@@ -1193,7 +1193,13 @@ void Database::AddPrimaryKey(string tableName, string pkName, const vector<strin
 			throw "Error: Multiple constraint is not supported!";
 	}
 	CreateIndex(tableName, "-" + tableName, columnList);
-	table->fieldList.AddPrimaryKey(pkName, columnList);
+	bool ret = table->CheckPrimaryKey(currentDatabase->indexes["-" + tableName]);
+	if(ret) {
+		DropIndex(tableName, "-" + tableName);
+		cout << "Add primary key failed: constraint validated!" << endl;
+	}
+	else
+		table->fieldList.AddPrimaryKey(pkName, columnList);
 }
 void Database::DropPrimaryKey(string tableName, string pkName) {
 	Table* table = GetTable(tableName);
@@ -1222,6 +1228,7 @@ void Database::AddForeignKey(string tableName, string fkName, const vector<strin
 		if((field.constraints & Field::FOREIGN_KEY))
 			throw "Error: Multiple constraint is not supported!";
 	}
+
 	table->fieldList.AddForeignKey(fkName, refTableName, columnList, refColumnList);
 }
 void Database::DropForeignKey(string tableName, string fkName) {
